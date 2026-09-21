@@ -55,7 +55,7 @@ Before you dive in:
 2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
 3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
 4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
-5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
+5. **Join our Telegram group:** To participate in Community Coding Month activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
 
 ---
 
@@ -142,114 +142,11 @@ Once you've completed your changes:
 
 Once you’ve submitted your PR:  
 
-- A maintainer will review your changes. This may take some time—thank you for your patience!  
+- A maintainer will review your changes. This may take some time — thank you for your patience!  
 - If changes are requested, you can update your PR by pushing to the same branch.  
 
 Remember, reviews are meant to ensure the quality and consistency of the project, not to criticize you personally.  
 
 ---
 
-Thank you for making WomenDevsSG a better space for everyone! 💙  2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
-3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
-4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
-5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
-
-2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
-3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
-4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
-5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
+Thank you for making WomenDevsSG a better space for everyone! 💙  
