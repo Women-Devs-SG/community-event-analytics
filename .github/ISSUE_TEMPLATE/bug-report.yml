@@ -13,7 +13,9 @@ body:
         **If you would like to work on this issue:** Please ask to be assigned and wait for a maintainer to formally assign it before beginning. Commenting on an issue does not count as assignment. Issues labeled `women-devs-only` are reserved for women developers.
 
         Read the full [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md).
-        ---
+        
+        ***
+        
   - type: textarea
     id: problem
     attributes:
