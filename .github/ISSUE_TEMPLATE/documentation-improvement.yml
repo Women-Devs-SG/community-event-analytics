@@ -1,0 +1,90 @@
+name: "📝 Documentation improvement"
+description: Suggest a correction or improvement to the project documentation.
+title: "[Docs]: "
+labels:
+  - documentation
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping make Community Event Analytics easier and safer to use.
+
+        Before offering to implement a change, please review our [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md):
+
+          - Do not begin work until a maintainer assigns the issue to you.
+          - Commenting or submitting this request does not count as assignment.
+          - Issues labelled `women-devs-only` are reserved for women developers.
+
+        You are welcome to report a documentation issue even if you do not intend to fix it.
+        Do not include participant data, credentials, or private spreadsheet links in this issue.
+
+  - type: dropdown
+    id: documentation-area
+    attributes:
+      label: Documentation area
+      description: Which part of the documentation needs attention?
+      options:
+        - Project overview or local setup
+        - Dashboard usage or interpretation
+        - Configuration and community branding
+        - Data preparation or Google Sheets setup
+        - Data contract, metrics, or privacy behavior
+        - Community adoption or publishing
+        - Deployment
+        - Contributing or community guidance
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Link to the page or provide the file name and section heading.
+      placeholder: "Example: docs/data-contract-v1.md — Metric definitions"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Primary audience
+      description: Who would benefit most from this improvement?
+      options:
+        - Community organizer or adopter
+        - Data analyst
+        - Contributor or developer
+        - Dashboard reader
+        - Maintainer
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: Documentation issue
+      description: Explain what is missing, unclear, inaccurate, outdated, or difficult to follow.
+      placeholder: Describe the current wording or gap and how it affects readers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed improvement
+      description: Describe the change you recommend and why it would improve the documentation.
+      placeholder: Include suggested wording, examples, or structure if you have them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: >-
+        Add related links, fictional examples, or privacy-checked screenshots. Do not attach
+        real participant data or images containing personal or confidential information.
+
