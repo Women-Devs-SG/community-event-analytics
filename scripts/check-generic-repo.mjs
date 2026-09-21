@@ -5,7 +5,17 @@ const root = process.cwd();
 const ignoredDirectories = new Set(['.git', 'node_modules', 'dist', 'coverage']);
 const ignoredFiles = new Set(['package-lock.json', 'check-generic-repo.mjs']);
 const allowedSourceUrlFiles = new Set(['src/data/adapters/google-sheets.ts']);
+const allowedBrandFiles = new Set([
+  'CONTRIBUTING.md',
+  '.github/ISSUE_TEMPLATE/bug-report.yml',
+  '.github/ISSUE_TEMPLATE/feature-request.yml',
+  '.github/ISSUE_TEMPLATE/documentation-improvement.yml',
+]);
 
+const brandLabels = new Set([
+  'WDS name',
+  'WDS abbreviation',
+]);
 // Keep this list specific to the source project. Add a term before importing
 // any material from an adopter's repository; do not use this as a general PII scanner.
 const forbidden = [
@@ -32,6 +42,7 @@ for (const file of await filesIn(root)) {
   const path = relative(root, file).replaceAll('\\', '/');
   for (const { label, pattern } of forbidden) {
     if (label === 'Google Sheets document URL' && allowedSourceUrlFiles.has(path)) continue;
+    if (brandLabels.has(label) && allowedBrandFiles.has(path)) continue;
     if (pattern.test(content)) findings.push(`${path}: ${label}`);
   }
 }
