@@ -1,31 +1,55 @@
-name: Bug report
-description: Report a reproducible problem without including private community data.
+name: 🐛 Bug report
+description: Report a bug, unexpected behavior or problem in the community event analytics dashboard.
 title: "[Bug]: "
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Do not attach real participant data, credentials, or private spreadsheet links.
+      value: | 
+      Thank you for reporting a problem!
+
+      **Privacy:** Do not attach real participant data, credentials, or private spreadsheet links. Use synthetic or fictional data when demonstrating the bug.
+
+      **If you would like to work on this issue:** Please ask to be assigned and wait for a maintainer to formally assign it before beginning. Commenting on an issue does not count as assignment. Issues labeled `women-devs-only` are reserved for women developers.
+
+      Read the full [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md).
+      
   - type: textarea
     id: problem
     attributes:
       label: What happened?
-      description: Describe the observed and expected behavior.
+      description: Clearly describe the problem you observed.
+      placeholder: Tell us what went wrong.
     validations:
       required: true
+      
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe the behavior you expected instead.
+    validations:
+      required: true
+      
   - type: textarea
     id: reproduce
     attributes:
       label: Reproduction steps
       description: Use the bundled synthetic data or a minimal fictional example.
+      placeholder: |
+      1. Go to...
+      2. Select...
+      3. Observe...
     validations:
       required: true
-  - type: input
-    id: browser
-    attributes:
-      label: Browser and version
+      
   - type: textarea
     id: context
     attributes:
-      label: Additional context
-      description: Include screenshots only after checking that they contain no private data.
+      label: Screenshots and additional context
+      description: |
+        Add anything else that may help. Before uploading screenshots,
+        confirm that they contain no participant information, credentials,
+        or private links.
+
+        
