@@ -10,8 +10,7 @@ body:
       value: |
         Thank you for helping improve Community Event Analytics!
 
-        Before proposing to implement this feature, please review our
-        [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md):
+        Before proposing to implement this feature, please review our [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md):
   
         - Do not begin implementation until a maintainer assigns the issue to you.
         - Commenting or submitting this request does not count as assignment.
