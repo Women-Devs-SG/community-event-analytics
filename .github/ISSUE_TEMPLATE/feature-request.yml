@@ -1,23 +1,58 @@
-name: Feature request
+name: 🌟 Feature request
 description: Suggest a reusable improvement for community event analytics.
 title: "[Feature]: "
 labels: [enhancement]
+assignees: []
+
 body:
+  - type: markdown
+  attributes:
+    value: |
+      Thank you for helping improve Community Event Analytics!
+
+      Before proposing to implement this feature, please review our
+      [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md):
+
+      - Do not begin implementation until a maintainer assigns the issue to you.
+      - Commenting or submitting this request does not count as assignment.
+      - Issues labelled `women-devs-only` are reserved for women developers. As our mission is to empower women in tech, we hold this space for them.
+
+      You are welcome to submit an idea even if you do not intend to implement it.
+
+      ***
+      
   - type: textarea
     id: need
     attributes:
-      label: Community need
-      description: What decision or workflow would this improve?
+      label: Community need or problem
+      description: What problem, decision, or workflow would this feature improve?
+      placeholder: Describe who experiences the problem and why it matters.
     validations:
       required: true
+      
   - type: textarea
     id: proposal
     attributes:
-      label: Proposed behavior
+      label: Proposed solution
+      description: Describe the behavior or outcome you would like to see.
+      placeholder: Explain what should happen from the user's perspective.
     validations:
       required: true
+      
   - type: textarea
-    id: evidence
+    id: privacy
     attributes:
       label: Data and privacy considerations
-      description: What data would be needed, and what disclosure risks should be considered?
+      description: |
+        What data would be needed, and what disclosure risks should be considered?
+        Do not include real participant data, credentials, or private spreadsheet links.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        Add relevant examples, mockups, or screenshots.
+        Check that attachments contain no personal or private community data.
