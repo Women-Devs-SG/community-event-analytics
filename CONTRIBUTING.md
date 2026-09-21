@@ -13,7 +13,7 @@ By contributing, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md) a
 - [Working with Issues](#working-with-issues)  
 - [Setting Up Your Local Environment](#setting-up-your-local-environment)  
 - [Creating a Pull Request](#creating-a-pull-request)  
-- [Awaiting Review](#awaiting-review) 
+- [Awaiting Review](#awaiting-review)  
 
 ---
 
@@ -33,24 +33,131 @@ Whether you're fixing a typo or tackling a major issue, all contributions are va
 - Women developers based in Singapore  
 - Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
 
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
+This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community.  
 
+### 💡 Tips for First-Time Contributors  
 
+- Look for issues labeled `good first issue`, `hacktoberfest`, or `no-coding-required`.  
+- Read this guide before submitting a PR.  
+- Don’t be afraid to ask questions — [maintainers](https://github.com/orgs/Women-Devs-SG/teams/wds-maintainers) are here to help.  
+- Start small: even fixing a typo or adding a link counts!  
+- Celebrate your contributions and share your PRs with the community.  
 
-## Before opening a change
+We’re excited to have you here and can’t wait to see your contributions and ideas! 
 
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
+---
 
-## Validate the change
+## Getting Started  
 
-Run:
+Before you dive in:  
 
-```bash
-npm test
-npm run scan:generic
+1. **Read Our Code of Conduct:** This ensures a welcoming and collaborative space for everyone.  
+2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
+3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
+4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
+5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
+
+---
+
+## Working with Issues  
+
+### Finding an Issue  
+
+- Visit the Issues tab in the repository.  
+- Look for issues tagged with `good first issue` or `help wanted`.  
+- Leave a comment on the issue you'd like to work on, and a maintainer will assign it to you.  
+
+### ❤️ Our Contribution Etiquette
+
+To ensure that everyone has a fair and positive experience, we ask all contributors to follow these guidelines. We are a community focused on providing opportunities, and these rules help us achieve that mission.
+
+**1. Ask Before You Work**
+- Please comment on an issue and ask to be assigned **before** you start working.
+- Do not work on issues that have already been assigned to someone else.
+
+**2. Wait for Assignment**
+- After commenting, please wait for a maintainer to formally assign the issue to you.
+- A maintainer's assignment is the official green light to begin your work.
+
+**3. Respect Our `women-devs-only` Issues**
+- As part of our core mission to empower women in tech, some issues are labeled **`women-devs-only`**.
+- **These issues are strictly reserved to give women developers an opportunity to learn and contribute in a safe, supportive space.** We kindly ask that our allies respect this policy and leave these specific issues for them.
+
+**4. One Issue at a Time**
+- To give everyone a chance, you can only be assigned **one issue at a time** across all WomenDevsSG repositories.
+- Please also ensure that each Pull Request (PR) you submit solves **only one issue**. Do not bundle fixes for multiple issues into a single PR.
+
+**We appreciate your cooperation in helping us build a fair and supportive open-source environment!**
+
+### Creating an Issue  
+
+If you spot a bug or have an idea that isn’t already listed:  
+
+1. Open a new issue and use the appropriate template (e.g., Bug Report, Feature Request).  
+2. Be clear and concise in your description.  
+3. Wait for feedback from maintainers before proceeding.  
+
+---
+
+## Setting Up Your Local Environment  
+
+To work on an issue:  
+
+1. Fork the repository to your GitHub account.  
+2. Clone the forked repository to your local machine:  
+   ```bash  
+   git clone https://github.com/your-username/repo-name.git  
+   ```  
+3. Create a new branch for your changes:  
+   ```bash  
+   git checkout -b your-branch-name  
+   ```  
+4. Follow the steps in the project’s README to set up your environment.  
+5. Make your changes.  
+6. Test the changes on your local environment.
+7. Run `npm run test:e2e` to run the e2e (end to end) tests (Runs by default on `http://localhost:4321`, you can change it to another port in your environment variables by duplicating `.env.example` into `.env` and changing the `PLAYWRIGHT_BASE_URL` value). 
+
+---
+
+## Creating a Pull Request  
+
+Once you've completed your changes:  
+
+1. Push your branch to your forked repository:  
+   ```bash  
+   git push origin your-branch-name  
+   ```  
+2. Open a pull request (PR) from your branch to the repository's `main` branch.  
+3. Include a clear description of your changes and link the issue it resolves.  
+
+### PR Checklist:  
+
+- Your changes follow the repository’s coding guidelines.  
+- You've tested your changes locally.  
+- Your PR has a descriptive title and follows best practices.  
+
+---
+
+## Awaiting Review  
+
+Once you’ve submitted your PR:  
+
+- A maintainer will review your changes. This may take some time—thank you for your patience!  
+- If changes are requested, you can update your PR by pushing to the same branch.  
+
+Remember, reviews are meant to ensure the quality and consistency of the project, not to criticize you personally.  
+
+---
+
+Thank you for making WomenDevsSG a better space for everyone! 💙  2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
+3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
+4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
+5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
+
+2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
+3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
+4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
+5. **Join our Telegram group:** To participate in Hacktoberfest activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
 npm run typecheck
 npm run build
 ```
@@ -62,29 +169,6 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
 npm run typecheck
 npm run build
 ```
@@ -96,28 +180,6 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
 npm run typecheck
 npm run build
 ```
@@ -129,28 +191,6 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
 npm run typecheck
 npm run build
 ```
@@ -162,28 +202,6 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
 npm run typecheck
 npm run build
 ```
@@ -195,28 +213,6 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
 npm run typecheck
 npm run build
 ```
@@ -228,594 +224,14 @@ For interface changes, also inspect both dashboard tabs, test at least one filte
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding Month efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding  efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding m efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding mo efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding  efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Coding efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Cod efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community Co efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Community  efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Commu efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Comm efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Com efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Whether you're fixing a typo or tackling a major issue, all contributions are valuable!  
-
-⚠️ **Disclaimer:** While we welcome contributions from everyone around the world, preference will be given to:  
-- Women developers based in Singapore  
-- Members of the **[WDS Telegram community group](https://t.me/+hh3Fts4oDG41NzQ1)**  
-
-This ensures our Hacktoberfest efforts stay aligned with our mission of building a strong local women-in-tech community. 
-
-## Before opening a change
-
-1. Create a focused branch from `main`.
-2. Install dependencies with `npm ci`.
-3. Keep synthetic data as the default and do not commit participant data, credentials, private spreadsheet identifiers, or direct personal identifiers.
-4. Update the data contract or configuration guide when a change affects schema, metric definitions, privacy behavior, or adopter setup.
-
-## Validate the change
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-Run:
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-```bash
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-npm test
-npm run scan:generic
-npm run typecheck
-npm run build
-```
-
-For interface changes, also inspect both dashboard tabs, test at least one filter, and check narrow-screen behavior.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-## Pull requests
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
 Describe the user problem, the approach, the checks performed, and any data-contract or privacy implications. Keep unrelated changes in separate pull requests.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
+By contributing, you agree that your contribution is licensed under the repository's MIT License.
+By contributing, you agree that your contribution is licensed under the repository's MIT License.
+By contributing, you agree that your contribution is licensed under the repository's MIT License.
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
@@ -835,17 +251,5 @@ By contributing, you agree that your contribution is licensed under the reposito
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
 
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
-By contributing, you agree that your contribution is licensed under the repository's MIT License.
-
 By contributing, you agree that your contribution is licensed under the repository's MIT License.
