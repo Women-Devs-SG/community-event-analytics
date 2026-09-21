@@ -149,7 +149,8 @@ const isoDate = (date: Date | null, timeZone: string): string | null => {
 };
 
 const sourceValue = (row: RawRow, dataset: DatasetKey, canonicalField: string): unknown => {
-  for (const field of [canonicalField, ...(communityConfig.data.fieldAliases[dataset][canonicalField] ?? [])]) {
+  const aliases: Record<string, readonly string[]> = communityConfig.data.fieldAliases[dataset];
+  for (const field of [canonicalField, ...(aliases[canonicalField] ?? [])]) {
     const value = row[field];
     if (value == null || (typeof value === 'string' && !value.trim())) continue;
     return value;

@@ -1,21 +1,41 @@
 // Pure metric computations over the filtered slice.
 import { communityConfig, surveyExperienceOrder } from './config';
+import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from './types';
 
-export const fmtPct = (v, dp = 0) => (v == null || isNaN(v) ? '–' : (v * 100).toFixed(dp) + '%');
-export const fmtNum = (v, dp = 1) => (v == null || isNaN(v) ? '–' : Number(v).toFixed(dp));
-export const fmtInt = (v) => (v == null || isNaN(v) ? '–' : Math.round(v).toLocaleString());
+type Numeric = number | null | undefined;
 
-const sumKnown = (values) => {
-  const known = values.filter((value) => value != null && !isNaN(value));
+export interface QuadrantRefs {
+  medianDemand: number | null;
+  medianSatisfaction: number | null;
+}
+
+export interface QuadrantPoint {
+  id: string;
+  name: string;
+  satisfaction: number;
+  demand: number;
+  registered: number;
+  events: number;
+  detail: string;
+}
+
+export type QuadrantMode = 'event' | 'topic' | 'format';
+
+export const fmtPct = (v: Numeric, dp = 0) => (v == null || isNaN(v) ? '–' : (v * 100).toFixed(dp) + '%');
+export const fmtNum = (v: Numeric, dp = 1) => (v == null || isNaN(v) ? '–' : Number(v).toFixed(dp));
+export const fmtInt = (v: Numeric) => (v == null || isNaN(v) ? '–' : Math.round(v).toLocaleString());
+
+const sumKnown = (values: Numeric[]): number | null => {
+  const known = values.filter((value): value is number => value != null && !isNaN(value));
   return known.length ? known.reduce((sum, value) => sum + value, 0) : null;
 };
 
 // ── Dashboard 1 KPIs ─────────────────────────────────────────────────────────
-export function kpisEffectiveness(slice) {
+export function kpisEffectiveness(slice: DataSlice) {
   const { events, responses, registrations } = slice;
   const uniqueEvents = new Set(events.map((e) => e.event_id)).size;
 
-  const sats = responses.map((r) => r.satisfaction).filter((v) => v != null);
+  const sats = responses.map((r) => r.satisfaction).filter((v): v is number => v != null);
   const avgSatisfaction = sats.length ? sats.reduce((a, b) => a + b, 0) / sats.length : null;
 
   const totalAttended = sumKnown(events.map((e) => e.attended));
@@ -23,12 +43,12 @@ export function kpisEffectiveness(slice) {
   const responseRate = totalAttended != null && totalAttended > 0 ? responseCount / totalAttended : null;
 
   const totalRegistered = sumKnown(events.map((e) => e.registered));
-  const people = new Map();
+  const people = new Map<string, PersonRecord>();
   for (const r of registrations) if (r.person?.is_returning_registered != null) people.set(r.participant_id, r.person);
   const returning = [...people.values()].filter((p) => p.is_returning_registered === true).length;
   const returningRate = people.size ? returning / people.size : null;
 
-  const byTopic = new Map();
+  const byTopic = new Map<string, number>();
   for (const e of events) {
     if (e.topic_primary == null || e.attended == null) continue;
     byTopic.set(e.topic_primary, (byTopic.get(e.topic_primary) ?? 0) + e.attended);
@@ -58,11 +78,13 @@ export const SAT_BANDS = {
   neutral: communityConfig.ratings.satisfaction.verdictNeutralMin,
 };
 
-export function satisfactionVerdict(responses) {
-  const sats = responses.map((r) => r.satisfaction).filter((v) => v != null);
+export type VerdictLabel = 'positive' | 'neutral' | 'negative';
+
+export function satisfactionVerdict(responses: ResponseRecord[]) {
+  const sats = responses.map((r) => r.satisfaction).filter((v): v is number => v != null);
   if (!sats.length) return null;
   const mean = sats.reduce((a, b) => a + b, 0) / sats.length;
-  const label = mean >= SAT_BANDS.positive ? 'positive' : mean >= SAT_BANDS.neutral ? 'neutral' : 'negative';
+  const label: VerdictLabel = mean >= SAT_BANDS.positive ? 'positive' : mean >= SAT_BANDS.neutral ? 'neutral' : 'negative';
   return {
     label,
     mean,
@@ -72,8 +94,15 @@ export function satisfactionVerdict(responses) {
 }
 
 // ── quadrant scatter: per event, or aggregated by topic_primary / format ─────
-export function quadrantPoints(slice, satByEvent, mode) {
-  const withSat = slice.events.filter((e) => satByEvent.get(e.event_id) != null && e.demand_index != null && e.registered != null);
+export function quadrantPoints(
+  slice: DataSlice,
+  satByEvent: Map<string, number | null>,
+  mode: QuadrantMode,
+): { points: QuadrantPoint[]; skipped: number } {
+  type Plottable = EventRecord & { demand_index: number; registered: number };
+  const withSat = slice.events.filter(
+    (e): e is Plottable => satByEvent.get(e.event_id) != null && e.demand_index != null && e.registered != null,
+  );
   const skipped = slice.events.length - withSat.length;
 
   if (mode === 'event') {
@@ -81,7 +110,7 @@ export function quadrantPoints(slice, satByEvent, mode) {
       points: withSat.map((e) => ({
         id: e.event_id, // click target: drills the feedback section to this event
         name: e.event_name.replace(/_/g, ' '),
-        satisfaction: satByEvent.get(e.event_id),
+        satisfaction: satByEvent.get(e.event_id) as number,
         demand: e.demand_index,
         registered: e.registered,
         events: 1,
@@ -91,18 +120,19 @@ export function quadrantPoints(slice, satByEvent, mode) {
     };
   }
   const key = mode === 'topic' ? 'topic_primary' : 'format';
-  const groups = new Map();
+  const groups = new Map<string, { satW: number; respW: number; demandSum: number; registered: number; n: number }>();
   for (const e of withSat) {
-    if (e[key] == null) continue;
-    const g = groups.get(e[key]) ?? { satW: 0, respW: 0, demandSum: 0, registered: 0, n: 0 };
+    const groupKey = e[key];
+    if (groupKey == null) continue;
+    const g = groups.get(groupKey) ?? { satW: 0, respW: 0, demandSum: 0, registered: 0, n: 0 };
     const resp = slice.responses.filter((response) => response.event_id === e.event_id && response.satisfaction != null).length;
     if (!resp) continue;
-    g.satW += satByEvent.get(e.event_id) * resp;
+    g.satW += (satByEvent.get(e.event_id) as number) * resp;
     g.respW += resp;
     g.demandSum += e.demand_index; // demand = simple mean of event demand indices
     g.registered += e.registered;
     g.n += 1;
-    groups.set(e[key], g);
+    groups.set(groupKey, g);
   }
   return {
     points: [...groups.entries()].map(([name, g]) => ({
@@ -118,8 +148,10 @@ export function quadrantPoints(slice, satByEvent, mode) {
   };
 }
 
-export const quadrantAction = (sat, demand, refs) => {
-  const hiSat = sat >= refs.medianSatisfaction, hiDem = demand >= refs.medianDemand;
+export type QuadrantActionLabel = 'Scale' | 'Improve' | 'Maintain' | 'Deprioritise';
+
+export const quadrantAction = (sat: number, demand: number, refs: QuadrantRefs): QuadrantActionLabel => {
+  const hiSat = sat >= (refs.medianSatisfaction ?? 0), hiDem = demand >= (refs.medianDemand ?? 0);
   if (hiSat && hiDem) return 'Scale';
   if (!hiSat && hiDem) return 'Improve';
   if (hiSat && !hiDem) return 'Maintain';
@@ -127,16 +159,18 @@ export const quadrantAction = (sat, demand, refs) => {
 };
 
 // ── Dashboard 2 ──────────────────────────────────────────────────────────────
-export function kpisCommunity(slice) {
+export function kpisCommunity(slice: DataSlice) {
   const { registrations } = slice;
-  const people = new Map();
+  const people = new Map<string, RegistrationRecord>();
   for (const r of registrations) if (!people.has(r.participant_id)) people.set(r.participant_id, r);
 
   const genderCounts = countBy(registrations, (r) => r.gender_segment ?? 'Not stated');
 
   // % of unique registrants who came back for another event, easier to read at a
   // glance than a mean event count and consistent with the event-effectiveness KPI
-  const persons = [...people.keys()].map((h) => people.get(h).person).filter((person) => person?.is_returning_registered != null);
+  const persons = [...people.values()]
+    .map((r) => r.person)
+    .filter((person): person is PersonRecord => person?.is_returning_registered != null);
   const returning = persons.filter((p) => p.is_returning_registered === true).length;
   const returningRate = persons.length ? returning / persons.length : null;
 
@@ -147,8 +181,8 @@ export function kpisCommunity(slice) {
   return { uniquePeople: people.size, genderCounts, returningRate, returningPopulation: persons.length, topSector, sectorTotal };
 }
 
-export function countBy(rows, keyFn) {
-  const m = new Map();
+export function countBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, number> {
+  const m = new Map<string, number>();
   for (const r of rows) {
     const k = keyFn(r);
     m.set(k, (m.get(k) ?? 0) + 1);
@@ -157,12 +191,19 @@ export function countBy(rows, keyFn) {
 }
 
 // counts of key2 within each key1, e.g. gender within YOE bucket
-export function crossTab(rows, key1Fn, key2Fn) {
-  const m = new Map();
+export function crossTab<T>(
+  rows: T[],
+  key1Fn: (row: T) => string,
+  key2Fn: (row: T) => string,
+): Map<string, Map<string, number>> {
+  const m = new Map<string, Map<string, number>>();
   for (const r of rows) {
     const k1 = key1Fn(r);
-    if (!m.has(k1)) m.set(k1, new Map());
-    const inner = m.get(k1);
+    let inner = m.get(k1);
+    if (!inner) {
+      inner = new Map<string, number>();
+      m.set(k1, inner);
+    }
     const k2 = key2Fn(r);
     inner.set(k2, (inner.get(k2) ?? 0) + 1);
   }
@@ -175,13 +216,20 @@ export const SURVEY_YOE_ORDER = [...surveyExperienceOrder];
 // ── segment × outcome ────────────────────────────────────────────────────────
 // YOE: response-level (the survey captures years_exp on each anonymous response).
 // field is 'satisfaction' or 'recommend'.
-export function outcomeByYoe(slice, field) {
-  const groups = new Map();
+export interface OutcomeRow {
+  bucket: string;
+  avg: number;
+  n: number;
+}
+
+export function outcomeByYoe(slice: DataSlice, field: 'satisfaction' | 'recommend'): OutcomeRow[] {
+  const groups = new Map<string, { sum: number; n: number }>();
   for (const r of slice.responses) {
-    if (r[field] == null) continue;
+    const value = r[field];
+    if (value == null) continue;
     const bucket = r.experience_segment ?? 'Not stated';
     const g = groups.get(bucket) ?? { sum: 0, n: 0 };
-    g.sum += r[field];
+    g.sum += value;
     g.n += 1;
     groups.set(bucket, g);
   }
@@ -189,8 +237,16 @@ export function outcomeByYoe(slice, field) {
 }
 
 // promoter (9-10) / passive (7-8) / detractor (<=6) split, response-level by survey YOE
-export function distributionByYoe(slice) {
-  const groups = new Map();
+export interface DistributionRow {
+  bucket: string;
+  promoters: number;
+  passives: number;
+  detractors: number;
+  n: number;
+}
+
+export function distributionByYoe(slice: DataSlice): DistributionRow[] {
+  const groups = new Map<string, { promoters: number; passives: number; detractors: number; n: number }>();
   for (const r of slice.responses) {
     if (r.satisfaction == null) continue;
     const bucket = r.experience_segment ?? 'Not stated';
@@ -207,8 +263,15 @@ export function distributionByYoe(slice) {
 
 // person-level returning rate per segment, behaviour, not stated opinion, and valid
 // for every segment dimension since it never touches the anonymous survey
-export function returningBySegment(slice, keyFn) {
-  const groups = new Map();
+export interface ReturningRow {
+  bucket: string;
+  rate: number | null;
+  n: number;
+  directional: boolean;
+}
+
+export function returningBySegment(slice: DataSlice, keyFn: (row: RegistrationRecord) => string): ReturningRow[] {
+  const groups = new Map<string, { people: Set<string>; returners: Set<string> }>();
   for (const r of slice.registrations) {
     const k = keyFn(r);
     const g = groups.get(k) ?? { people: new Set(), returners: new Set() };

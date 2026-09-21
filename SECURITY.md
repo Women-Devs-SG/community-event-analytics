@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Do not open a public issue for a security vulnerability or possible participant-data exposure. Contact the repository maintainers privately through the security-reporting method configured on the GitHub repository.
+Do not open a public issue for a security vulnerability or possible participant-data exposure. Report it privately through the repository's **Security** tab → **Report a vulnerability**. Maintainers must enable private vulnerability reporting under **Settings → Code security** for this path to be available; until then, contact the maintainers through the private channel listed in the repository profile.
 
 Include a concise description, affected version or commit, reproduction steps, and the potential impact. Do not include real participant records in the report.
 

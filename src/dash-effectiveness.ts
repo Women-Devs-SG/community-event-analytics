@@ -1,17 +1,26 @@
 // Dashboard 1, Event effectiveness
 import * as echarts from 'echarts';
 import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from './theme';
+import type { ChartParams } from './theme';
 import { scoped } from './data';
-import { kpisEffectiveness, quadrantPoints, quadrantAction, satisfactionVerdict, fmtPct, fmtNum, fmtInt, countBy } from './metrics';
+import { kpisEffectiveness, quadrantPoints, quadrantAction, satisfactionVerdict, fmtPct, fmtNum, fmtInt } from './metrics';
+import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from './metrics';
 import { isNonAnswer, extractThemes, pickQuotes, buildActions, minHitsFor, unmatchedCount, matchExcerpt, KEEP_RULES, FIX_RULES } from './sentiment';
+import type { ActionRule, RankedAction } from './sentiment';
 import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from './components';
+import type { BoardFilter } from './components';
 import { communityConfig } from './config';
 import { canShowFeedback, isDisclosureSafe } from './privacy';
+import type { DashboardController, DashboardData, DataSlice, FeedbackRecord } from './types';
+
+// scatter callbacks receive the plotted point back under `data.meta`
+type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };
 
 const terms = communityConfig.terminology;
 const satisfaction = communityConfig.ratings.satisfaction;
 
-export function initEffectiveness(root, data) {
+export function initEffectiveness(root: HTMLElement, data: DashboardData): DashboardController {
+  const q = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   root.innerHTML = `
     <div class="kpi-row" id="eff-kpis"></div>
 
@@ -48,13 +57,13 @@ export function initEffectiveness(root, data) {
       </div>
     </div>`;
 
-  const quadChart = echarts.init(root.querySelector('#quad-chart'));
-  let quadMode = 'event';
-  let boardFilter = null; // { dim: 'topic'|'format'|'event', id, label }, set by clicking a scatter bubble
+  const quadChart = echarts.init(q('#quad-chart'));
+  let quadMode: QuadrantMode = 'event';
+  let boardFilter: BoardFilter | null = null; // set by clicking a scatter bubble
 
   // The scatter is the only entry point to the drill-down: one click rescopes the
   // verdict, the themes and the feedback board together.
-  function setBoardFilter(next) {
+  function setBoardFilter(next: BoardFilter | null) {
     boardFilter = next;
     drawQuadrant(); // re-emphasise the selected bubble
     drawVerdict();
@@ -66,27 +75,28 @@ export function initEffectiveness(root, data) {
     boardFilter ? `${boardFilter.dim}: ${boardFilter.label}` : 'the current filters';
 
   quadChart.on('click', (params) => {
-    const meta = (params?.data as any)?.meta;
+    const meta = (params.data as { meta?: QuadrantPoint } | undefined)?.meta;
     if (!meta?.id) return;
     const isSame = boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
     setBoardFilter(isSame ? null : { dim: quadMode, id: meta.id, label: meta.name });
   });
-  root.querySelector('#quad-toggle').addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-mode]');
+  q('#quad-toggle').addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('button[data-mode]');
     if (!btn) return;
-    quadMode = btn.dataset.mode;
+    quadMode = btn.dataset.mode as QuadrantMode;
     root.querySelectorAll('#quad-toggle .toggle-chip').forEach((b) => b.classList.toggle('active', b === btn));
     if (boardFilter && boardFilter.dim !== quadMode) setBoardFilter(null);
     else drawQuadrant();
   });
-  let slice, annotated;
+  let slice: DataSlice = { events: [], responses: [], feedback: [], registrations: [] };
+  let annotated: FeedbackRecord[] = [];
 
   function drawKpis() {
     const k = kpisEffectiveness(slice);
     const returningSummary = isDisclosureSafe(k.returningPopulation)
       ? `${fmtPct(k.returningRate)} are returning ${terms.participants}`
       : 'Returning share hidden below the privacy threshold';
-    root.querySelector('#eff-kpis').innerHTML = [
+    q('#eff-kpis').innerHTML = [
       kpiCard(fmtInt(k.uniqueEvents), communityConfig.terminology.events[0].toUpperCase() + communityConfig.terminology.events.slice(1), `unique ${terms.events} in view`),
       kpiCard(fmtNum(k.avgSatisfaction), 'Avg satisfaction', 'mean of survey scores', `/ ${satisfaction.max}`),
       kpiCard(fmtPct(k.responseRate), 'Response rate', `${fmtInt(k.responses)} responses ÷ ${fmtInt(k.totalAttended)} attendees`),
@@ -95,7 +105,7 @@ export function initEffectiveness(root, data) {
     ].join('');
   }
 
-  const isSelected = (meta) => !!boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
+  const isSelected = (meta: QuadrantPoint) => !!boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
 
   function drawQuadrant() {
     const { points, skipped } = quadrantPoints(slice, data.satByEvent, quadMode);
@@ -108,7 +118,7 @@ export function initEffectiveness(root, data) {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
-          formatter: (p) => {
+          formatter: (p: ScatterParams) => {
             const d = p.data.meta;
             return `<b>${esc(d.name)}</b><br/>${esc(d.detail)}<br/>
               Satisfaction: <b>${fmtNum(d.satisfaction)}</b> / ${satisfaction.max} · Demand index: <b>${fmtNum(d.demand, 2)}</b><br/>
@@ -123,7 +133,7 @@ export function initEffectiveness(root, data) {
         yAxis: {
           ...baseAxis, type: 'value', name: `Satisfaction (${satisfaction.min}–${satisfaction.max})`,
           nameLocation: 'middle', nameGap: 34,
-          min: Math.max(0, Math.floor(Math.min(refs.medianSatisfaction, ...points.map((p) => p.satisfaction)) - 1)),
+          min: Math.max(0, Math.floor(Math.min(refs.medianSatisfaction ?? Infinity, ...points.map((p) => p.satisfaction)) - 1)),
           max: 10,
         },
         series: [{
@@ -151,9 +161,9 @@ export function initEffectiveness(root, data) {
               },
             };
           }),
-          symbolSize: (v, p) => 10 + 26 * Math.sqrt(p.data.meta.registered / maxReg),
+          symbolSize: (_v: unknown, p: ScatterParams) => 10 + 26 * Math.sqrt(p.data.meta.registered / maxReg),
           emphasis: { focus: 'self', itemStyle: { opacity: 1 } },
-          label: { show: false, formatter: (p) => p.name, position: 'top', color: C.ink2, fontSize: 10 },
+          label: { show: false, formatter: (p: ChartParams) => p.name, position: 'top', color: C.ink2, fontSize: 10 },
           labelLayout: { hideOverlap: true },
           markLine: {
             silent: true, symbol: 'none',
@@ -174,17 +184,17 @@ export function initEffectiveness(root, data) {
       },
       true,
     );
-    root.querySelector('#quad-note').textContent = skipped
+    q('#quad-note').textContent = skipped
       ? `${skipped} event${skipped > 1 ? 's' : ''} without survey responses not plotted.`
       : '';
   }
 
-  const ACTION_COLORS = { Scale: C.green, Improve: C.jasper, Maintain: C.blue, Deprioritise: C.muted };
+  const ACTION_COLORS: Record<QuadrantActionLabel, string> = { Scale: C.green, Improve: C.jasper, Maintain: C.blue, Deprioritise: C.muted };
 
   // corner label + a small muted caption underneath naming the axes and the action,
   // e.g. "high demand, high satisfaction" under SCALE, so the quadrant reads on its
   // own without the reader needing the paragraph above the chart
-  const corner = (action, caption, h, v, color) => ({
+  const corner = (action: string, caption: string, h: 'left' | 'right', v: 'top' | 'bottom', color: string) => ({
     type: 'text',
     [h]: h === 'left' ? 56 : 30, [v]: v === 'top' ? 42 : 52,
     style: {
@@ -200,22 +210,22 @@ export function initEffectiveness(root, data) {
 
   // Headline verdict for the current selection: one word, not a three-way split.
   function drawVerdict() {
-    const el = root.querySelector('#senti-verdict');
+    const el = q('#senti-verdict');
     const safe = canShowFeedback(boardResponses());
     el.innerHTML = verdictBannerHtml(safe ? satisfactionVerdict(boardResponses()) : null, scopeLabel(), safe);
-    const scope = el.querySelector('#verdict-scope');
+    const scope = el.querySelector<HTMLElement>('#verdict-scope');
     if (scope && boardFilter) {
       scope.innerHTML = `<button type="button" class="chip filter-chip board" title="Clear this selection">
           <b>${esc(boardFilter.dim[0].toUpperCase() + boardFilter.dim.slice(1))}:</b> ${esc(boardFilter.label)} <span aria-hidden="true">&times;</span>
         </button>`;
-      scope.querySelector('button').addEventListener('click', () => setBoardFilter(null));
+      scope.querySelector('button')?.addEventListener('click', () => setBoardFilter(null));
     }
   }
 
   function drawSummary() {
     const rows = boardRows();
     if (!canShowFeedback(rows)) {
-      root.querySelector('#senti-summary').innerHTML =
+      q('#senti-summary').innerHTML =
         '<div class="empty-note">Feedback themes and action suggestions are hidden for this selection to protect respondent privacy.</div>';
       return;
     }
@@ -225,17 +235,17 @@ export function initEffectiveness(root, data) {
     const improve = rows.filter((r) => r.question_role === 'improvement' && !isNonAnswer(r.text));
     const interest = rows.filter((r) => r.question_role === 'topic_request' && !isNonAnswer(r.text));
 
-    const themeChips = (themes) =>
+    const themeChips = (themes: { theme: string; count: number }[]) =>
       themes.length
         ? `<div class="theme-chips">${themes.map((t) => `<span class="chip theme">${esc(t.theme)} <b>×${t.count}</b></span>`).join('')}</div>`
         : '<div class="table-count">No recurring themes yet, too few comments.</div>';
-    const quoteHtml = (rs) =>
+    const quoteHtml = (rs: FeedbackRecord[]) =>
       pickQuotes(rs, 2).map((r) => `<div class="quote">“${esc(r.text)}”</div>`).join('');
 
     // Each action point carries the comment that produced it, so a director can
     // see exactly what they are acting on rather than trusting a keyword.
     // say plainly how much of the box the rules did not read
-    const footnote = (rows, rules) => {
+    const footnote = (rows: FeedbackRecord[], rules: ActionRule[]) => {
       const n = unmatchedCount(rows, rules);
       return n
         ? `<div class="rec-note">${n} of ${rows.length} comment${rows.length === 1 ? '' : 's'} matched no known theme, read them in the board below.</div>`
@@ -245,7 +255,7 @@ export function initEffectiveness(root, data) {
     // Hovering the count shows the comments the rule actually matched. Without
     // this the reader has no way to check a claim, and a keyword rule that
     // misfires looks exactly like one that did not.
-    const evidenceTip = (a) =>
+    const evidenceTip = (a: RankedAction) =>
       'Comments behind this:\n' +
       a.evidence
         .slice(0, 6)
@@ -259,7 +269,7 @@ export function initEffectiveness(root, data) {
     // A theme can legitimately appear on both sides: one attendee valued the Q&A,
     // another wanted more of it. Say so, rather than printing "keep X" beside
     // "improve X" and leaving the reader to assume the tool is broken.
-    const counterpart = (a, kind) => {
+    const counterpart = (a: RankedAction, kind: 'keep' | 'fix') => {
       const other = a.pair && (kind === 'keep' ? fixById : keepById).get(a.pair);
       if (!other) return '';
       const n = other.hits;
@@ -268,7 +278,7 @@ export function initEffectiveness(root, data) {
       } (${n} comment${n === 1 ? '' : 's'}), the room was split.</div>`;
     };
 
-    const actionList = (actions, kind) =>
+    const actionList = (actions: RankedAction[], kind: 'keep' | 'fix') =>
       actions
         .map(
           (a) => `<li class="rec-item">
@@ -294,8 +304,8 @@ export function initEffectiveness(root, data) {
     const allFixes = buildActions(improve, FIX_RULES, { minHits: minHitsFor(improve), max: 99 });
     const keeps = allKeeps.slice(0, 3);
     const fixes = allFixes.slice(0, 3);
-    const keepById = new Map<string, any>(allKeeps.map((a) => [a.id, a]));
-    const fixById = new Map<string, any>(allFixes.map((a) => [a.id, a]));
+    const keepById = new Map<string, RankedAction>(allKeeps.map((a) => [a.id, a]));
+    const fixById = new Map<string, RankedAction>(allFixes.map((a) => [a.id, a]));
     // Themes need repetition to mean anything, which one event's handful of
     // answers can never reach, so fall back to quoting the requests themselves.
     const topInterest = extractThemes(interest, 4);
@@ -303,7 +313,7 @@ export function initEffectiveness(root, data) {
       ? []
       : [...new Set<string>(interest.map((r) => r.text.trim()))].filter((t) => t.length <= 70).slice(0, 4);
 
-    root.querySelector('#senti-summary').innerHTML = `
+    q('#senti-summary').innerHTML = `
       <div class="summary-cols">
         <div class="summary-block">
           <h4><span class="dot" style="background:${SENTIMENT_COLORS.positive}"></span> What attendees loved <span class="table-count">(${good.length} comments)</span></h4>
@@ -351,7 +361,7 @@ export function initEffectiveness(root, data) {
   }
 
   // the selected bubble scopes both the free-text comments and the rating rows
-  function inScope(eventId) {
+  function inScope(eventId: string) {
     if (!boardFilter) return true;
     if (boardFilter.dim === 'event') return eventId === boardFilter.id;
     const ev = data.eventsById.get(eventId);
@@ -361,7 +371,7 @@ export function initEffectiveness(root, data) {
   const boardResponses = () => slice.responses.filter((r) => inScope(r.event_id));
 
   function drawFeedbackBoard() {
-    renderFeedbackBoard(root.querySelector('#fb-table'), boardRows(), data.eventsById, boardFilter, () => setBoardFilter(null));
+    renderFeedbackBoard(q('#fb-table'), boardRows(), data.eventsById, boardFilter, () => setBoardFilter(null));
   }
 
   function update() {

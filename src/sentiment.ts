@@ -3,6 +3,20 @@
 // question without coupling the analysis to one source's column values.
 import Sentiment from 'sentiment';
 import { communityConfig } from './config';
+import type { FeedbackRecord } from './types';
+
+export type SentimentLabel = 'positive' | 'neutral' | 'negative';
+
+export interface ActionRule {
+  id: string;
+  title: string;
+  action: string;
+  match: RegExp;
+  /** id of the rule on the other side (keep / fix) that covers the same theme */
+  pair?: string;
+}
+
+export type RankedAction = ActionRule & { hits: number; evidence: FeedbackRecord[] };
 
 const analyzer = new Sentiment();
 
@@ -11,7 +25,7 @@ const NOTHING_RE = /^(nothing|none|nil|nope|no|n\/?a|-|all good|nothing much|not
 // bare "nothing/none", under text_good this means nothing WAS good
 const NONE_RE = /^(nothing|none|nil|nope|no|n\/?a|-)[.!\s]*$/i;
 
-export function scoreFeedback(row) {
+export function scoreFeedback(row: Pick<FeedbackRecord, 'text' | 'question_role'>): { score: number; label: SentimentLabel } {
   const text = row.text.trim();
   const comparative = analyzer.analyze(text).comparative;
 
@@ -26,17 +40,17 @@ export function scoreFeedback(row) {
   }
   const prior = row.question_role === 'improvement' ? -0.1 : 0;
   const adjusted = comparative + prior;
-  const label = adjusted > 0.05 ? 'positive' : adjusted < -0.05 ? 'negative' : 'neutral';
+  const label: SentimentLabel = adjusted > 0.05 ? 'positive' : adjusted < -0.05 ? 'negative' : 'neutral';
   return { score: comparative, label };
 }
 
-export function annotateFeedback(feedback) {
+export function annotateFeedback(feedback: FeedbackRecord[]): FeedbackRecord[] {
   return feedback.map((row) => ({ ...row, ...scoreFeedback(row) }));
 }
 
-export function sentimentSplit(rows) {
-  const counts = { positive: 0, neutral: 0, negative: 0 };
-  for (const r of rows) counts[r.label]++;
+export function sentimentSplit(rows: FeedbackRecord[]) {
+  const counts: Record<SentimentLabel, number> = { positive: 0, neutral: 0, negative: 0 };
+  for (const r of rows) if (r.label) counts[r.label]++;
   const total = rows.length || 1;
   return {
     counts,
@@ -49,7 +63,7 @@ export function sentimentSplit(rows) {
   };
 }
 
-export const FIELD_LABELS = Object.fromEntries(
+export const FIELD_LABELS: Record<string, string> = Object.fromEntries(
   communityConfig.feedbackRoles.map((role) => [role.id, role.label]),
 );
 
@@ -61,7 +75,7 @@ const STOPWORDS = new Set(
 // words kept out of unigram themes but allowed inside bigrams ("more time", "hands on")
 const BIGRAM_OK = new Set(['more', 'hands', 'less', 'too']);
 
-const tokenize = (text) =>
+const tokenize = (text: string): string[] =>
   text
     .toLowerCase()
     .replace(/[^a-z0-9'&+ -]/g, ' ')
@@ -69,13 +83,13 @@ const tokenize = (text) =>
     .filter(Boolean);
 
 // top recurring themes across comments: bigrams first, then unigrams, counted per-comment
-export function extractThemes(rows, max = 5) {
-  const uni = new Map();
-  const bi = new Map();
+export function extractThemes(rows: Pick<FeedbackRecord, 'text'>[], max = 5): { theme: string; count: number }[] {
+  const uni = new Map<string, number>();
+  const bi = new Map<string, number>();
   for (const r of rows) {
     const toks = tokenize(r.text);
-    const seenU = new Set();
-    const seenB = new Set();
+    const seenU = new Set<string>();
+    const seenB = new Set<string>();
     toks.forEach((t, i) => {
       if (t.length > 2 && !STOPWORDS.has(t) && !seenU.has(t)) {
         seenU.add(t);
@@ -83,7 +97,7 @@ export function extractThemes(rows, max = 5) {
       }
       if (i < toks.length - 1) {
         const a = toks[i], b = toks[i + 1];
-        const ok = (w) => (!STOPWORDS.has(w) || BIGRAM_OK.has(w)) && w.length > 1;
+        const ok = (w: string) => (!STOPWORDS.has(w) || BIGRAM_OK.has(w)) && w.length > 1;
         if (ok(a) && ok(b) && !(STOPWORDS.has(a) && STOPWORDS.has(b))) {
           const g = `${a} ${b}`;
           if (!seenB.has(g)) {
@@ -106,7 +120,7 @@ export function extractThemes(rows, max = 5) {
 // Comments to quote verbatim. Ranked by how much they actually say (length as a
 // proxy for specificity, within a readable range) rather than by lexicon score,
 // which cannot tell a specific answer from a generic one.
-export function pickQuotes(rows, n = 2) {
+export function pickQuotes<T extends Pick<FeedbackRecord, 'text'>>(rows: T[], n = 2): T[] {
   return [...rows]
     .filter((r) => !isNonAnswer(r.text) && r.text.length >= 15 && r.text.length <= 140)
     .sort((a, b) => b.text.length - a.text.length)
@@ -116,7 +130,7 @@ export function pickQuotes(rows, n = 2) {
 // Answers given to skip the question: "-", "nil", "nothing", "no". No content,
 // and they distort every count they are included in.
 const NON_ANSWER_RE = /^(nothing|none|nil|nope|no|n\/?a|na|yes|-+|\.+)[.!\s]*$/i;
-export const isNonAnswer = (text) => {
+export const isNonAnswer = (text: unknown) => {
   const t = String(text ?? '').trim();
   return t.length < 3 || NON_ANSWER_RE.test(t);
 };
@@ -131,7 +145,7 @@ export const isNonAnswer = (text) => {
 // is ground truth; the lexicon label is not (every text_good answer scores
 // positive by construction, so filtering on it would be circular).
 
-export const KEEP_RULES = [
+export const KEEP_RULES: ActionRule[] = [
   {
     id: 'accessible',
     pair: 'level',
@@ -186,7 +200,7 @@ export const KEEP_RULES = [
   },
 ];
 
-export const FIX_RULES = [
+export const FIX_RULES: ActionRule[] = [
   {
     id: 'mentors',
     title: 'Review the availability of support people',
@@ -279,14 +293,21 @@ export const FIX_RULES = [
 // uncomfortable and the view was very limited" would raise both a seating and an
 // AV action from a single person, and the mention counts would stop meaning
 // anything.
-export function buildActions(rows, rules, { minHits = 1, max = 3 } = {}) {
-  const buckets = new Map<string, any[]>(rules.map((r) => [r.id, []]));
+export function buildActions(
+  rows: FeedbackRecord[],
+  rules: ActionRule[],
+  { minHits = 1, max = 3 }: { minHits?: number; max?: number } = {},
+): RankedAction[] {
+  const buckets = new Map<string, FeedbackRecord[]>(rules.map((r) => [r.id, []]));
   for (const row of rows) {
     const rule = rules.find((r) => r.match.test(row.text.toLowerCase()));
-    if (rule) buckets.get(rule.id).push(row);
+    if (rule) buckets.get(rule.id)?.push(row);
   }
   return rules
-    .map((rule) => ({ ...rule, hits: buckets.get(rule.id).length, evidence: buckets.get(rule.id) }))
+    .map((rule) => {
+      const evidence = buckets.get(rule.id) ?? [];
+      return { ...rule, hits: evidence.length, evidence };
+    })
     .filter((x) => x.hits >= minHits)
     .sort((a, b) => b.hits - a.hits)
     .slice(0, max);
@@ -294,12 +315,12 @@ export function buildActions(rows, rules, { minHits = 1, max = 3 } = {}) {
 
 // A small selection needs a lower bar than the whole programme, otherwise a
 // nine-comment event can never surface anything and reads as "no issues".
-export const minHitsFor = (rows) => (rows.length >= 40 ? 2 : 1);
+export const minHitsFor = (rows: unknown[]) => (rows.length >= 40 ? 2 : 1);
 
 // The comment that best illustrates a rule. Length is a rough proxy for
 // specificity, but only within a readable band: the very longest answers are
 // usually multi-topic rambles that illustrate no single point well.
-export function bestExample(rows, { min = 15, max = 140 } = {}) {
+export function bestExample<T extends Pick<FeedbackRecord, 'text'>>(rows: T[], { min = 15, max = 140 }: { min?: number; max?: number } = {}): T | null {
   const inBand = rows.filter((r) => r.text.length >= min && r.text.length <= max);
   const pool = inBand.length ? inBand : rows.filter((r) => r.text.trim().length >= 8);
   return [...pool].sort((a, b) => b.text.length - a.text.length)[0] ?? null;
@@ -309,16 +330,19 @@ export function bestExample(rows, { min = 15, max = 140 } = {}) {
 // run to several hundred characters covering half a dozen separate points, so
 // quoting the first N characters routinely shows text unrelated to the match and
 // makes a correct rule look broken.
-export function matchExcerpt(text, re, span = 150) {
+export function matchExcerpt(text: string, re: RegExp, span = 150): { term: string | null; excerpt: string } {
   const flat = String(text).replace(/\s+/g, ' ').trim();
   const m = flat.toLowerCase().match(re);
-  if (!m || flat.length <= span) return { term: m ? m[0] : null, excerpt: flat.slice(0, span) + (flat.length > span ? '…' : '') };
-  let start = Math.max(0, m.index - Math.floor((span - m[0].length) / 2));
+  if (!m || m.index == null || flat.length <= span) {
+    return { term: m ? m[0] : null, excerpt: flat.slice(0, span) + (flat.length > span ? '…' : '') };
+  }
+  const matchIndex = m.index;
+  let start = Math.max(0, matchIndex - Math.floor((span - m[0].length) / 2));
   let end = Math.min(flat.length, start + span);
   start = Math.max(0, end - span);
   // snap to word boundaries so the window does not open mid-word
-  if (start > 0) { const sp = flat.indexOf(' ', start); if (sp > -1 && sp < m.index) start = sp + 1; }
-  if (end < flat.length) { const sp = flat.lastIndexOf(' ', end); if (sp > m.index + m[0].length) end = sp; }
+  if (start > 0) { const sp = flat.indexOf(' ', start); if (sp > -1 && sp < matchIndex) start = sp + 1; }
+  if (end < flat.length) { const sp = flat.lastIndexOf(' ', end); if (sp > matchIndex + m[0].length) end = sp; }
   return {
     term: m[0],
     excerpt: (start > 0 ? '…' : '') + flat.slice(start, end).trim() + (end < flat.length ? '…' : ''),
@@ -327,5 +351,5 @@ export function matchExcerpt(text, re, span = 150) {
 
 // How many comments matched no rule at all. Surfaced in the UI so a reader knows
 // the action points are a partial reading of the box, not the whole of it.
-export const unmatchedCount = (rows, rules) =>
+export const unmatchedCount = (rows: Pick<FeedbackRecord, 'text'>[], rules: ActionRule[]) =>
   rows.filter((r) => !rules.some((x) => x.match.test(r.text.toLowerCase()))).length;
