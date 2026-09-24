@@ -9,3 +9,6 @@ dist/
 
 # local data exports — never commit data to the open-source repo
 data-source-excel/
+
+# generated at build time from the configured data source
+public/dashboard-summary.json

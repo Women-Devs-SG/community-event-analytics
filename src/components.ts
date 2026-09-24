@@ -1,11 +1,10 @@
 // Shared DOM components: filter bar, KPI cards, sentiment split, feedback table
-import { filters, setFilters, parseDate } from './data';
+import { eventsIn, filters, setFilters } from './data';
 import { SENTIMENT_COLORS } from './theme';
 import { FIELD_LABELS, isNonAnswer } from './sentiment';
 import { communityConfig } from './config';
-import { canShowFeedback } from './privacy';
-import type { DashboardData, EventRecord, FeedbackRecord } from './types';
 import type { VerdictLabel } from './metrics';
+import type { DashboardSummary, SummaryComment, SummaryEvent } from './summary/types';
 
 export interface BoardFilter {
   dim: 'event' | 'topic' | 'format';
@@ -26,23 +25,20 @@ export { esc };
 // ── filter bar ────────────────────────────────────────────────────────────────
 const isText = (value: string | null): value is string => Boolean(value);
 
-export function buildFilterBar(container: HTMLElement, data: DashboardData) {
-  const formats = [...new Set(data.events.map((e) => e.format).filter(isText))].sort();
-  const topics = [...new Set(data.events.map((e) => e.topic_primary).filter(isText))].sort();
+export function buildFilterBar(container: HTMLElement, summary: DashboardSummary) {
+  const unique = (values: (string | null)[]) => [...new Set(values.filter(isText))];
+  const years = unique(summary.events.map((e) => e.year)).sort().reverse();
+  const formats = unique(summary.events.map((e) => e.format)).sort();
+  const topics = unique(summary.events.map((e) => e.topic)).sort();
+  const options = (values: string[]) => values.map((v) => `<option>${esc(v)}</option>`).join('');
 
   container.innerHTML = `
     <div class="filterbar-inner">
-      <div class="filter-group"><label for="f-format">Format</label><select id="f-format"><option value="">All formats</option>${formats.map((f) => `<option>${esc(f)}</option>`).join('')}</select></div>
-      <div class="filter-group"><label for="f-topic">Topic</label><select id="f-topic"><option value="">All topics</option>${topics.map((t) => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="filter-group"><label for="f-year">Year</label><select id="f-year"><option value="">All years</option>${options(years)}</select></div>
+      <div class="filter-group"><label for="f-format">Format</label><select id="f-format"><option value="">All formats</option>${options(formats)}</select></div>
+      <div class="filter-group"><label for="f-topic">Topic</label><select id="f-topic"><option value="">All topics</option>${options(topics)}</select></div>
       <div class="filter-group"><label for="f-event">Event</label><select id="f-event"><option value="">All events</option></select></div>
-      <div class="filter-group"><label for="f-from">Period</label>
-        <div class="period-inputs">
-          <input type="date" id="f-from" aria-label="Period start" />
-          <span aria-hidden="true">–</span>
-          <input type="date" id="f-to" aria-label="Period end" />
-        </div>
-      </div>
-      <button class="reset-btn" id="f-reset">Reset filters</button>
+      <button type="button" class="reset-btn" id="f-reset">Reset filters</button>
     </div>
   `;
 
@@ -50,47 +46,28 @@ export function buildFilterBar(container: HTMLElement, data: DashboardData) {
   const eventSelect = el<HTMLSelectElement>('#f-event');
 
   function refreshEventOptions() {
-    const opts = data.events
-      .filter((e) =>
-        (!filters.format || e.format === filters.format) &&
-        (!filters.topic || e.topic_primary === filters.topic) &&
-        (!filters.from || (e.date && e.date >= filters.from)) &&
-        (!filters.to || (e.date && e.date <= filters.to)),
-      )
-      .sort((a, b) => (a.date && b.date ? b.date.getTime() - a.date.getTime() : 0));
+    // summary.events is already newest first
+    const opts = eventsIn(summary, { ...filters, eventId: '' });
     eventSelect.innerHTML =
       '<option value="">All events</option>' +
       opts
-        .map((e) => `<option value="${esc(e.event_id)}"${filters.eventId === e.event_id ? ' selected' : ''}>${esc(e.event_name.replace(/_/g, ' '))} (${esc(e.event_date)})</option>`)
+        .map((e) => `<option value="${esc(e.id)}"${filters.eventId === e.id ? ' selected' : ''}>${esc(e.name)}${e.date ? ` (${esc(e.date)})` : ''}</option>`)
         .join('');
   }
   refreshEventOptions();
 
-  el<HTMLSelectElement>('#f-format').addEventListener('change', (e) => {
-    setFilters({ format: (e.target as HTMLSelectElement).value, eventId: '' });
-    refreshEventOptions();
-  });
-  el<HTMLSelectElement>('#f-topic').addEventListener('change', (e) => {
-    setFilters({ topic: (e.target as HTMLSelectElement).value, eventId: '' });
-    refreshEventOptions();
-  });
+  const onSelect = (id: string, key: 'year' | 'format' | 'topic') =>
+    el<HTMLSelectElement>(id).addEventListener('change', (e) => {
+      setFilters({ [key]: (e.target as HTMLSelectElement).value, eventId: '' });
+      refreshEventOptions();
+    });
+  onSelect('#f-year', 'year');
+  onSelect('#f-format', 'format');
+  onSelect('#f-topic', 'topic');
   eventSelect.addEventListener('change', (e) => setFilters({ eventId: (e.target as HTMLSelectElement).value }));
-  el<HTMLInputElement>('#f-from').addEventListener('change', (e) => {
-    const value = (e.target as HTMLInputElement).value;
-    setFilters({ from: value ? parseDate(value) : null, eventId: '' });
-    refreshEventOptions();
-  });
-  el<HTMLInputElement>('#f-to').addEventListener('change', (e) => {
-    const value = (e.target as HTMLInputElement).value;
-    setFilters({ to: value ? parseDate(value) : null, eventId: '' });
-    refreshEventOptions();
-  });
   el('#f-reset').addEventListener('click', () => {
-    el<HTMLSelectElement>('#f-format').value = '';
-    el<HTMLSelectElement>('#f-topic').value = '';
-    el<HTMLInputElement>('#f-from').value = '';
-    el<HTMLInputElement>('#f-to').value = '';
-    setFilters({ format: '', topic: '', eventId: '', from: null, to: null });
+    for (const id of ['#f-year', '#f-format', '#f-topic']) el<HTMLSelectElement>(id).value = '';
+    setFilters({ year: '', format: '', topic: '', eventId: '' });
     refreshEventOptions();
   });
 }
@@ -156,34 +133,32 @@ export function verdictBannerHtml(verdict: Verdict | null, scopeLabel: string, i
 // ── feedback board: one column per survey question, active filters in the header ──
 const FIELD_ORDER = communityConfig.feedbackRoles.map((role) => role.id);
 
-function activeFilterChips(eventsById: Map<string, EventRecord>) {
+function activeFilterChips(eventsById: Map<string, SummaryEvent>) {
   const chips: [string, string][] = [];
+  if (filters.year) chips.push(['Year', filters.year]);
   if (filters.format) chips.push(['Format', filters.format]);
   if (filters.topic) chips.push(['Topic', filters.topic]);
-  if (filters.eventId) chips.push(['Event', eventsById.get(filters.eventId)?.event_name.replace(/_/g, ' ') ?? filters.eventId]);
-  const fmtD = (d: Date) => d.toISOString().slice(0, 10);
-  if (filters.from || filters.to)
-    chips.push(['Period', `${filters.from ? fmtD(filters.from) : '…'} – ${filters.to ? fmtD(filters.to) : '…'}`]);
+  if (filters.eventId) chips.push(['Event', eventsById.get(filters.eventId)?.name ?? filters.eventId]);
   if (!chips.length) return '<span class="chip filter-chip all">All events</span>';
   return chips.map(([k, v]) => `<span class="chip filter-chip"><b>${esc(k)}:</b> ${esc(v)}</span>`).join('');
 }
 
+// `rows` must already be privacy-safe: the build publishes only comments from
+// events that met the threshold. `isSafe` is false when the selection has none.
 export function renderFeedbackBoard(
   container: HTMLElement,
-  rows: FeedbackRecord[],
-  eventsById: Map<string, EventRecord>,
+  rows: SummaryComment[],
+  eventsById: Map<string, SummaryEvent>,
+  isSafe: boolean,
   boardFilter: BoardFilter | null = null,
   onClearBoardFilter: (() => void) | null = null,
 ) {
-  if (!canShowFeedback(rows)) {
+  if (!isSafe) {
     container.innerHTML = '<div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div>';
     return;
   }
-  const sorted = [...rows].sort((a, b) => {
-    const da = eventsById.get(a.event_id)?.date?.getTime() ?? 0;
-    const db = eventsById.get(b.event_id)?.date?.getTime() ?? 0;
-    return db - da;
-  });
+  const sorted = [...rows].sort((a, b) =>
+    (eventsById.get(b.event_id)?.date ?? '').localeCompare(eventsById.get(a.event_id)?.date ?? ''));
   const nonAnswers = sorted.filter((r) => isNonAnswer(r.text)).length;
 
   const boardChip = boardFilter
@@ -243,7 +218,7 @@ export function renderFeedbackBoard(
               const ev = eventsById.get(r.event_id);
               return `<div class="fb-item">
                 <div class="fb-item-text">${esc(r.text)}</div>
-                <div class="fb-item-meta">${esc(ev?.event_name.replace(/_/g, ' ') ?? r.event_id)} · ${esc(ev?.event_date ?? '')}</div>
+                <div class="fb-item-meta">${esc(ev?.name ?? r.event_id)} · ${esc(ev?.date ?? '')}</div>
               </div>`;
             })
             .join('')

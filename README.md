@@ -20,39 +20,44 @@ For an adopting community, use the [adoption workflow](docs/adopting-community.m
 
 ## Safe demo by default
 
-A fresh clone loads deterministic synthetic data generated locally in the browser. The demo contains fictional events, participants, registrations, survey ratings, and comments. It does not contact any external data source.
+A fresh clone builds its dashboard from deterministic synthetic data generated locally. The demo contains fictional events, participants, registrations, survey ratings, and comments. It does not contact any external data source.
 
 The sample deliberately includes repeat participants, missing demographics, unknown attendance, small segments, and events without feedback so empty and incomplete states can be tested honestly.
 
 ```text
-Bundled synthetic adapter
+Build time (npm run summary)                       Browser
+  source adapter (synthetic or Google Sheets)
   → canonical normalization
   → contract validation
-  → client-side metrics
-  → dashboards
+  → metrics + privacy rules
+  → public/dashboard-summary.json   ──────────▶   dashboards
 ```
 
-The source architecture lives under `src/data/`. `src/data.ts` is the stable dashboard-facing facade.
+The browser only ever receives the summary: aggregates that met the privacy threshold, event metadata, and comments from events with enough respondents. It never receives participant IDs, response IDs, or registration rows, and never contacts the data source.
+
+The source architecture lives under `src/data/` and the build-time summary under `src/summary/`. `src/data.ts` is the browser-side facade that loads the summary.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev
+npm run dev        # builds the summary, then starts Vite
+npm run summary    # rebuild the summary after changing data or config
 npm test
 npm run build
 ```
 
-Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The application is fully static: no backend, database, API keys, or paid services are required for the synthetic demo.
+Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The published site is fully static: no backend, database, API keys, or paid services are required. PapaParse and Sentiment run at build time only.
 
 ## Optional Google Sheets source
 
-Google Sheets remains available as an opt-in adapter. Copy `.env.example` to `.env.local`, then configure:
+Google Sheets remains available as an opt-in adapter. The sheet is read once, at build time, and only the privacy-safe summary is published. Copy `.env.example` to `.env.local`, then configure:
 
 ```dotenv
 VITE_DATA_SOURCE=google-sheets
-VITE_GOOGLE_SHEET_ID=replace_with_your_sheet_id
 VITE_REPORTING_TIMEZONE=UTC
+GOOGLE_SHEET_ID=replace_with_your_sheet_id
+GOOGLE_SERVICE_ACCOUNT_KEY={"client_email":"...","private_key":"..."}
 ```
 
 The configured spreadsheet uses these tabs by default:
@@ -63,9 +68,13 @@ The configured spreadsheet uses these tabs by default:
 - `registrations`
 - `participants`
 
-Each tab name can be overridden with the `VITE_GOOGLE_TAB_*` variables shown in `.env.example`. Canonical fields and accepted source-column aliases are configured in `src/config.ts`.
+Each tab name can be overridden with the `GOOGLE_TAB_*` variables shown in `.env.example`. Canonical fields and accepted source-column aliases are configured in `src/config.ts`.
 
-The current adapter reads the public CSV endpoint in the participant's browser. Do not place personal identifiers, secrets, or data that is unsuitable for public access in that spreadsheet.
+Keep the sheet **private**. Create a Google Cloud service account with the Google Sheets API enabled, share the sheet with the account's email as a Viewer, and supply its JSON key as `GOOGLE_SERVICE_ACCOUNT_KEY`. Without a key, the build falls back to the sheet's public link and prints a warning: the published site still contains only the summary, but anyone with the sheet ID could open the sheet itself.
+
+Because data is read at build time, the dashboard shows data as of the last build. The deploy workflow rebuilds daily and can be run manually from the **Actions** tab.
+
+Earlier versions used `VITE_GOOGLE_SHEET_ID` and `VITE_GOOGLE_TAB_*`. Those names still work but print a deprecation warning; rename them without the `VITE_` prefix.
 
 ## Data contract
 
@@ -83,7 +92,7 @@ See [`docs/configuration.md`](docs/configuration.md) for the adopter checklist a
 
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site and publishes `dist/` to GitHub Pages. One-time repository setup: **Settings → Pages → Source: GitHub Actions**.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which runs the checks and tests, builds the summary and the site, and publishes `dist/` to GitHub Pages. It also runs daily to refresh the data. One-time repository setup: **Settings → Pages → Source: GitHub Actions**.
 
 Environment variables used during the build determine whether the deployed site uses synthetic data or an explicitly configured Google Sheet. Synthetic remains the default when no variables are supplied.
 

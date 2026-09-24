@@ -2,16 +2,18 @@
 import * as echarts from 'echarts';
 import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from './theme';
 import type { ChartParams } from './theme';
-import { scoped } from './data';
-import { kpisEffectiveness, quadrantPoints, quadrantAction, satisfactionVerdict, fmtPct, fmtNum, fmtInt } from './metrics';
+import { commentsFor, eventsIn, filters, scopeFor } from './data';
+import { quadrantAction, fmtPct, fmtNum, fmtInt } from './metrics';
 import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from './metrics';
 import { isNonAnswer, extractThemes, pickQuotes, buildActions, minHitsFor, unmatchedCount, matchExcerpt, KEEP_RULES, FIX_RULES } from './sentiment';
 import type { ActionRule, RankedAction } from './sentiment';
 import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from './components';
 import type { BoardFilter } from './components';
 import { communityConfig } from './config';
-import { canShowFeedback, isDisclosureSafe } from './privacy';
-import type { DashboardController, DashboardData, DataSlice, FeedbackRecord } from './types';
+import { ALL_EVENTS } from './summary/scope';
+import type { ScopeSelection } from './summary/scope';
+import type { DashboardSummary, EffectivenessScope, SummaryComment } from './summary/types';
+import type { DashboardController } from './types';
 
 // scatter callbacks receive the plotted point back under `data.meta`
 type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };
@@ -19,9 +21,12 @@ type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };
 const terms = communityConfig.terminology;
 const satisfaction = communityConfig.ratings.satisfaction;
 
-export function initEffectiveness(root: HTMLElement, data: DashboardData): DashboardController {
+export function initEffectiveness(root: HTMLElement, summary: DashboardSummary): DashboardController {
   const q = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+  const eventsById = new Map(summary.events.map((event) => [event.id, event]));
   root.innerHTML = `
+    <div class="status" id="eff-empty" hidden>No ${terms.events} match the current filters.</div>
+    <div id="eff-body">
     <div class="kpi-row" id="eff-kpis"></div>
 
     <h2 class="section-title">Demand × Satisfaction</h2>
@@ -55,6 +60,7 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
         <div class="card-sub">Every free-text comment for the current selection, grouped by the question asked. Newest events first.</div>
         <div id="fb-table"></div>
       </div>
+    </div>
     </div>`;
 
   const quadChart = echarts.init(q('#quad-chart'));
@@ -88,17 +94,20 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
     if (boardFilter && boardFilter.dim !== quadMode) setBoardFilter(null);
     else drawQuadrant();
   });
-  let slice: DataSlice = { events: [], responses: [], feedback: [], registrations: [] };
-  let annotated: FeedbackRecord[] = [];
+  let scope: EffectivenessScope | null = null;
 
   function drawKpis() {
-    const k = kpisEffectiveness(slice);
-    const returningSummary = isDisclosureSafe(k.returningPopulation)
+    const k = scope!.kpis;
+    const returningSummary = k.returningRate != null
       ? `${fmtPct(k.returningRate)} are returning ${terms.participants}`
       : 'Returning share hidden below the privacy threshold';
     q('#eff-kpis').innerHTML = [
       kpiCard(fmtInt(k.uniqueEvents), communityConfig.terminology.events[0].toUpperCase() + communityConfig.terminology.events.slice(1), `unique ${terms.events} in view`),
-      kpiCard(fmtNum(k.avgSatisfaction), 'Avg satisfaction', 'mean of survey scores', `/ ${satisfaction.max}`),
+      kpiCard(
+        fmtNum(k.avgSatisfaction), 'Avg satisfaction',
+        k.avgSatisfaction != null ? `mean of survey scores from ${terms.events} with enough responses` : `no ${terms.events} with enough responses to show`,
+        k.avgSatisfaction != null ? `/ ${satisfaction.max}` : '',
+      ),
       kpiCard(fmtPct(k.responseRate), 'Response rate', `${fmtInt(k.responses)} responses ÷ ${fmtInt(k.totalAttended)} attendees`),
       kpiCard(fmtInt(k.totalRegistered), terms.registrations[0].toUpperCase() + terms.registrations.slice(1), returningSummary),
       kpiCard(k.hotTopic ? esc(k.hotTopic[0]) : '–', 'Hot topic', k.hotTopic ? `${fmtInt(k.hotTopic[1])} attendees` : ''),
@@ -108,8 +117,8 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
   const isSelected = (meta: QuadrantPoint) => !!boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
 
   function drawQuadrant() {
-    const { points, skipped } = quadrantPoints(slice, data.satByEvent, quadMode);
-    const refs = data.refs;
+    const { points, skipped } = scope!.quadrant[quadMode];
+    const refs = summary.refs;
     const maxDemand = Math.max(1.2, ...points.map((p) => p.demand)) * 1.15;
     const maxReg = Math.max(1, ...points.map((p) => p.registered));
 
@@ -185,7 +194,7 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
       true,
     );
     q('#quad-note').textContent = skipped
-      ? `${skipped} event${skipped > 1 ? 's' : ''} without survey responses not plotted.`
+      ? `${skipped} ${skipped > 1 ? terms.events : terms.event} not plotted: no survey responses, or fewer than ${summary.privacy.minimumSegmentSize} respondents.`
       : '';
   }
 
@@ -211,8 +220,10 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
   // Headline verdict for the current selection: one word, not a three-way split.
   function drawVerdict() {
     const el = q('#senti-verdict');
-    const safe = canShowFeedback(boardResponses());
-    el.innerHTML = verdictBannerHtml(safe ? satisfactionVerdict(boardResponses()) : null, scopeLabel(), safe);
+    const board = boardScope();
+    // no verdict despite ratings existing means they were withheld for privacy
+    const safe = !board || board.verdict != null || board.kpis.responses === 0;
+    el.innerHTML = verdictBannerHtml(board?.verdict ?? null, scopeLabel(), safe);
     const scope = el.querySelector<HTMLElement>('#verdict-scope');
     if (scope && boardFilter) {
       scope.innerHTML = `<button type="button" class="chip filter-chip board" title="Clear this selection">
@@ -224,7 +235,7 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
 
   function drawSummary() {
     const rows = boardRows();
-    if (!canShowFeedback(rows)) {
+    if (!boardScope()?.feedbackSafe) {
       q('#senti-summary').innerHTML =
         '<div class="empty-note">Feedback themes and action suggestions are hidden for this selection to protect respondent privacy.</div>';
       return;
@@ -239,13 +250,13 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
       themes.length
         ? `<div class="theme-chips">${themes.map((t) => `<span class="chip theme">${esc(t.theme)} <b>×${t.count}</b></span>`).join('')}</div>`
         : '<div class="table-count">No recurring themes yet, too few comments.</div>';
-    const quoteHtml = (rs: FeedbackRecord[]) =>
+    const quoteHtml = (rs: SummaryComment[]) =>
       pickQuotes(rs, 2).map((r) => `<div class="quote">“${esc(r.text)}”</div>`).join('');
 
     // Each action point carries the comment that produced it, so a director can
     // see exactly what they are acting on rather than trusting a keyword.
     // say plainly how much of the box the rules did not read
-    const footnote = (rows: FeedbackRecord[], rules: ActionRule[]) => {
+    const footnote = (rows: SummaryComment[], rules: ActionRule[]) => {
       const n = unmatchedCount(rows, rules);
       return n
         ? `<div class="rec-note">${n} of ${rows.length} comment${rows.length === 1 ? '' : 's'} matched no known theme, read them in the board below.</div>`
@@ -360,24 +371,27 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
       </div>`;
   }
 
-  // the selected bubble scopes both the free-text comments and the rating rows
-  function inScope(eventId: string) {
-    if (!boardFilter) return true;
-    if (boardFilter.dim === 'event') return eventId === boardFilter.id;
-    const ev = data.eventsById.get(eventId);
-    return boardFilter.dim === 'topic' ? ev?.topic_primary === boardFilter.id : ev?.format === boardFilter.id;
+  // The selected bubble narrows the filter-bar selection. Every narrowed
+  // selection is itself a selection the build summarised.
+  function boardSelection(): ScopeSelection {
+    if (!boardFilter) return { ...filters };
+    if (boardFilter.dim === 'event') return { ...ALL_EVENTS, eventId: boardFilter.id };
+    if (filters.eventId) return { ...filters }; // a single event is its own topic and format
+    return { ...filters, [boardFilter.dim]: boardFilter.id };
   }
-  const boardRows = () => annotated.filter((r) => inScope(r.event_id));
-  const boardResponses = () => slice.responses.filter((r) => inScope(r.event_id));
+  const boardScope = () => scopeFor(summary, boardSelection())?.effectiveness ?? null;
+  const boardRows = () => commentsFor(summary, eventsIn(summary, boardSelection()));
 
   function drawFeedbackBoard() {
-    renderFeedbackBoard(q('#fb-table'), boardRows(), data.eventsById, boardFilter, () => setBoardFilter(null));
+    renderFeedbackBoard(q('#fb-table'), boardRows(), eventsById, !!boardScope()?.feedbackSafe, boardFilter, () => setBoardFilter(null));
   }
 
   function update() {
-    slice = scoped(data);
-    annotated = slice.feedback;
+    scope = scopeFor(summary)?.effectiveness ?? null;
     boardFilter = null; // the top filter bar changed scope, drop any chart-click drill-down
+    q('#eff-empty').hidden = !!scope;
+    q('#eff-body').hidden = !scope;
+    if (!scope) return;
     drawKpis();
     drawQuadrant();
     drawVerdict();
@@ -385,5 +399,5 @@ export function initEffectiveness(root: HTMLElement, data: DashboardData): Dashb
     drawFeedbackBoard();
   }
 
-  return { update, resize: () => quadChart.resize() };
+  return { update, resize: () => quadChart.resize(), dispose: () => quadChart.dispose() };
 }

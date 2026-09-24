@@ -1,6 +1,3 @@
-import { createGoogleSheetsAdapter } from './adapters/google-sheets';
-import { createSyntheticAdapter } from './adapters/synthetic';
-import { communityConfig } from '../config';
 import { normalizeSource } from './normalize';
 import { validateSource } from './validate';
 import type { DataSourceAdapter } from './contract';
@@ -13,10 +10,9 @@ export const median = (values: Array<number | null>): number | null => {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 };
 
-const configuredAdapter = (): DataSourceAdapter =>
-  communityConfig.data.sourceKind === 'google-sheets' ? createGoogleSheetsAdapter() : createSyntheticAdapter();
-
-export async function loadData(adapter: DataSourceAdapter = configuredAdapter()): Promise<DashboardData> {
+// Build-time only: assembles the full, row-level data that src/summary/build.ts
+// reduces to the privacy-safe summary. Never import this from browser code.
+export async function loadData(adapter: DataSourceAdapter): Promise<DashboardData> {
   const normalized = validateSource(normalizeSource(await adapter.load()));
   const { events, surveyResponses, feedbackAnswers, registrations, participants } = normalized.datasets;
   const eventsById = new Map(events.map((event) => [event.event_id, event]));

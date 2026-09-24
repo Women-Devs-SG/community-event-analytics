@@ -33,7 +33,6 @@ export interface CommunityConfig {
     sourceKind: 'synthetic' | 'google-sheets';
     sourceLabel: string;
     reportingTimezone: string;
-    googleSheets: { sheetId: string; tabs: Record<DatasetKey, string> };
     fieldAliases: Record<DatasetKey, Record<string, readonly string[]>>;
   };
   branding: {
@@ -61,7 +60,27 @@ export interface CommunityConfig {
   privacy: { excludedOrganisations: readonly string[]; minimumSegmentSize: number };
 }
 
-const env = import.meta.env;
+// Read each variable by name. Referencing import.meta.env as a whole object
+// would make Vite inline every VITE_ variable into the browser bundle.
+// Data-source access settings (sheet ID, tab names, credentials) are not read
+// here: they are build-only and live in src/summary/generate.ts.
+const env = {
+  VITE_COMMUNITY_NAME: import.meta.env.VITE_COMMUNITY_NAME,
+  VITE_COMMUNITY_SHORT_NAME: import.meta.env.VITE_COMMUNITY_SHORT_NAME,
+  VITE_COMMUNITY_LOCATION: import.meta.env.VITE_COMMUNITY_LOCATION,
+  VITE_DASHBOARD_TITLE: import.meta.env.VITE_DASHBOARD_TITLE,
+  VITE_DASHBOARD_SUBTITLE: import.meta.env.VITE_DASHBOARD_SUBTITLE,
+  VITE_DASHBOARD_FOOTER: import.meta.env.VITE_DASHBOARD_FOOTER,
+  VITE_DATA_SOURCE: import.meta.env.VITE_DATA_SOURCE,
+  VITE_SOURCE_LABEL: import.meta.env.VITE_SOURCE_LABEL,
+  VITE_REPORTING_TIMEZONE: import.meta.env.VITE_REPORTING_TIMEZONE,
+  VITE_COLOR_SURFACE: import.meta.env.VITE_COLOR_SURFACE,
+  VITE_COLOR_CARD: import.meta.env.VITE_COLOR_CARD,
+  VITE_COLOR_INK: import.meta.env.VITE_COLOR_INK,
+  VITE_COLOR_PRIMARY: import.meta.env.VITE_COLOR_PRIMARY,
+  VITE_COLOR_SECONDARY: import.meta.env.VITE_COLOR_SECONDARY,
+  VITE_COLOR_ACCENT: import.meta.env.VITE_COLOR_ACCENT,
+};
 const configuredName = env.VITE_COMMUNITY_NAME || 'Sample Community';
 
 export const communityConfig = {
@@ -89,16 +108,6 @@ export const communityConfig = {
     sourceKind: env.VITE_DATA_SOURCE === 'google-sheets' ? 'google-sheets' : 'synthetic',
     sourceLabel: env.VITE_DATA_SOURCE === 'google-sheets' ? (env.VITE_SOURCE_LABEL || 'Google Sheets') : 'Synthetic demo data',
     reportingTimezone: env.VITE_REPORTING_TIMEZONE || 'UTC',
-    googleSheets: {
-      sheetId: env.VITE_GOOGLE_SHEET_ID || '',
-      tabs: {
-        events: env.VITE_GOOGLE_TAB_EVENTS || 'events',
-        surveyResponses: env.VITE_GOOGLE_TAB_SURVEY_RESPONSES || 'survey_responses',
-        feedbackAnswers: env.VITE_GOOGLE_TAB_FEEDBACK_ANSWERS || 'feedback_answers',
-        registrations: env.VITE_GOOGLE_TAB_REGISTRATIONS || 'registrations',
-        participants: env.VITE_GOOGLE_TAB_PARTICIPANTS || 'participants',
-      },
-    },
     // Canonical fields are read first, followed by these accepted source aliases.
     fieldAliases: {
       events: {

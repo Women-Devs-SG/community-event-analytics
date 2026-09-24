@@ -26,7 +26,7 @@ Community names, demographic labels, survey wording, and organizer-specific term
 
 ## Conformance levels
 
-- **Core conformance** requires a valid `events` dataset. It supports event discovery, period filtering, and any event-level metrics backed by supplied fields.
+- **Core conformance** requires a valid `events` dataset. It supports event discovery, year filtering, and any event-level metrics backed by supplied fields.
 - **Programme conformance** adds rating or feedback datasets. Each programme module is enabled only when its required evidence is present.
 - **Community conformance** adds registrations. Participant-returning metrics additionally require either participant summaries or enough registration history to derive them.
 - **Full conformance** supplies every dataset and all fields needed by the two current dashboards.
@@ -168,7 +168,7 @@ Adapters may accept case-insensitive `true`/`false`, `yes`/`no`, and `1`/`0`. Bl
 - Preferred interchange format is ISO 8601: `YYYY-MM-DD` for dates and an offset-bearing timestamp for datetimes.
 - An adapter may accept a documented source-specific date format, but ambiguous day/month strings require an explicit locale.
 - Date-only event values are interpreted in the configured reporting timezone, not the browser's local timezone.
-- Period filters are inclusive of both boundary dates.
+- The year filter uses each event's date in the reporting timezone.
 - The source metadata must declare the reporting timezone and the time at which the data was fetched or generated.
 
 ### Categories
@@ -188,7 +188,7 @@ Every normalized load must provide:
 | `source_kind` | Adapter identifier such as `synthetic`, `google-sheets`, `csv`, or `api`. |
 | `data_classification` | `synthetic`, `anonymized`, or another explicitly documented classification. |
 | `fetched_at` | Offset-bearing timestamp at which the source was read or generated. |
-| `reporting_timezone` | IANA timezone used for event dates and period filters. |
+| `reporting_timezone` | IANA timezone used for event dates and the year filter. |
 | `contract_version` | `1`. |
 | `history_start` / `history_end` | Available source-history bounds when known. |
 | `limitations` | Adapter or validation limitations that affect interpretation. |
@@ -197,7 +197,7 @@ Synthetic data must always remain classified as synthetic. Real participant feed
 
 ## Metric definitions
 
-All metrics use the events selected by the active event, format, topic, and inclusive period filters. Fact rows are included only when their `event_id` is in that event set.
+All metrics use the events selected by the active event, year, format, and topic filters. Every reachable filter selection is computed at build time. Fact rows are included only when their `event_id` is in that event set.
 
 | Metric | Definition |
 | --- | --- |
@@ -237,6 +237,8 @@ All metrics use the events selected by the active event, format, topic, and incl
 5. Organizer/staff exclusions must use configured normalized values and be disclosed in the affected view.
 6. Missing demographics must remain in denominators where the measure calls for all participants and appear as a configured unknown bucket.
 7. Feedback is evidence from respondents, not evidence about non-respondents. The product must display response counts beside rating-derived claims.
+8. Survey ratings and free-text answers are published per event only when that event has at least `minimum_segment_size` distinct respondents (counted separately for ratings and for free-text answers). Otherwise they are excluded from every figure, so a small event cannot be recovered by comparing selections that differ only by that event. Response counts are still shown.
+9. Only aggregates and threshold-meeting free text are delivered to the browser. Participant and response identifiers never leave the build, and response identifiers are not published, so a respondent's separate answers cannot be linked.
 
 This contract reduces accidental disclosure but does not replace consent, legal review, or an adopter's own disclosure-risk assessment.
 
@@ -244,7 +246,7 @@ This contract reduces accidental disclosure but does not replace consent, legal 
 
 | Feature | Minimum evidence | Behavior when unavailable |
 | --- | --- | --- |
-| Event and period filters | Valid `events` rows | Application cannot load without them; show a schema-specific error. |
+| Event and year filters | Valid `events` rows | Application cannot load without them; show a schema-specific error. |
 | Format or topic filters | Corresponding non-null event field | Omit only the unsupported filter and grouping toggle. |
 | Registration totals | `events.registered` | Show unavailable; do not derive unless the configured metric basis is registration rows. |
 | Attendance totals | `events.attended` | Show unavailable. |
@@ -273,5 +275,7 @@ These are implementation tasks for later generalization steps, not exceptions to
 - Source selection is environment-driven rather than exposed through a setup screen. Synthetic data is the safe default.
 - The dashboard currently supports five configured participant segment slots and three canonical feedback roles; adding new slot or role types still requires code.
 - Some chart styling and deterministic feedback action rules remain implementation defaults rather than configuration.
+- Arbitrary date ranges are not supported because selections are precomputed; the year filter replaces them.
+- Registration breakdowns are checked per selection. Overlapping selections are not yet cross-checked against each other, so rule 4's differencing protection is complete for survey data but not for every pair of registration breakdowns.
 
 Until those gaps are addressed, this document is the target contract for migration rather than a claim that every existing runtime path conforms.

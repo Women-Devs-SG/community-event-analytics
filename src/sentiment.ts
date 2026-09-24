@@ -1,7 +1,7 @@
-// Lexicon (AFINN) sentiment with a prior from the survey question the text answers:
-// The canonical question roles describe the intent of the configured survey
-// question without coupling the analysis to one source's column values.
-import Sentiment from 'sentiment';
+// Browser-side helpers for reading free-text feedback: sentiment split,
+// recurring themes, quotes, and rule-based action suggestions. Lexicon scoring
+// runs at build time (src/summary/sentiment-score.ts) so the browser only
+// receives each answer's label.
 import { communityConfig } from './config';
 import type { FeedbackRecord } from './types';
 
@@ -16,39 +16,11 @@ export interface ActionRule {
   pair?: string;
 }
 
-export type RankedAction = ActionRule & { hits: number; evidence: FeedbackRecord[] };
+type TextRow = Pick<FeedbackRecord, 'text'>;
 
-const analyzer = new Sentiment();
+export type RankedAction<T extends TextRow = TextRow> = ActionRule & { hits: number; evidence: T[] };
 
-// "nothing to improve" style answers to text_improve are actually praise
-const NOTHING_RE = /^(nothing|none|nil|nope|no|n\/?a|-|all good|nothing much|nothing really|nothing so far|no comments?|keep it up|great as is)[.!\s]*$/i;
-// bare "nothing/none", under text_good this means nothing WAS good
-const NONE_RE = /^(nothing|none|nil|nope|no|n\/?a|-)[.!\s]*$/i;
-
-export function scoreFeedback(row: Pick<FeedbackRecord, 'text' | 'question_role'>): { score: number; label: SentimentLabel } {
-  const text = row.text.trim();
-  const comparative = analyzer.analyze(text).comparative;
-
-  // the question asked carries most of the signal: an answer to "what was good"
-  // names praise even when the lexicon misreads a word ("mock interview")
-  if (row.question_role === 'positive') {
-    if (NONE_RE.test(text)) return { score: comparative, label: 'negative' };
-    return { score: comparative, label: comparative < -0.5 ? 'neutral' : 'positive' };
-  }
-  if (row.question_role === 'improvement' && NOTHING_RE.test(text)) {
-    return { score: comparative, label: 'positive' };
-  }
-  const prior = row.question_role === 'improvement' ? -0.1 : 0;
-  const adjusted = comparative + prior;
-  const label: SentimentLabel = adjusted > 0.05 ? 'positive' : adjusted < -0.05 ? 'negative' : 'neutral';
-  return { score: comparative, label };
-}
-
-export function annotateFeedback(feedback: FeedbackRecord[]): FeedbackRecord[] {
-  return feedback.map((row) => ({ ...row, ...scoreFeedback(row) }));
-}
-
-export function sentimentSplit(rows: FeedbackRecord[]) {
+export function sentimentSplit(rows: Pick<FeedbackRecord, 'label'>[]) {
   const counts: Record<SentimentLabel, number> = { positive: 0, neutral: 0, negative: 0 };
   for (const r of rows) if (r.label) counts[r.label]++;
   const total = rows.length || 1;
@@ -293,12 +265,12 @@ export const FIX_RULES: ActionRule[] = [
 // uncomfortable and the view was very limited" would raise both a seating and an
 // AV action from a single person, and the mention counts would stop meaning
 // anything.
-export function buildActions(
-  rows: FeedbackRecord[],
+export function buildActions<T extends TextRow>(
+  rows: T[],
   rules: ActionRule[],
   { minHits = 1, max = 3 }: { minHits?: number; max?: number } = {},
-): RankedAction[] {
-  const buckets = new Map<string, FeedbackRecord[]>(rules.map((r) => [r.id, []]));
+): RankedAction<T>[] {
+  const buckets = new Map<string, T[]>(rules.map((r) => [r.id, []]));
   for (const row of rows) {
     const rule = rules.find((r) => r.match.test(row.text.toLowerCase()));
     if (rule) buckets.get(rule.id)?.push(row);

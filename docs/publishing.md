@@ -26,7 +26,7 @@ After pushing the clean snapshot:
 
 The Pages workflow reads optional repository variables with the same names as `.env.example`. With no variables, the public site uses the bundled synthetic community.
 
-For a real Google Sheets deployment, set `VITE_DATA_SOURCE`, `VITE_GOOGLE_SHEET_ID`, the community identity, and an honest footer through **Settings → Secrets and variables → Actions → Variables**. The sheet ID is delivered to visitors as part of the built frontend; it is configuration, not a secret. The sheet itself must be safe for public browser access.
+For a real Google Sheets deployment, set `VITE_DATA_SOURCE`, `GOOGLE_SHEET_ID`, the community identity, and an honest footer through **Settings → Secrets and variables → Actions → Variables**. Add the service-account JSON key as the **secret** `GOOGLE_SERVICE_ACCOUNT_KEY`. The sheet is read during the build only; neither the sheet ID nor the key is included in the published site, which contains only the privacy-safe summary.
 
 ## Release check
 

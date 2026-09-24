@@ -185,7 +185,7 @@ describe('dashboard assembly', () => {
 
     expect(data.source.dataClassification).toBe('synthetic');
     expect(data.events).toHaveLength(24);
-    expect(data.persons.size).toBe(280);
+    expect(data.persons.size).toBe(560);
     expect(data.registrations.length).toBeGreaterThan(350);
     expect(data.responses.length).toBeGreaterThan(100);
     expect(data.feedback.length).toBeGreaterThan(data.responses.length);

@@ -3,7 +3,8 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const ignoredDirectories = new Set(['.git', 'node_modules', 'dist', 'coverage']);
-const ignoredFiles = new Set(['package-lock.json', 'check-generic-repo.mjs']);
+// dashboard-summary.json is generated from the adopter's data and gitignored
+const ignoredFiles = new Set(['package-lock.json', 'check-generic-repo.mjs', 'dashboard-summary.json']);
 const allowedSourceUrlFiles = new Set(['src/data/adapters/google-sheets.ts']);
 const allowedBrandFiles = new Set([
   'CONTRIBUTING.md',
@@ -23,7 +24,8 @@ const forbidden = [
   { label: 'WDS abbreviation', pattern: /\bwds\b/i },
   { label: 'source owner name', pattern: /\bzawanah\b/i },
   { label: 'Google Sheets document URL', pattern: /docs\.google\.com\/spreadsheets\/d\//i },
-  { label: 'configured Google Sheets ID', pattern: /^VITE_GOOGLE_SHEET_ID=(?!replace_with_your_sheet_id\s*$).+/m },
+  { label: 'configured Google Sheets ID', pattern: /^(?:VITE_)?GOOGLE_SHEET_ID=(?!replace_with_your_sheet_id\s*$).+/m },
+  { label: 'service account private key', pattern: /-----BEGIN (?:RSA )?PRIVATE KEY-----/ },
 ];
 
 async function filesIn(directory) {

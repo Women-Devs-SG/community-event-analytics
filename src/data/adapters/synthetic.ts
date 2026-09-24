@@ -109,7 +109,7 @@ function surveyExperience(registrationExperience: string | null): string | null 
 
 function generateSyntheticBundle(): RawDataBundle {
   const random = seededRandom(20260917);
-  const profiles = Array.from({ length: 280 }, (_, index) => {
+  const profiles = Array.from({ length: 560 }, (_, index) => {
     const teamMember = index % 47 === 0;
     return {
       participant_id: `sample-participant-${String(index + 1).padStart(3, '0')}`,

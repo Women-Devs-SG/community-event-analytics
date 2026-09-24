@@ -2,20 +2,14 @@
 import * as echarts from 'echarts';
 import { C, baseAxis, baseTooltip, baseChart, GENDER_ORDER, GENDER_COLORS, SECTOR_ORDER, SECTOR_COLORS, SEQ_BLUE, indexOfOrLast } from './theme';
 import type { ChartParams } from './theme';
-import { scoped } from './data';
-import {
-  kpisCommunity, fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER,
-  outcomeByYoe, distributionByYoe, returningBySegment,
-} from './metrics';
-import { annotateFeedback, sentimentSplit } from './sentiment';
+import { scopeFor } from './data';
+import { fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER } from './metrics';
+import { sentimentSplit } from './sentiment';
 import { kpiCard, sentimentSplitHtml, renderFeedbackBoard, esc } from './components';
 import { communityConfig } from './config';
-import type { SegmentId } from './config';
-import { canShowFeedback, disclosureGroups, isDisclosureSafe, minimumSegmentSize, protectedCrossTab } from './privacy';
-import type { ProtectedCrossTab } from './privacy';
-import type { DashboardController, DashboardData, DataSlice, FeedbackRecord, RegistrationRecord } from './types';
+import type { CommunityScope, CrossTabGroup, DashboardSummary, SegDim } from './summary/types';
+import type { DashboardController } from './types';
 
-type SegDim = 'yoe' | 'gender' | 'jobfam' | 'sector' | 'org';
 type SegOutcome = 'return' | 'sat' | 'rec';
 
 // One row of the segment x outcome chart. Which outcome fields are present
@@ -35,26 +29,17 @@ const sectorColors: Record<string, string> = SECTOR_COLORS;
 
 const ORG_NOISE = new Set(['other', 'na', 'n/a', '-', 'nil', 'unknown', 'none', '']);
 
-const excludedOrganisations = new Set(communityConfig.privacy.excludedOrganisations.map((name) => name.toLowerCase()));
-const segmentValue = (row: RegistrationRecord, id: SegmentId): string => {
-  const segment = communityConfig.segments[id];
-  return row[segment.registrationField] ?? segment.unknownLabel;
-};
-const isCommunityStaff = (r: RegistrationRecord) => excludedOrganisations.has(segmentValue(r, 'organization').trim().toLowerCase());
-const experienceOf = (r: RegistrationRecord) => segmentValue(r, 'experience');
-const genderOf = (r: RegistrationRecord) => segmentValue(r, 'gender');
-const sectorOf = (r: RegistrationRecord) => segmentValue(r, 'sector');
-const jobFamilyOf = (r: RegistrationRecord) => segmentValue(r, 'jobFamily');
-const organizationOf = (r: RegistrationRecord) => segmentValue(r, 'organization');
-const participantIdOf = (r: RegistrationRecord) => r.participant_id;
 const terms = communityConfig.terminology;
 const segments = communityConfig.segments;
 const satisfaction = communityConfig.ratings.satisfaction;
 const recommendation = communityConfig.ratings.recommendation;
 
-export function initCommunity(root: HTMLElement, data: DashboardData): DashboardController {
+export function initCommunity(root: HTMLElement, summary: DashboardSummary): DashboardController {
   const q = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+  const eventsById = new Map(summary.events.map((event) => [event.id, event]));
   root.innerHTML = `
+    <div class="status" id="comm-empty" hidden>No ${esc(terms.events)} match the current filters.</div>
+    <div id="comm-body">
     <div class="kpi-row" id="comm-kpis"></div>
 
     <h2 class="section-title">Who we're reaching</h2>
@@ -117,6 +102,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
         <div id="seg-senti"></div>
         <div id="seg-fb-table"></div>
       </div>
+    </div>
     </div>`;
 
   const yoeChart = echarts.init(q('#yoe-chart'));
@@ -130,8 +116,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   let segDim: SegDim = 'yoe';
   let segOutcome: SegOutcome = 'return';
   let segSelection: { bucket: string } | null = null;
-  let slice: DataSlice = { events: [], responses: [], feedback: [], registrations: [] };
-  let annotated: FeedbackRecord[] = [];
+  let scope: CommunityScope | null = null;
 
   const responseSegmentLabel = segments.experience.label;
   // Survey outcomes are attributable only to the response-level segment configured by this version.
@@ -175,8 +160,8 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
 
   segChart.on('click', (p) => {
     if (!canDrill()) return;
-    const row = segmentRows().find((candidate) => candidate.bucket === p.name);
-    if (!row || !isDisclosureSafe(row.n)) return;
+    // published rows already meet the privacy threshold
+    if (!segmentRows().some((candidate) => candidate.bucket === p.name)) return;
     segSelection = { bucket: p.name };
     drawSegmentFeedback();
   });
@@ -186,27 +171,21 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   });
 
   function drawKpis() {
-    const k = kpisCommunity(slice);
-    const gender = disclosureGroups(slice.registrations, genderOf, participantIdOf);
-    const safeGender = !gender.hasUnsafeRemainder && gender.groups.length > 0;
-    const safeSectors = disclosureGroups(slice.registrations, sectorOf, participantIdOf);
-    const topSector = !safeSectors.hasUnsafeRemainder
-      ? [...safeSectors.groups].sort((a, b) => b.count - a.count)[0] ?? null
-      : null;
-    const genderTotal = gender.groups.reduce((total, group) => total + group.count, 0) || 1;
-    const safePeople = isDisclosureSafe(k.uniquePeople);
-    const safeReturning = isDisclosureSafe(k.returningPopulation);
+    const k = scope!.kpis;
+    const gender = k.gender ?? [];
+    const safeGender = gender.length > 0;
+    const genderTotal = gender.reduce((total, group) => total + group.count, 0) || 1;
     q('#comm-kpis').innerHTML = [
-      kpiCard(safePeople ? fmtInt(k.uniquePeople) : 'Hidden', `Unique ${terms.participants}`, safePeople ? 'distinct de-identified participant keys' : 'Selection is below the privacy threshold'),
+      kpiCard(k.uniquePeople != null ? fmtInt(k.uniquePeople) : 'Hidden', `Unique ${terms.participants}`, k.uniquePeople != null ? 'distinct de-identified participant keys' : 'Selection is below the privacy threshold'),
       `<div class="card kpi"><div class="kpi-label" style="margin-top:0">${esc(segments.gender.label)} mix</div>${safeGender ? '<div id="gender-donut" style="height:110px"></div>' : '<div class="empty-note">Hidden to protect privacy</div>'}</div>`,
-      kpiCard(safeReturning ? fmtPct(k.returningRate) : 'Hidden', 'Returning rate', safeReturning ? `share of ${terms.participants} who registered for another ${terms.event}` : 'Selection is below the privacy threshold'),
-      kpiCard(topSector ? esc(topSector.key) : 'Hidden', `Largest ${segments.sector.shortLabel.toLowerCase()}`, topSector ? `${fmtInt(topSector.count)} ${terms.registrations}` : 'Segment totals would reveal a small group'),
+      kpiCard(k.returningRate != null ? fmtPct(k.returningRate) : 'Hidden', 'Returning rate', k.returningRate != null ? `share of ${terms.participants} who registered for another ${terms.event}` : 'Selection is below the privacy threshold'),
+      kpiCard(k.topSector ? esc(k.topSector.key) : 'Hidden', `Largest ${segments.sector.shortLabel.toLowerCase()}`, k.topSector ? `${fmtInt(k.topSector.count)} ${terms.registrations}` : 'Segment totals would reveal a small group'),
     ].join('');
 
     donutChart?.dispose();
     if (!safeGender) return;
     donutChart = echarts.init(donutEl());
-    const gData = gender.groups.map((group) => ({
+    const gData = gender.map((group) => ({
       name: group.key, value: group.count, itemStyle: { color: genderColors[group.key] ?? C.notStated },
     }));
     donutChart.setOption({
@@ -226,7 +205,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
     });
   }
 
-  const stackedGenderSeries = (buckets: string[], tab: Map<string, ProtectedCrossTab<RegistrationRecord>>) => {
+  const stackedGenderSeries = (buckets: string[], tab: Map<string, CrossTabGroup>) => {
     const genderKeys = [...new Set(buckets.flatMap((b) => tab.get(b)?.children.map((child) => child.key) ?? []))];
     return genderKeys.sort((a, b) => indexOfOrLast(GENDER_ORDER, a) - indexOfOrLast(GENDER_ORDER, b)).map((g) => ({
       name: g, type: 'bar', stack: 'g', barMaxWidth: 22,
@@ -242,8 +221,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   }, true);
 
   function drawYoe() {
-    const groups = protectedCrossTab(slice.registrations, experienceOf, genderOf, participantIdOf);
-    const tab = new Map(groups.map((group) => [group.key, group]));
+    const tab = new Map(scope!.experienceByGender.map((group) => [group.key, group]));
     const buckets = YOE_ORDER.filter((b) => tab.has(b));
     if (!buckets.length) return hideChart(yoeChart, 'No privacy-safe segments for this selection.');
     yoeChart.setOption({
@@ -265,8 +243,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   }
 
   function drawTopicGender() {
-    const groups = protectedCrossTab(slice.registrations, (r) => data.eventsById.get(r.event_id)?.topic_primary ?? 'Not stated', genderOf, participantIdOf);
-    const tab = new Map(groups.map((group) => [group.key, group]));
+    const tab = new Map(scope!.topicByGender.map((group) => [group.key, group]));
     const tot = (t: string) => tab.get(t)?.count ?? 0;
     const topics = [...tab.keys()].sort((a, b) => tot(b) - tot(a));
     if (!topics.length) return hideChart(topicGenderChart, 'No privacy-safe segments for this selection.');
@@ -300,10 +277,10 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   }
 
   function drawJobFamilies() {
-    const protectedGroups = disclosureGroups(slice.registrations, jobFamilyOf, participantIdOf);
-    if (protectedGroups.hasUnsafeRemainder) return hideChart(jobfamChart, 'Hidden because a total could reveal a small group.');
-    const total = protectedGroups.groups.reduce((sum, group) => sum + group.count, 0) || 1;
-    const items = protectedGroups.groups.sort((a, b) => b.count - a.count);
+    const groups = scope!.jobFamilies;
+    if (!groups) return hideChart(jobfamChart, 'Hidden because a total could reveal a small group.');
+    const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
+    const items = [...groups].sort((a, b) => b.count - a.count);
     jobfamChart.setOption({
       ...baseChart,
       tooltip: { ...baseTooltip, formatter: (p: ChartParams) => `<b>${esc(p.name)}</b><br/>${fmtInt(p.value)} ${terms.registrations} (${fmtPct(p.value / total)})` },
@@ -326,14 +303,14 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   }
 
   function drawSector() {
-    const protectedGroups = disclosureGroups(slice.registrations, sectorOf, participantIdOf);
-    if (protectedGroups.hasUnsafeRemainder) {
+    const groups = scope!.sectors;
+    if (!groups) {
       hideChart(sectorChart, 'Hidden because a total could reveal a small group.');
       q('#sector-legend').innerHTML = '';
       return;
     }
-    const counts = new Map(protectedGroups.groups.map((group) => [group.key, group.count]));
-    const total = protectedGroups.groups.reduce((sum, group) => sum + group.count, 0) || 1;
+    const counts = new Map(groups.map((group) => [group.key, group.count]));
+    const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
     const sectors = [...counts.keys()].sort((a, b) => indexOfOrLast(SECTOR_ORDER, a) - indexOfOrLast(SECTOR_ORDER, b));
     sectorChart.setOption({
       ...baseChart,
@@ -358,7 +335,7 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   }
 
   // ── segment × outcome ──────────────────────────────────────────────────────
-  const MIN_N = minimumSegmentSize();
+  const MIN_N = summary.privacy.minimumSegmentSize;
   const DIM_LABELS: Record<SegDim, string> = {
     yoe: segments.experience.label.toLowerCase(),
     gender: segments.gender.label.toLowerCase(),
@@ -366,13 +343,6 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
     sector: segments.sector.label.toLowerCase(),
     org: segments.organization.label.toLowerCase(),
   };
-
-  const segKeyFn = () =>
-    segDim === 'gender' ? genderOf
-    : segDim === 'jobfam' ? jobFamilyOf
-    : segDim === 'sector' ? sectorOf
-    : segDim === 'org' ? organizationOf
-    : experienceOf; // experience on registrant data (returning-rate view)
 
   // YOE stays in career order (it's ordinal, the progression is the point); every
   // other dim ranks by the outcome, best at the top. For org/jobfam keep the 12
@@ -396,10 +366,13 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
     return rows;
   }
 
+  // Rows arrive already filtered to the privacy threshold. Copied because
+  // orderRows sorts in place.
   function segmentRows(): SegRow[] {
-    if (segOutcome === 'return') return orderRows(returningBySegment(slice, segKeyFn()).filter((row) => isDisclosureSafe(row.n)));
+    const segs = scope!.segments;
+    if (segOutcome === 'return') return orderRows(segs.return[segDim].map((row) => ({ ...row })));
     // survey outcomes: years-of-experience only, the one attribute responses carry
-    return orderRows((segOutcome === 'sat' ? distributionByYoe(slice) : outcomeByYoe(slice, 'recommend')).filter((row) => isDisclosureSafe(row.n)));
+    return orderRows((segOutcome === 'sat' ? segs.sat : segs.rec).map((row) => ({ ...row })));
   }
 
   function segNote() {
@@ -563,23 +536,27 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
       return;
     }
     const { bucket } = segSelection;
-    const ids = new Set(slice.responses.filter((r) => (r.experience_segment ?? 'Not stated') === bucket).map((r) => r.response_id));
-    const rows = annotated.filter((r) => ids.has(r.response_id));
+    // only buckets with enough respondents are published
+    const indexes = scope?.surveyBuckets[bucket];
+    const rows = (indexes ?? []).map((index) => summary.comments[index]);
     card.hidden = false;
     q('#seg-sel-label').textContent = bucket;
-    const safe = canShowFeedback(rows);
+    const safe = indexes != null;
     q('#seg-senti').innerHTML = sentimentSplitHtml(sentimentSplit(rows), safe);
-    renderFeedbackBoard(q('#seg-fb-table'), rows, data.eventsById);
+    renderFeedbackBoard(q('#seg-fb-table'), rows, eventsById, safe);
   }
 
   function update() {
-    const full = scoped(data);
-    slice = { ...full, registrations: full.registrations.filter((r) => !isCommunityStaff(r)) };
-    annotated = annotateFeedback(slice.feedback);
+    scope = scopeFor(summary)?.community ?? null;
     segSelection = null;
-    const covered = new Set(slice.registrations.map((r) => r.event_id)).size;
+    q('#comm-empty').hidden = !!scope;
+    q('#comm-body').hidden = !scope;
+    if (!scope) {
+      q('#seg-fb-card').hidden = true;
+      return;
+    }
     q('#comm-coverage').textContent =
-      `Participant attributes for the current filters. Configured team registrations are excluded. Participant-level data covers ${covered} of ${slice.events.length} ${terms.events} in view.`;
+      `Participant attributes for the current filters. Configured team registrations are excluded. Participant-level data covers ${scope.coveredEvents} of ${scope.eventsInView} ${terms.events} in view.`;
     drawKpis();
     drawYoe();
     drawTopicGender();
@@ -592,5 +569,6 @@ export function initCommunity(root: HTMLElement, data: DashboardData): Dashboard
   return {
     update,
     resize: () => [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.resize()),
+    dispose: () => [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.dispose()),
   };
 }

@@ -2,14 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_DATA_SOURCE?: 'synthetic' | 'google-sheets';
-  readonly VITE_GOOGLE_SHEET_ID?: string;
   readonly VITE_REPORTING_TIMEZONE?: string;
   readonly VITE_SOURCE_LABEL?: string;
-  readonly VITE_GOOGLE_TAB_EVENTS?: string;
-  readonly VITE_GOOGLE_TAB_SURVEY_RESPONSES?: string;
-  readonly VITE_GOOGLE_TAB_FEEDBACK_ANSWERS?: string;
-  readonly VITE_GOOGLE_TAB_REGISTRATIONS?: string;
-  readonly VITE_GOOGLE_TAB_PARTICIPANTS?: string;
   readonly VITE_COMMUNITY_NAME?: string;
   readonly VITE_COMMUNITY_SHORT_NAME?: string;
   readonly VITE_COMMUNITY_LOCATION?: string;

@@ -23,7 +23,16 @@ The current dashboard has five participant segment slots: experience, gender, jo
 
 ## 3. Connect Google Sheets
 
-Set `VITE_DATA_SOURCE=google-sheets`, provide `VITE_GOOGLE_SHEET_ID`, and publish only data suitable for browser access. The default tab names follow the canonical datasets; override any tab with its corresponding `VITE_GOOGLE_TAB_*` variable.
+Set `VITE_DATA_SOURCE=google-sheets` and provide `GOOGLE_SHEET_ID`. The default tab names follow the canonical datasets; override any tab with its corresponding `GOOGLE_TAB_*` variable.
+
+The sheet is read at build time by `npm run summary`, never by visitors. To keep the sheet private:
+
+1. In Google Cloud, create a project, enable the **Google Sheets API**, and create a **service account**.
+2. Create a JSON key for the service account.
+3. Share the sheet with the service account's email address as a **Viewer**.
+4. Set the whole JSON key as `GOOGLE_SERVICE_ACCOUNT_KEY`: on one line in `.env.local` locally, and as a repository **secret** (not a variable) for deployment.
+
+`GOOGLE_*` variables have no `VITE_` prefix on purpose: Vite never exposes them to browser code.
 
 Source columns should use the canonical names in `docs/data-contract-v1.md`. If an existing sheet uses different names, add them under `data.fieldAliases` in `src/config.ts`:
 
@@ -43,12 +52,12 @@ Canonical names always take precedence over aliases. Use a dedicated adapter und
 
 Aliases are supported for required fields, optional fields, counts, booleans, ratings, dates, and segment values across all five datasets. Invalid aliased values are subject to the same contract validation as canonical columns.
 
-Set `VITE_REPORTING_TIMEZONE` to an IANA timezone such as `Asia/Singapore` or `America/New_York`. Date-only values and period filters are anchored to that reporting timezone rather than the visitor's browser timezone. The adapter accepts ISO `YYYY-MM-DD`, the documented `M/D/YYYY` source format, and ISO timestamps that include `Z` or an explicit numeric offset.
+Set `VITE_REPORTING_TIMEZONE` to an IANA timezone such as `Asia/Singapore` or `America/New_York`. Date-only values and the year filter are anchored to that reporting timezone. An unrecognised timezone stops the build with a clear error. The adapter accepts ISO `YYYY-MM-DD`, the documented `M/D/YYYY` source format, and ISO timestamps that include `Z` or an explicit numeric offset.
 
 ## Pre-publication checklist
 
-- Run `npm test` and `npm run build`.
+- Run `npm test` and `npm run build`. The build fails if the summary would contain a participant or response ID.
 - Confirm the header, browser title, source label, and footer identify the intended community and data classification.
 - Check that filtered views hide sub-threshold segments, feedback, and parent totals that could disclose a hidden remainder.
-- Confirm the spreadsheet contains no names, email addresses, phone numbers, or reversible identifiers.
+- Confirm the spreadsheet contains no names, email addresses, phone numbers, or reversible identifiers, and that it is not shared publicly.
 - Verify the synthetic dataset remains the default when source variables are absent.

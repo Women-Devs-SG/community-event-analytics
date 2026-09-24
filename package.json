@@ -4,11 +4,12 @@
   "description": "Configurable event analytics dashboards for community organizers",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "summary": "node scripts/build-summary.mjs",
+    "dev": "node scripts/build-summary.mjs development && vite",
     "test": "vitest run",
     "scan:generic": "node scripts/check-generic-repo.mjs",
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && npm run summary && vite build",
     "preview": "vite preview"
   },
   "keywords": [

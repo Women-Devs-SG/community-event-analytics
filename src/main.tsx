@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { communityConfig as config } from './config';
-import { formatDataContractError, loadData, onFilterChange } from './data';
+import { formatLoadError, loadSummary, onFilterChange } from './data';
 import { buildFilterBar } from './components';
 import { initEffectiveness } from './dash-effectiveness';
 import { initCommunity } from './dash-community';
-import type { DashboardController, DashboardData } from './types';
+import type { DashboardController } from './types';
+import type { DashboardSummary } from './summary/types';
 
 type DashboardTab = 'effectiveness' | 'community';
 
@@ -24,7 +25,7 @@ function BrandLogo() {
 }
 
 function App() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>('effectiveness');
   const filterBarRef = useRef<HTMLDivElement>(null);
@@ -45,13 +46,13 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    loadData()
+    loadSummary()
       .then((loaded) => {
         if (!cancelled) setData(loaded);
       })
       .catch((reason: unknown) => {
         console.error(reason);
-        if (!cancelled) setError(formatDataContractError(reason));
+        if (!cancelled) setError(formatLoadError(reason));
       });
     return () => {
       cancelled = true;
@@ -132,7 +133,7 @@ function App() {
           <div className={`status${error ? ' error' : ''}`} role="status">
             {error
               ? error
-              : `Loading live data from ${config.data.sourceLabel}…`}
+              : 'Loading dashboard data…'}
           </div>
         )}
         <section
@@ -152,7 +153,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <span>{data ? `Data fetched from ${data.source.sourceLabel} at ${data.source.fetchedAt.toLocaleString()}` : ''}</span>
+        <span>{data ? `Summarised from ${data.source.label} on ${new Date(data.generatedAt).toLocaleString()}` : ''}</span>
         <span>{config.community.footer}</span>
       </footer>
     </>

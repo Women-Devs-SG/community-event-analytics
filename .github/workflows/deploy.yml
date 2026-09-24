@@ -3,6 +3,10 @@ name: Deploy dashboards to GitHub Pages
 on:
   push:
     branches: [main]
+  # The dashboard shows data as of the last build, so rebuild daily to pick up
+  # new rows. Run it manually from the Actions tab for an immediate refresh.
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,14 +23,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_DATA_SOURCE: ${{ vars.VITE_DATA_SOURCE }}
-      VITE_GOOGLE_SHEET_ID: ${{ vars.VITE_GOOGLE_SHEET_ID }}
       VITE_REPORTING_TIMEZONE: ${{ vars.VITE_REPORTING_TIMEZONE }}
       VITE_SOURCE_LABEL: ${{ vars.VITE_SOURCE_LABEL }}
-      VITE_GOOGLE_TAB_EVENTS: ${{ vars.VITE_GOOGLE_TAB_EVENTS }}
-      VITE_GOOGLE_TAB_SURVEY_RESPONSES: ${{ vars.VITE_GOOGLE_TAB_SURVEY_RESPONSES }}
-      VITE_GOOGLE_TAB_FEEDBACK_ANSWERS: ${{ vars.VITE_GOOGLE_TAB_FEEDBACK_ANSWERS }}
-      VITE_GOOGLE_TAB_REGISTRATIONS: ${{ vars.VITE_GOOGLE_TAB_REGISTRATIONS }}
-      VITE_GOOGLE_TAB_PARTICIPANTS: ${{ vars.VITE_GOOGLE_TAB_PARTICIPANTS }}
+      # Build-only: used by `npm run summary` to read the sheet. None of these
+      # reach the published site. VITE_-prefixed names are accepted for older setups.
+      GOOGLE_SHEET_ID: ${{ vars.GOOGLE_SHEET_ID || vars.VITE_GOOGLE_SHEET_ID }}
+      GOOGLE_TAB_EVENTS: ${{ vars.GOOGLE_TAB_EVENTS || vars.VITE_GOOGLE_TAB_EVENTS }}
+      GOOGLE_TAB_SURVEY_RESPONSES: ${{ vars.GOOGLE_TAB_SURVEY_RESPONSES || vars.VITE_GOOGLE_TAB_SURVEY_RESPONSES }}
+      GOOGLE_TAB_FEEDBACK_ANSWERS: ${{ vars.GOOGLE_TAB_FEEDBACK_ANSWERS || vars.VITE_GOOGLE_TAB_FEEDBACK_ANSWERS }}
+      GOOGLE_TAB_REGISTRATIONS: ${{ vars.GOOGLE_TAB_REGISTRATIONS || vars.VITE_GOOGLE_TAB_REGISTRATIONS }}
+      GOOGLE_TAB_PARTICIPANTS: ${{ vars.GOOGLE_TAB_PARTICIPANTS || vars.VITE_GOOGLE_TAB_PARTICIPANTS }}
+      GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
       VITE_COMMUNITY_NAME: ${{ vars.VITE_COMMUNITY_NAME }}
       VITE_COMMUNITY_SHORT_NAME: ${{ vars.VITE_COMMUNITY_SHORT_NAME }}
       VITE_COMMUNITY_LOCATION: ${{ vars.VITE_COMMUNITY_LOCATION }}
@@ -49,6 +56,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run scan:generic
+      - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
