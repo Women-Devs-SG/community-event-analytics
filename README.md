@@ -76,6 +76,12 @@ Because data is read at build time, the dashboard shows data as of the last buil
 
 Earlier versions used `VITE_GOOGLE_SHEET_ID` and `VITE_GOOGLE_TAB_*`. Those names still work but print a deprecation warning; rename them without the `VITE_` prefix.
 
+## Private dashboard with Google sign-in
+
+To show the dashboard only to your organisers, set `VITE_DATA_SOURCE=google-signin`. Viewers sign in with Google, and a small Apps Script attached to the sheet returns live data only to accounts the sheet is shared with. Sharing the sheet is the only access list, the site contains no data, and no server or service account is needed.
+
+Viewers in this mode can read the sheet itself, so share it only with people who may see raw responses. Setup takes about 15 minutes: see [Google sign-in](docs/google-signin.md).
+
 ## Data contract
 
 The versioned canonical schema, dataset grains, joins, metric denominators, normalization rules, privacy behavior, and feature-degradation policy are defined in [`docs/data-contract-v1.md`](docs/data-contract-v1.md).

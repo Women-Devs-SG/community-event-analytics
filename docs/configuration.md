@@ -34,6 +34,8 @@ The sheet is read at build time by `npm run summary`, never by visitors. To keep
 
 `GOOGLE_*` variables have no `VITE_` prefix on purpose: Vite never exposes them to browser code.
 
+To make the dashboard private instead, visible only to people the sheet is shared with, use `VITE_DATA_SOURCE=google-signin` and follow [Google sign-in](google-signin.md).
+
 Source columns should use the canonical names in `docs/data-contract-v1.md`. If an existing sheet uses different names, add them under `data.fieldAliases` in `src/config.ts`:
 
 ```ts

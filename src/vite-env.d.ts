@@ -1,7 +1,9 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_DATA_SOURCE?: 'synthetic' | 'google-sheets';
+  readonly VITE_DATA_SOURCE?: 'synthetic' | 'google-sheets' | 'google-signin';
+  readonly VITE_GOOGLE_OAUTH_CLIENT_ID?: string;
+  readonly VITE_APPS_SCRIPT_URL?: string;
   readonly VITE_REPORTING_TIMEZONE?: string;
   readonly VITE_SOURCE_LABEL?: string;
   readonly VITE_COMMUNITY_NAME?: string;

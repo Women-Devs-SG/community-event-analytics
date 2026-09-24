@@ -26,6 +26,10 @@ const forbidden = [
   { label: 'Google Sheets document URL', pattern: /docs\.google\.com\/spreadsheets\/d\//i },
   { label: 'configured Google Sheets ID', pattern: /^(?:VITE_)?GOOGLE_SHEET_ID=(?!replace_with_your_sheet_id\s*$).+/m },
   { label: 'service account private key', pattern: /-----BEGIN (?:RSA )?PRIVATE KEY-----/ },
+  // Deployment values belong in repository variables or .env.local, never in files.
+  // The placeholders in .env.example and apps-script/Code.gs do not match.
+  { label: 'Apps Script web app URL', pattern: /script\.google(?:usercontent)?\.com\/macros\/s\/AKfy[A-Za-z0-9_-]{20,}/ },
+  { label: 'Google OAuth client ID', pattern: /\b\d{6,}-[a-z0-9]{20,}\.apps\.googleusercontent\.com\b/ },
 ];
 
 async function filesIn(directory) {

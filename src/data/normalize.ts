@@ -120,6 +120,14 @@ const dateInZone = (year: number, month: number, day: number, timeZone: string):
   }
 };
 
+export function assertTimeZone(timeZone: string) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+  } catch {
+    throw new Error(`VITE_REPORTING_TIMEZONE "${timeZone}" is not a recognised IANA timezone, such as UTC or Asia/Singapore.`);
+  }
+}
+
 export function parseDate(value: unknown, timeZone = communityConfig.data.reportingTimezone): Date | null {
   const normalized = text(value);
   if (!normalized) return null;

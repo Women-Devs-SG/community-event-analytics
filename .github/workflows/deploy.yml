@@ -25,6 +25,9 @@ jobs:
       VITE_DATA_SOURCE: ${{ vars.VITE_DATA_SOURCE }}
       VITE_REPORTING_TIMEZONE: ${{ vars.VITE_REPORTING_TIMEZONE }}
       VITE_SOURCE_LABEL: ${{ vars.VITE_SOURCE_LABEL }}
+      # google-signin mode only. Both are public by design: neither grants access.
+      VITE_GOOGLE_OAUTH_CLIENT_ID: ${{ vars.VITE_GOOGLE_OAUTH_CLIENT_ID }}
+      VITE_APPS_SCRIPT_URL: ${{ vars.VITE_APPS_SCRIPT_URL }}
       # Build-only: used by `npm run summary` to read the sheet. None of these
       # reach the published site. VITE_-prefixed names are accepted for older setups.
       GOOGLE_SHEET_ID: ${{ vars.GOOGLE_SHEET_ID || vars.VITE_GOOGLE_SHEET_ID }}

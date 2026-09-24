@@ -238,7 +238,7 @@ All metrics use the events selected by the active event, year, format, and topic
 6. Missing demographics must remain in denominators where the measure calls for all participants and appear as a configured unknown bucket.
 7. Feedback is evidence from respondents, not evidence about non-respondents. The product must display response counts beside rating-derived claims.
 8. Survey ratings and free-text answers are published per event only when that event has at least `minimum_segment_size` distinct respondents (counted separately for ratings and for free-text answers). Otherwise they are excluded from every figure, so a small event cannot be recovered by comparing selections that differ only by that event. Response counts are still shown.
-9. Only aggregates and threshold-meeting free text are delivered to the browser. Participant and response identifiers never leave the build, and response identifiers are not published, so a respondent's separate answers cannot be linked.
+9. In the public modes, only aggregates and threshold-meeting free text are delivered to the browser. Participant and response identifiers never leave the build, and response identifiers are not published, so a respondent's separate answers cannot be linked. In `google-signin` mode, source rows are delivered only to signed-in viewers on the sheet's sharing list; rules 2–8 still shape the charts but do not restrict what those viewers can access.
 
 This contract reduces accidental disclosure but does not replace consent, legal review, or an adopter's own disclosure-risk assessment.
 

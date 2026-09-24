@@ -1,5 +1,9 @@
-// Browser-side data access. The dashboard only ever loads the privacy-safe
-// summary produced at build time (see src/summary/); it never sees raw rows.
+// Browser-side data access. In the public modes the dashboard loads only the
+// privacy-safe summary produced at build time (see src/summary/) and never sees
+// raw rows. In google-signin mode, src/summary/live.ts builds the same summary
+// in the browser from rows the Apps Script returns to a signed-in viewer.
+import { SignInDataError } from './data/adapters/apps-script';
+import { DataContractError, formatDataContractError } from './data/contract';
 import { matchesSelection, scopeKey } from './summary/scope';
 import type { ScopeSelection } from './summary/scope';
 import { SUMMARY_FILE, SUMMARY_VERSION } from './summary/types';
@@ -60,3 +64,16 @@ export const commentsFor = (summary: DashboardSummary, events: SummaryEvent[]): 
   const ids = new Set(events.map((event) => event.id));
   return summary.comments.filter((comment) => ids.has(comment.event_id));
 };
+
+export function formatSignInError(error: unknown, email: string): string {
+  if (error instanceof SignInDataError) {
+    if (error.code === 'not_authorized') {
+      return `${email || 'This Google account'} doesn't have access. Ask an organiser to share the reporting sheet with this account, or sign in with another account.`;
+    }
+    if (error.code === 'invalid_token') return 'Your sign-in expired or could not be verified. Please sign in again.';
+    return error.message;
+  }
+  if (error instanceof DataContractError) return formatDataContractError(error);
+  if (error instanceof Error && /timezone|not configured/i.test(error.message)) return error.message;
+  return 'The dashboard data could not be loaded. Please try again.';
+}

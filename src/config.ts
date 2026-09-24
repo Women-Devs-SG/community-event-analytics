@@ -30,9 +30,10 @@ export interface CommunityConfig {
     events: string;
   };
   data: {
-    sourceKind: 'synthetic' | 'google-sheets';
+    sourceKind: 'synthetic' | 'google-sheets' | 'google-signin';
     sourceLabel: string;
     reportingTimezone: string;
+    googleSignIn: { clientId: string; appsScriptUrl: string };
     fieldAliases: Record<DatasetKey, Record<string, readonly string[]>>;
   };
   branding: {
@@ -62,8 +63,8 @@ export interface CommunityConfig {
 
 // Read each variable by name. Referencing import.meta.env as a whole object
 // would make Vite inline every VITE_ variable into the browser bundle.
-// Data-source access settings (sheet ID, tab names, credentials) are not read
-// here: they are build-only and live in src/summary/generate.ts.
+// Sheet access settings for the build (sheet ID, tab names, service-account
+// key) are not read here: they are build-only and live in src/summary/generate.ts.
 const env = {
   VITE_COMMUNITY_NAME: import.meta.env.VITE_COMMUNITY_NAME,
   VITE_COMMUNITY_SHORT_NAME: import.meta.env.VITE_COMMUNITY_SHORT_NAME,
@@ -74,6 +75,8 @@ const env = {
   VITE_DATA_SOURCE: import.meta.env.VITE_DATA_SOURCE,
   VITE_SOURCE_LABEL: import.meta.env.VITE_SOURCE_LABEL,
   VITE_REPORTING_TIMEZONE: import.meta.env.VITE_REPORTING_TIMEZONE,
+  VITE_GOOGLE_OAUTH_CLIENT_ID: import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID,
+  VITE_APPS_SCRIPT_URL: import.meta.env.VITE_APPS_SCRIPT_URL,
   VITE_COLOR_SURFACE: import.meta.env.VITE_COLOR_SURFACE,
   VITE_COLOR_CARD: import.meta.env.VITE_COLOR_CARD,
   VITE_COLOR_INK: import.meta.env.VITE_COLOR_INK,
@@ -105,8 +108,17 @@ export const communityConfig = {
     events: 'events',
   },
   data: {
-    sourceKind: env.VITE_DATA_SOURCE === 'google-sheets' ? 'google-sheets' : 'synthetic',
-    sourceLabel: env.VITE_DATA_SOURCE === 'google-sheets' ? (env.VITE_SOURCE_LABEL || 'Google Sheets') : 'Synthetic demo data',
+    sourceKind: env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin' ? env.VITE_DATA_SOURCE : 'synthetic',
+    sourceLabel: env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin'
+      ? (env.VITE_SOURCE_LABEL || 'Google Sheets')
+      : 'Synthetic demo data',
+    // google-signin only: viewers sign in with Google, and the Apps Script web app
+    // (apps-script/Code.gs) returns the sheet's rows to people it is shared with.
+    // Neither value grants access on its own.
+    googleSignIn: {
+      clientId: env.VITE_GOOGLE_OAUTH_CLIENT_ID || '',
+      appsScriptUrl: env.VITE_APPS_SCRIPT_URL || '',
+    },
     reportingTimezone: env.VITE_REPORTING_TIMEZONE || 'UTC',
     // Canonical fields are read first, followed by these accepted source aliases.
     fieldAliases: {

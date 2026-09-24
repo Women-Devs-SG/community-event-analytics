@@ -4,6 +4,7 @@ import { communityConfig } from '../config';
 import { createGoogleSheetsAdapter, parseServiceAccountKey } from '../data/adapters/google-sheets';
 import { createSyntheticAdapter } from '../data/adapters/synthetic';
 import { loadData } from '../data/load';
+import { assertTimeZone } from '../data/normalize';
 import type { DataSourceAdapter, RawDatasets } from '../data/contract';
 import { assertNoRowIdentifiers, buildSummary } from './build';
 import type { DashboardSummary } from './types';
@@ -19,14 +20,6 @@ const TAB_VARIABLES: Record<keyof RawDatasets, [string, string]> = {
   registrations: ['GOOGLE_TAB_REGISTRATIONS', 'registrations'],
   participants: ['GOOGLE_TAB_PARTICIPANTS', 'participants'],
 };
-
-function assertTimezone(timeZone: string) {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone });
-  } catch {
-    throw new Error(`VITE_REPORTING_TIMEZONE "${timeZone}" is not a recognised IANA timezone, such as UTC or Asia/Singapore.`);
-  }
-}
 
 export function createConfiguredAdapter(env: BuildEnv, warn: (message: string) => void): DataSourceAdapter {
   if (communityConfig.data.sourceKind !== 'google-sheets') return createSyntheticAdapter();
@@ -57,7 +50,7 @@ export function createConfiguredAdapter(env: BuildEnv, warn: (message: string) =
 }
 
 export async function generateSummary(env: BuildEnv, warn: (message: string) => void = console.warn): Promise<DashboardSummary> {
-  assertTimezone(communityConfig.data.reportingTimezone);
+  assertTimeZone(communityConfig.data.reportingTimezone);
   const data = await loadData(createConfiguredAdapter(env, warn));
   const summary = buildSummary(data);
   assertNoRowIdentifiers(summary, data);

@@ -3,7 +3,7 @@
 // is written to public/ and shipped with the site.
 //
 // Usage: node scripts/build-summary.mjs [mode]   (mode defaults to "production")
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { loadEnv, runnerImport } from 'vite';
 
@@ -12,6 +12,19 @@ const mode = process.argv[2] ?? 'production';
 // All variables from .env files plus the process environment, including
 // build-only ones such as GOOGLE_SERVICE_ACCOUNT_KEY that have no VITE_ prefix.
 const env = loadEnv(mode, root, '');
+
+// google-signin mode reads the sheet live after a viewer signs in, so nothing
+// may be published at build time. Remove any summary left from an earlier run.
+if (env.VITE_DATA_SOURCE === 'google-signin') {
+  await rm(join(root, 'public', 'dashboard-summary.json'), { force: true });
+  const missing = ['VITE_GOOGLE_OAUTH_CLIENT_ID', 'VITE_APPS_SCRIPT_URL'].filter((name) => !env[name]);
+  if (missing.length) {
+    console.error(`google-signin mode needs ${missing.join(' and ')}. See docs/google-signin.md.`);
+    process.exit(1);
+  }
+  console.log('google-signin mode: no summary is published; signed-in viewers load data from the sheet.');
+  process.exit(0);
+}
 
 const warnings = [];
 try {
