@@ -47,11 +47,12 @@ npm run dev        # builds the summary, then starts Vite
 npm run summary    # rebuild the summary after changing data or config
 npm test
 npm run format:check
+npm run lint
 npm run scan:generic
 npm run build
 ```
 
-`npm ci` installs the shared pre-commit hook automatically. For an existing checkout, run `npm run hooks:install`. Each commit checks staged whitespace and formatting, runs the generic scan, typechecks, and runs all tests using synthetic data. Run `npm run format` to fix formatting before committing. See [the contributor guide](CONTRIBUTING.md#pre-commit-checks) for details.
+`npm ci` installs the shared pre-commit hook automatically. For an existing checkout, run `npm run hooks:install`. Each commit checks staged whitespace and formatting, runs ESLint and the generic scan, typechecks, and runs all tests using synthetic data. Run `npm run lint:fix` for available lint fixes and `npm run format` to fix formatting before committing. See [the contributor guide](CONTRIBUTING.md#pre-commit-checks) for details.
 
 Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The synthetic demo is fully static and requires no backend, database, API keys, or paid services. Public summaries are generated at build time; Google sign-in mode uses an Apps Script backend and performs summary generation, including sentiment scoring, in the browser.
 

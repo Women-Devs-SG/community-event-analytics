@@ -121,7 +121,7 @@ To work on an issue:
 5. Make your changes.
 6. Test the changes on your local environment.
 7. Use Node 22 and run `npm ci`, then `npm run dev` to start the synthetic demo. Use the local URL printed by Vite. No credentials are needed.
-8. Before opening a PR, run `npm run format:check`, `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
+8. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
 
 AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENTS.md), verify generated changes, and describe the checks you actually ran. Keep all fixtures synthetic and follow [SECURITY.md](SECURITY.md) when handling data or reporting vulnerabilities.
 
@@ -135,15 +135,22 @@ Before each commit, the hook runs `npm run check:commit`:
 
 1. Check staged changes for whitespace errors with `git diff --cached --check`.
 2. Check formatting with Prettier.
-3. Run the generic repository scan.
-4. Run TypeScript typechecking.
-5. Run all Vitest tests.
+3. Run ESLint with zero warnings allowed.
+4. Run the generic repository scan.
+5. Run TypeScript typechecking.
+6. Run all Vitest tests.
 
 A failed check stops the commit. The hook sets the data source to synthetic and does not build the site or fetch a real sheet. It does not modify or stage files. Apart from the staged whitespace check, checks inspect the working tree, so unstaged changes can affect the result; review partially staged files carefully. You can run `npm run check:commit` manually too.
 
 Hook setup skips CI and source archives without Git metadata. It preserves an existing custom `core.hooksPath`; if setup reports one, add `npm run check:commit` to your existing hook and use the synthetic source. If npm lifecycle scripts were disabled during installation, run `npm run hooks:install` explicitly.
 
-Local hooks can be bypassed, so CI remains the shared validation gate. Both validation and deployment workflows check formatting. Linting is not currently configured.
+Local hooks can be bypassed, so CI remains the shared validation gate. Both validation and deployment workflows check formatting and linting.
+
+### Linting
+
+Run `npm run lint` to check code without changing it. Run `npm run lint:fix` to apply available automatic fixes, then `npm run format` and review the diff. Some lint errors require a manual fix. Pre-commit and CI run the check only, with zero warnings allowed.
+
+`eslint.config.mjs` covers TypeScript/TSX, JavaScript build/configuration scripts, and Apps Script `.gs` files. It uses ESLint and TypeScript recommended rules plus React hook ordering and dependency checks. Runtime globals are scoped to browser, Node, or Apps Script files. Generated artifacts and local data are excluded. Prettier owns formatting, while `npm run typecheck` remains the separate TypeScript compiler check. Fix the underlying issue instead of disabling a rule globally; explain any necessary narrow suppression beside the code.
 
 ### Formatting
 

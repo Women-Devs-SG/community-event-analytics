@@ -1,3 +1,6 @@
+// Apps Script invokes these web-app entry points externally.
+/* exported doPost, doGet */
+
 /**
  * Community Event Analytics: sign-in backend for the `google-signin` data mode.
  *

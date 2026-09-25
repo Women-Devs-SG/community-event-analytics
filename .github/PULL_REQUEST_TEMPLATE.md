@@ -5,6 +5,7 @@
 ## Validation
 
 - [ ] `npm run format:check`
+- [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] `npm run scan:generic`
 - [ ] `npm run typecheck`

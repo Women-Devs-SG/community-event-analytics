@@ -16,23 +16,25 @@ Community Event Analytics is a static dashboard for event organizers, built with
 
 Run commands from the repository root. Use npm and the committed `package-lock.json`; `.nvmrc` pins Node 22 and `package.json` requires Node >=22.
 
-| Command                           | Purpose                                                                  |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| `npm ci`                          | Install the locked dependencies for a fresh checkout.                    |
-| `npm run hooks:install`           | Enable the shared pre-commit hook for an existing checkout.              |
-| `npm run check:commit`            | Check staged whitespace, formatting, generic scan, types, and all tests. |
-| `npm run format`                  | Apply Prettier formatting to supported repository files.                 |
-| `npm run format:check`            | Check formatting without modifying files.                                |
-| `npm run dev`                     | Generate the summary in development mode, then start Vite.               |
-| `npm run summary`                 | Regenerate `public/dashboard-summary.json` in production mode.           |
-| `npm test`                        | Run all Vitest tests once.                                               |
-| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path.                   |
-| `npm run typecheck`               | Check strict TypeScript without emitting files.                          |
-| `npm run scan:generic`            | Scan for selected source-project identifiers and deployment values.      |
-| `npm run build`                   | Typecheck, regenerate the summary, and build into `dist/`.               |
-| `npm run preview`                 | Serve the existing production build locally.                             |
+| Command                           | Purpose                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| `npm ci`                          | Install the locked dependencies for a fresh checkout.                          |
+| `npm run hooks:install`           | Enable the shared pre-commit hook for an existing checkout.                    |
+| `npm run check:commit`            | Check staged whitespace, formatting, lint, generic scan, types, and all tests. |
+| `npm run lint`                    | Run ESLint with zero warnings allowed.                                         |
+| `npm run lint:fix`                | Apply available ESLint fixes; review and format afterward.                     |
+| `npm run format`                  | Apply Prettier formatting to supported repository files.                       |
+| `npm run format:check`            | Check formatting without modifying files.                                      |
+| `npm run dev`                     | Generate the summary in development mode, then start Vite.                     |
+| `npm run summary`                 | Regenerate `public/dashboard-summary.json` in production mode.                 |
+| `npm test`                        | Run all Vitest tests once.                                                     |
+| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path.                         |
+| `npm run typecheck`               | Check strict TypeScript without emitting files.                                |
+| `npm run scan:generic`            | Scan for selected source-project identifiers and deployment values.            |
+| `npm run build`                   | Typecheck, regenerate the summary, and build into `dist/`.                     |
+| `npm run preview`                 | Serve the existing production build locally.                                   |
 
-Prettier is pinned in `package.json` and configured in `.prettierrc.json`, including Apps Script `.gs` support. Respect `.prettierignore` and LF line endings in `.gitattributes`. There is no configured lint or end-to-end test command. Do not invent one or add tooling just to complete an unrelated change. Use the URL printed by Vite rather than assuming a port.
+Prettier is pinned in `package.json` and configured in `.prettierrc.json`, including Apps Script `.gs` support. Respect `.prettierignore` and LF line endings in `.gitattributes`. ESLint is configured in `eslint.config.mjs` for TypeScript, JavaScript, Apps Script, and React hook correctness. Run `npm run lint` to check with zero warnings allowed, or `npm run lint:fix` for available automatic fixes followed by formatting and diff review. Fix causes rather than disabling rules globally. There is no configured end-to-end test command. Use the URL printed by Vite rather than assuming a port.
 
 `npm ci` installs `.githooks/pre-commit` via the `prepare` script outside CI. The hook forces synthetic data and runs `check:commit`; it does not build, modify, or stage files. Only the whitespace check reads the index; other checks inspect the working tree. Preserve custom hook configurations and keep `.githooks/*` LF-terminated through `.gitattributes`.
 
@@ -79,6 +81,7 @@ There are two distinct paths; preserve both:
 
 ## Implementation conventions
 
+- Keep TypeScript and typescript-eslint versions compatible. TypeScript is pinned to the supported 6.0 release line; do not bypass peer dependency checks to upgrade the compiler.
 - Follow nearby code: two-space indentation, single quotes, semicolons, explicit interfaces/types, and `import type` for type-only imports. Avoid broad reformatting or unrelated dependency upgrades.
 - Preserve the existing React shell plus DOM/ECharts controllers unless a task calls for architectural change. Clean up listeners and chart instances through controller disposal; resize charts when tabs become visible.
 - Escape data/configuration strings inserted into HTML templates using `esc` from `src/components.ts`, or use safe DOM text APIs. Review chart tooltip HTML as well as page markup.
@@ -92,7 +95,7 @@ There are two distinct paths; preserve both:
 
 ## Verification and handoff
 
-For code changes, run the relevant focused tests while working, then `npm run format:check`, `npm run scan:generic`, `npm test`, and `npm run build` before handoff. The build includes typechecking. For documentation-only edits, check links/commands and run formatting and generic checks; do not add tests for prose. Use `npm run format` to fix formatting and review the resulting diff before staging.
+For code changes, run the relevant focused tests while working, then `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` before handoff. The build includes typechecking. For documentation-only edits, check links/commands and run formatting and generic checks; do not add tests for prose. Use `npm run format` to fix formatting and review the resulting diff before staging.
 
 Existing test coverage is organized by behavior:
 
