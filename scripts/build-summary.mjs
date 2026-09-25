@@ -28,7 +28,12 @@ if (env.VITE_DATA_SOURCE === 'google-signin') {
 
 const warnings = [];
 try {
-  const { module } = await runnerImport('/src/summary/generate.ts', { root, mode, configFile: false, logLevel: 'error' });
+  const { module } = await runnerImport('/src/summary/generate.ts', {
+    root,
+    mode,
+    configFile: false,
+    logLevel: 'error',
+  });
   const { SUMMARY_FILE, generateSummary } = module;
   const summary = await generateSummary(env, (message) => warnings.push(message));
 
@@ -39,14 +44,15 @@ try {
 
   for (const warning of warnings) console.warn(`warning: ${warning}`);
   console.log(
-    `Dashboard summary written to public/${SUMMARY_FILE} (${(json.length / 1024).toFixed(0)} KB): `
-    + `${summary.events.length} events, ${Object.keys(summary.scopes).length} filter selections, ${summary.comments.length} published comments. `
-    + `Source: ${summary.source.label}.`,
+    `Dashboard summary written to public/${SUMMARY_FILE} (${(json.length / 1024).toFixed(0)} KB): ` +
+      `${summary.events.length} events, ${Object.keys(summary.scopes).length} filter selections, ${summary.comments.length} published comments. ` +
+      `Source: ${summary.source.label}.`,
   );
 } catch (error) {
   for (const warning of warnings) console.warn(`warning: ${warning}`);
   console.error(`Could not build the dashboard summary: ${error instanceof Error ? error.message : String(error)}`);
-  const issues = (error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues)) ? error.issues : [];
+  const issues =
+    error && typeof error === 'object' && 'issues' in error && Array.isArray(error.issues) ? error.issues : [];
   for (const issue of issues.filter((item) => item.severity === 'error').slice(0, 25)) {
     console.error(`  - ${issue.message}`);
   }

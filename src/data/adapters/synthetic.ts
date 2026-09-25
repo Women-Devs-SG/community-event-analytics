@@ -33,7 +33,14 @@ const EXPERIENCE = ['Student', '0-2', '3-5', '6-10', '10+', null] as const;
 const GENDERS = ['Female', 'Male', 'Other', null] as const;
 const JOB_FAMILIES = ['Engineering', 'Product', 'Design', 'Data', 'Operations', 'Education', 'Founder', null] as const;
 const SECTORS = ['Private', 'Public', 'Academia', 'Non-profit', 'Self-employed', null] as const;
-const ORGANIZATIONS = ['Example Labs', 'Demo Public Service', 'Sample University', 'Illustration Studio', 'Independent', null] as const;
+const ORGANIZATIONS = [
+  'Example Labs',
+  'Demo Public Service',
+  'Sample University',
+  'Illustration Studio',
+  'Independent',
+  null,
+] as const;
 
 const POSITIVE = [
   'The practical examples made the topic easy to apply.',
@@ -104,7 +111,7 @@ function surveyExperience(registrationExperience: string | null): string | null 
     '6-10': '5-6 years',
     '10+': '7+ years',
   };
-  return registrationExperience ? mapping[registrationExperience] ?? null : null;
+  return registrationExperience ? (mapping[registrationExperience] ?? null) : null;
 }
 
 function generateSyntheticBundle(): RawDataBundle {
@@ -117,7 +124,9 @@ function generateSyntheticBundle(): RawDataBundle {
       gender_segment: GENDERS[weightedIndex(random, [52, 35, 8, 5])],
       job_family_segment: JOB_FAMILIES[weightedIndex(random, [31, 16, 13, 14, 10, 6, 5, 5])],
       sector_segment: SECTORS[weightedIndex(random, [49, 17, 9, 8, 10, 7])],
-      organization_segment: teamMember ? 'Sample Community Team' : ORGANIZATIONS[weightedIndex(random, [25, 16, 12, 10, 24, 13])],
+      organization_segment: teamMember
+        ? 'Sample Community Team'
+        : ORGANIZATIONS[weightedIndex(random, [25, 16, 12, 10, 24, 13])],
       teamMember,
     };
   });
@@ -149,10 +158,16 @@ function generateSyntheticBundle(): RawDataBundle {
         status: 'confirmed',
       });
       registeredByEvent[eventIndex] += 1;
-      registrationCountByParticipant.set(profile.participant_id, (registrationCountByParticipant.get(profile.participant_id) ?? 0) + 1);
+      registrationCountByParticipant.set(
+        profile.participant_id,
+        (registrationCountByParticipant.get(profile.participant_id) ?? 0) + 1,
+      );
       if (attended === true) {
         attendedByEvent[eventIndex] += 1;
-        attendanceCountByParticipant.set(profile.participant_id, (attendanceCountByParticipant.get(profile.participant_id) ?? 0) + 1);
+        attendanceCountByParticipant.set(
+          profile.participant_id,
+          (attendanceCountByParticipant.get(profile.participant_id) ?? 0) + 1,
+        );
       }
     }
   }
@@ -193,13 +208,39 @@ function generateSyntheticBundle(): RawDataBundle {
       experience_segment: surveyExperience(profile.experience_segment),
     });
 
-    feedbackAnswers.push({ response_id: responseId, event_id: registration.event_id, question_role: 'positive', text: choose(random, POSITIVE) });
-    if (random() < 0.78) feedbackAnswers.push({ response_id: responseId, event_id: registration.event_id, question_role: 'improvement', text: choose(random, IMPROVEMENT) });
-    if (random() < 0.58) feedbackAnswers.push({ response_id: responseId, event_id: registration.event_id, question_role: 'topic_request', text: choose(random, TOPIC_REQUESTS) });
+    feedbackAnswers.push({
+      response_id: responseId,
+      event_id: registration.event_id,
+      question_role: 'positive',
+      text: choose(random, POSITIVE),
+    });
+    if (random() < 0.78)
+      feedbackAnswers.push({
+        response_id: responseId,
+        event_id: registration.event_id,
+        question_role: 'improvement',
+        text: choose(random, IMPROVEMENT),
+      });
+    if (random() < 0.58)
+      feedbackAnswers.push({
+        response_id: responseId,
+        event_id: registration.event_id,
+        question_role: 'topic_request',
+        text: choose(random, TOPIC_REQUESTS),
+      });
   }
 
   const years = [...new Set(EVENT_SPECS.map(([date]) => date.slice(0, 4)))];
-  const mediansByYear = new Map(years.map((year) => [year, median(EVENT_SPECS.map(([date], index) => date.startsWith(year) ? registeredByEvent[index] : null).filter((value): value is number => value != null))]));
+  const mediansByYear = new Map(
+    years.map((year) => [
+      year,
+      median(
+        EVENT_SPECS.map(([date], index) => (date.startsWith(year) ? registeredByEvent[index] : null)).filter(
+          (value): value is number => value != null,
+        ),
+      ),
+    ]),
+  );
   const events: RawRow[] = EVENT_SPECS.map(([date, name, format, topic], index) => {
     const yearMedian = mediansByYear.get(date.slice(0, 4))!;
     const registered = registeredByEvent[index];
@@ -229,7 +270,9 @@ function generateSyntheticBundle(): RawDataBundle {
       contractVersion: 1,
       historyStart: null,
       historyEnd: null,
-      limitations: ['Generated demonstration data. Values and comments do not describe real people, events, or organizations.'],
+      limitations: [
+        'Generated demonstration data. Values and comments do not describe real people, events, or organizations.',
+      ],
     },
   };
 }

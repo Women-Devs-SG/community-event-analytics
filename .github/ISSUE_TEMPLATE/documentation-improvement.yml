@@ -1,6 +1,6 @@
-name: "📝 Documentation improvement"
+name: '📝 Documentation improvement'
 description: Suggest a correction or improvement to the project documentation.
-title: "[Docs]: "
+title: '[Docs]: '
 labels:
   - documentation
 assignees: []
@@ -43,7 +43,7 @@ body:
     attributes:
       label: Documentation location
       description: Link to the page or provide the file name and section heading.
-      placeholder: "Example: docs/data-contract-v1.md — Metric definitions"
+      placeholder: 'Example: docs/data-contract-v1.md — Metric definitions'
     validations:
       required: true
 
@@ -87,4 +87,3 @@ body:
       description: >-
         Add related links, fictional examples, or privacy-checked screenshots. Do not attach
         real participant data or images containing personal or confidential information.
-

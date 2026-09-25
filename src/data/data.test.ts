@@ -22,43 +22,53 @@ function bundle(overrides: Partial<RawDatasets> = {}): RawDataBundle {
   return {
     source,
     datasets: {
-      events: [{
-        event_id: 'event-1',
-        event_name: 'Community meetup',
-        event_date: '2026-01-10',
-        format: 'Meetup',
-        topic_primary: 'Community',
-        registered: '25',
-        attended: '20',
-        year_median_registered: '20',
-      }],
-      surveyResponses: [{
-        response_id: 'response-1',
-        event_id: 'event-1',
-        satisfaction_1_10: '9',
-        recommend_1_10: '10',
-        years_exp: '2-3 years',
-      }],
-      feedbackAnswers: [{
-        response_id: 'response-1',
-        event_id: 'event-1',
-        canonical_field: 'text_good',
-        text: 'Friendly and practical.',
-      }],
-      registrations: [{
-        registrant_hash: 'participant-1',
-        event_id: 'event-1',
-        gender: 'Not stated',
-        attendance_known: 'YES',
-        attended: '1',
-      }],
-      participants: [{
-        registrant_hash: 'participant-1',
-        events_registered: '2',
-        events_attended: '1',
-        is_returning_registered: 'TRUE',
-        is_returning: 'FALSE',
-      }],
+      events: [
+        {
+          event_id: 'event-1',
+          event_name: 'Community meetup',
+          event_date: '2026-01-10',
+          format: 'Meetup',
+          topic_primary: 'Community',
+          registered: '25',
+          attended: '20',
+          year_median_registered: '20',
+        },
+      ],
+      surveyResponses: [
+        {
+          response_id: 'response-1',
+          event_id: 'event-1',
+          satisfaction_1_10: '9',
+          recommend_1_10: '10',
+          years_exp: '2-3 years',
+        },
+      ],
+      feedbackAnswers: [
+        {
+          response_id: 'response-1',
+          event_id: 'event-1',
+          canonical_field: 'text_good',
+          text: 'Friendly and practical.',
+        },
+      ],
+      registrations: [
+        {
+          registrant_hash: 'participant-1',
+          event_id: 'event-1',
+          gender: 'Not stated',
+          attendance_known: 'YES',
+          attended: '1',
+        },
+      ],
+      participants: [
+        {
+          registrant_hash: 'participant-1',
+          events_registered: '2',
+          events_attended: '1',
+          is_returning_registered: 'TRUE',
+          is_returning: 'FALSE',
+        },
+      ],
       ...overrides,
     },
   };
@@ -86,22 +96,32 @@ describe('contract v1 normalization', () => {
   });
 
   it('applies configured aliases to event fields', () => {
-    const normalized = validateSource(normalizeSource(bundle({
-      events: [{
-        event_id: 'event-1',
-        event_name: '   ',
-        title: 'Aliased event title',
-        event_date: '2026-01-10',
-      }],
-    })));
+    const normalized = validateSource(
+      normalizeSource(
+        bundle({
+          events: [
+            {
+              event_id: 'event-1',
+              event_name: '   ',
+              title: 'Aliased event title',
+              event_date: '2026-01-10',
+            },
+          ],
+        }),
+      ),
+    );
 
     expect(normalized.datasets.events[0].event_name).toBe('Aliased event title');
   });
 
   it('preserves missing optional measurements as null instead of zero', () => {
-    const normalized = validateSource(normalizeSource(bundle({
-      events: [{ event_id: 'event-1', event_name: 'Community meetup', event_date: '2026-01-10' }],
-    })));
+    const normalized = validateSource(
+      normalizeSource(
+        bundle({
+          events: [{ event_id: 'event-1', event_name: 'Community meetup', event_date: '2026-01-10' }],
+        }),
+      ),
+    );
 
     expect(normalized.datasets.events[0]).toMatchObject({
       registered: null,
@@ -112,43 +132,55 @@ describe('contract v1 normalization', () => {
   });
 
   it('rejects orphaned joins with a structured contract error', () => {
-    const invalid = normalizeSource(bundle({
-      feedbackAnswers: [{ response_id: 'missing-response', event_id: 'event-1', canonical_field: 'text_good', text: 'Useful.' }],
-    }));
+    const invalid = normalizeSource(
+      bundle({
+        feedbackAnswers: [
+          { response_id: 'missing-response', event_id: 'event-1', canonical_field: 'text_good', text: 'Useful.' },
+        ],
+      }),
+    );
 
     expect(() => validateSource(invalid)).toThrow(DataContractError);
     try {
       validateSource(invalid);
     } catch (error) {
-      expect((error as DataContractError).issues).toEqual(expect.arrayContaining([
-        expect.objectContaining({ code: 'orphan_response', dataset: 'feedbackAnswers' }),
-      ]));
+      expect((error as DataContractError).issues).toEqual(
+        expect.arrayContaining([expect.objectContaining({ code: 'orphan_response', dataset: 'feedbackAnswers' })]),
+      );
     }
   });
 
   it('rejects inconsistent lifetime-returning status', () => {
-    const invalid = normalizeSource(bundle({
-      participants: [{ registrant_hash: 'participant-1', events_registered: '1', is_returning_registered: 'TRUE' }],
-    }));
+    const invalid = normalizeSource(
+      bundle({
+        participants: [{ registrant_hash: 'participant-1', events_registered: '1', is_returning_registered: 'TRUE' }],
+      }),
+    );
 
     expect(() => validateSource(invalid)).toThrowError(/validation failed/i);
   });
 
   it('rejects ratings outside the configured scale', () => {
-    const invalid = normalizeSource(bundle({
-      surveyResponses: [{
-        response_id: 'response-1',
-        event_id: 'event-1',
-        satisfaction: '11',
-        recommend: '0',
-      }],
-    }));
+    const invalid = normalizeSource(
+      bundle({
+        surveyResponses: [
+          {
+            response_id: 'response-1',
+            event_id: 'event-1',
+            satisfaction: '11',
+            recommend: '0',
+          },
+        ],
+      }),
+    );
 
     expect(() => validateSource(invalid)).toThrow(DataContractError);
-    expect(invalid.issues).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'rating_out_of_range', field: 'satisfaction' }),
-      expect.objectContaining({ code: 'rating_out_of_range', field: 'recommend' }),
-    ]));
+    expect(invalid.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'rating_out_of_range', field: 'satisfaction' }),
+        expect.objectContaining({ code: 'rating_out_of_range', field: 'recommend' }),
+      ]),
+    );
   });
 
   it('rejects impossible calendar dates', () => {

@@ -13,10 +13,7 @@ const allowedBrandFiles = new Set([
   '.github/ISSUE_TEMPLATE/documentation-improvement.yml',
 ]);
 
-const brandLabels = new Set([
-  'WDS name',
-  'WDS abbreviation',
-]);
+const brandLabels = new Set(['WDS name', 'WDS abbreviation']);
 // Keep this list specific to the source project. Add a term before importing
 // any material from an adopter's repository; do not use this as a general PII scanner.
 const forbidden = [
@@ -28,17 +25,22 @@ const forbidden = [
   { label: 'service account private key', pattern: /-----BEGIN (?:RSA )?PRIVATE KEY-----/ },
   // Deployment values belong in repository variables or .env.local, never in files.
   // The placeholders in .env.example and apps-script/Code.gs do not match.
-  { label: 'Apps Script web app URL', pattern: /script\.google(?:usercontent)?\.com\/macros\/s\/AKfy[A-Za-z0-9_-]{20,}/ },
+  {
+    label: 'Apps Script web app URL',
+    pattern: /script\.google(?:usercontent)?\.com\/macros\/s\/AKfy[A-Za-z0-9_-]{20,}/,
+  },
   { label: 'Google OAuth client ID', pattern: /\b\d{6,}-[a-z0-9]{20,}\.apps\.googleusercontent\.com\b/ },
 ];
 
 async function filesIn(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
-  const nested = await Promise.all(entries.map(async (entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return ignoredDirectories.has(entry.name) ? [] : filesIn(path);
-    return ignoredFiles.has(entry.name) ? [] : [path];
-  }));
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return ignoredDirectories.has(entry.name) ? [] : filesIn(path);
+      return ignoredFiles.has(entry.name) ? [] : [path];
+    }),
+  );
   return nested.flat();
 }
 

@@ -11,7 +11,9 @@ import type { DashboardSummary } from './types';
 export async function loadLiveSummary(idToken: string): Promise<DashboardSummary> {
   const { reportingTimezone, sourceLabel, googleSignIn } = communityConfig.data;
   assertTimeZone(reportingTimezone);
-  const data = await loadData(createAppsScriptAdapter({ url: googleSignIn.appsScriptUrl, idToken, sourceLabel, reportingTimezone }));
+  const data = await loadData(
+    createAppsScriptAdapter({ url: googleSignIn.appsScriptUrl, idToken, sourceLabel, reportingTimezone }),
+  );
   // The same privacy rules as the public build: viewers can read the sheet
   // itself, so here they keep charts readable rather than protect data.
   return buildSummary(data);

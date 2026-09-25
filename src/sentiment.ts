@@ -42,7 +42,9 @@ export const FIELD_LABELS: Record<string, string> = Object.fromEntries(
 // ── keyword-theme summaries (deterministic, no API, labelled "directional" in the UI) ──
 
 const STOPWORDS = new Set(
-  `a an and are as at be been but by can could did do for from had has have i if in into is it its me my nil no none not of on or our so than that the their them they this to too very was we were what when which who will with would you your yours it's i'm don't didn't wasn't event events session sessions workshop talk talks really quite bit lot much many just also there here about overall maybe perhaps more good great nice well better best like liked love loved enjoy enjoyed nothing na all some any how get got make made keep those these things thing way s t ve d nil -`.split(/\s+/),
+  `a an and are as at be been but by can could did do for from had has have i if in into is it its me my nil no none not of on or our so than that the their them they this to too very was we were what when which who will with would you your yours it's i'm don't didn't wasn't event events session sessions workshop talk talks really quite bit lot much many just also there here about overall maybe perhaps more good great nice well better best like liked love loved enjoy enjoyed nothing na all some any how get got make made keep those these things thing way s t ve d nil -`.split(
+    /\s+/,
+  ),
 );
 // words kept out of unigram themes but allowed inside bigrams ("more time", "hands on")
 const BIGRAM_OK = new Set(['more', 'hands', 'less', 'too']);
@@ -68,7 +70,8 @@ export function extractThemes(rows: Pick<FeedbackRecord, 'text'>[], max = 5): { 
         uni.set(t, (uni.get(t) ?? 0) + 1);
       }
       if (i < toks.length - 1) {
-        const a = toks[i], b = toks[i + 1];
+        const a = toks[i],
+          b = toks[i + 1];
         const ok = (w: string) => (!STOPWORDS.has(w) || BIGRAM_OK.has(w)) && w.length > 1;
         if (ok(a) && ok(b) && !(STOPWORDS.has(a) && STOPWORDS.has(b))) {
           const g = `${a} ${b}`;
@@ -83,9 +86,7 @@ export function extractThemes(rows: Pick<FeedbackRecord, 'text'>[], max = 5): { 
   const bigrams = [...bi.entries()].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]);
   const chosen = bigrams.slice(0, max);
   const inBigram = new Set(chosen.flatMap(([g]) => g.split(' ')));
-  const unigrams = [...uni.entries()]
-    .filter(([w, n]) => n >= 3 && !inBigram.has(w))
-    .sort((a, b) => b[1] - a[1]);
+  const unigrams = [...uni.entries()].filter(([w, n]) => n >= 3 && !inBigram.has(w)).sort((a, b) => b[1] - a[1]);
   return [...chosen, ...unigrams].slice(0, max).map(([theme, count]) => ({ theme, count }));
 }
 
@@ -123,14 +124,16 @@ export const KEEP_RULES: ActionRule[] = [
     pair: 'level',
     title: 'Keep the experience accessible to the intended audience',
     action: 'Attendees described the content as clear, approachable, or easy to follow.',
-    match: /beginner|no prior|even if (you.?re )?new|even someone|not much technical|simple terms|easy to (understand|digest)|accessible|relatable|role[- ]specific|bite[- ]siz|primer|foundation|intimidat|inclusive|everyone can|any function/,
+    match:
+      /beginner|no prior|even if (you.?re )?new|even someone|not much technical|simple terms|easy to (understand|digest)|accessible|relatable|role[- ]specific|bite[- ]siz|primer|foundation|intimidat|inclusive|everyone can|any function/,
   },
   {
     id: 'handson',
     pair: 'practice',
     title: 'Keep practical ways for participants to apply the content',
     action: 'Attendees valued exercises, demonstrations, or other applied elements.',
-    match: /hands[- ]?on|exercise|practice|\blabs?\b|activity|workshop format|walk[- ]?through|live (demo|code)|worksheet/,
+    match:
+      /hands[- ]?on|exercise|practice|\blabs?\b|activity|workshop format|walk[- ]?through|live (demo|code)|worksheet/,
   },
   {
     id: 'examples',
@@ -168,7 +171,8 @@ export const KEEP_RULES: ActionRule[] = [
     pair: 'engagement',
     title: 'Keep opportunities for participation and discussion',
     action: 'Attendees valued discussion, questions, or interaction.',
-    match: /interactive|interaction|\bq&a\b|discussion|quiz|worksheet|group (work|discussion)|participat|asked questions|engaging (demo|discussion|session|conversation)/,
+    match:
+      /interactive|interaction|\bq&a\b|discussion|quiz|worksheet|group (work|discussion)|participat|asked questions|engaging (demo|discussion|session|conversation)/,
   },
 ];
 
@@ -183,7 +187,8 @@ export const FIX_RULES: ActionRule[] = [
     id: 'marketing',
     title: 'Review how and when the event is communicated',
     action: 'Attendees raised discoverability, promotion, or timing of communications.',
-    match: /marketing|promot|publicis|advertis|more visible|visibility|awareness|getting more people|would have missed|reach more people/,
+    match:
+      /marketing|promot|publicis|advertis|more visible|visibility|awareness|getting more people|would have missed|reach more people/,
   },
   {
     id: 'infra',
@@ -195,32 +200,37 @@ export const FIX_RULES: ActionRule[] = [
     id: 'facilitation',
     title: 'Clarify group logistics and timings',
     action: 'Attendees raised breakout, matching, or session-flow logistics.',
-    match: /facilitation (was|of)|breakout|splitting (to|into)|was (a bit )?(confusing|chaotic|messy)|matching session|not clear when/,
+    match:
+      /facilitation (was|of)|breakout|splitting (to|into)|was (a bit )?(confusing|chaotic|messy)|matching session|not clear when/,
   },
   {
     id: 'av',
     title: 'Review audio-visual accessibility',
     action: 'Attendees raised audibility or visibility of the presentation.',
-    match: /screen|projector|\bmic\b|microphone|speak louder|\baudio\b|hard to read|not clear in the back|view was (very )?limited|heads kept blocking/,
+    match:
+      /screen|projector|\bmic\b|microphone|speak louder|\baudio\b|hard to read|not clear in the back|view was (very )?limited|heads kept blocking/,
   },
   {
     id: 'precomms',
     title: 'Improve pre-event information',
     action: 'Attendees raised the information shared before the event.',
-    match: /agenda|\bemail\b|registration|confirmation|joining instruction|instructions of the event|in advance|before the (day|session|event)|laptops?\b|qr code|expiration|what time the event|actually start/,
+    match:
+      /agenda|\bemail\b|registration|confirmation|joining instruction|instructions of the event|in advance|before the (day|session|event)|laptops?\b|qr code|expiration|what time the event|actually start/,
   },
   {
     id: 'materials',
     title: 'Consider follow-up materials',
     action: 'Attendees asked for slides, recordings, links, or other materials.',
-    match: /github|source code|learning resources?|send us the slide|share slides?|provide .{0,15}link|slides? presented|recording/,
+    match:
+      /github|source code|learning resources?|send us the slide|share slides?|provide .{0,15}link|slides? presented|recording/,
   },
   {
     id: 'level',
     pair: 'accessible',
     title: 'Clarify the intended experience level',
     action: 'Attendees raised a mismatch between the content level and expectations.',
-    match: /beginner|intermediate|advanced|more advance|experienced people|in[- ]?depth|deep ?dive|too basic|for (junior|senior)|skill level|target level|more substantial/,
+    match:
+      /beginner|intermediate|advanced|more advance|experienced people|in[- ]?depth|deep ?dive|too basic|for (junior|senior)|skill level|target level|more substantial/,
   },
   {
     id: 'food',
@@ -232,7 +242,8 @@ export const FIX_RULES: ActionRule[] = [
     id: 'seating',
     title: 'Review space, seating, and participant comfort',
     action: 'Attendees raised space, seating, or comfort concerns.',
-    match: /\bseats?\b|\bseating\b|more tables|tables and seats|more space\b|space (was|is)|venue|\broom\b|crowd|bigger venue|too small|\bhot\b|aircon|standing|noisy|crosstalk/,
+    match:
+      /\bseats?\b|\bseating\b|more tables|tables and seats|more space\b|space (was|is)|venue|\broom\b|crowd|bigger venue|too small|\bhot\b|aircon|standing|noisy|crosstalk/,
   },
   {
     id: 'practice',
@@ -246,14 +257,16 @@ export const FIX_RULES: ActionRule[] = [
     pair: 'interactive',
     title: 'Create more opportunities for participant input',
     action: 'Attendees asked for more discussion, questions, or interaction.',
-    match: /more interactive|more interaction|\bq&a\b|very quiet|ice ?break|round table|breathing space|engaging conversation|panel discussion/,
+    match:
+      /more interactive|more interaction|\bq&a\b|very quiet|ice ?break|round table|breathing space|engaging conversation|panel discussion/,
   },
   {
     id: 'timing',
     pair: 'structure',
     title: 'Review pacing, scope, and timing',
     action: 'Attendees raised the duration, pacing, or start time.',
-    match: /\btiming\b|too (short|long|fast|rushed)|went by too quick|felt rushed|a bit rush|more time\b|not enough time|time management|longer|start(ed|ing)? on time|started late|was late|overrun|\bduration\b|more minutes?|watch on time/,
+    match:
+      /\btiming\b|too (short|long|fast|rushed)|went by too quick|felt rushed|a bit rush|more time\b|not enough time|time management|longer|start(ed|ing)? on time|started late|was late|overrun|\bduration\b|more minutes?|watch on time/,
   },
 ];
 
@@ -292,7 +305,10 @@ export const minHitsFor = (rows: unknown[]) => (rows.length >= 40 ? 2 : 1);
 // The comment that best illustrates a rule. Length is a rough proxy for
 // specificity, but only within a readable band: the very longest answers are
 // usually multi-topic rambles that illustrate no single point well.
-export function bestExample<T extends Pick<FeedbackRecord, 'text'>>(rows: T[], { min = 15, max = 140 }: { min?: number; max?: number } = {}): T | null {
+export function bestExample<T extends Pick<FeedbackRecord, 'text'>>(
+  rows: T[],
+  { min = 15, max = 140 }: { min?: number; max?: number } = {},
+): T | null {
   const inBand = rows.filter((r) => r.text.length >= min && r.text.length <= max);
   const pool = inBand.length ? inBand : rows.filter((r) => r.text.trim().length >= 8);
   return [...pool].sort((a, b) => b.text.length - a.text.length)[0] ?? null;
@@ -313,8 +329,14 @@ export function matchExcerpt(text: string, re: RegExp, span = 150): { term: stri
   let end = Math.min(flat.length, start + span);
   start = Math.max(0, end - span);
   // snap to word boundaries so the window does not open mid-word
-  if (start > 0) { const sp = flat.indexOf(' ', start); if (sp > -1 && sp < matchIndex) start = sp + 1; }
-  if (end < flat.length) { const sp = flat.lastIndexOf(' ', end); if (sp > matchIndex + m[0].length) end = sp; }
+  if (start > 0) {
+    const sp = flat.indexOf(' ', start);
+    if (sp > -1 && sp < matchIndex) start = sp + 1;
+  }
+  if (end < flat.length) {
+    const sp = flat.lastIndexOf(' ', end);
+    if (sp > matchIndex + m[0].length) end = sp;
+  }
   return {
     term: m[0],
     excerpt: (start > 0 ? '…' : '') + flat.slice(start, end).trim() + (end < flat.length ? '…' : ''),

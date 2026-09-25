@@ -7,19 +7,38 @@ import { communityConfig } from '../config';
 import type { SegmentId } from '../config';
 import { median } from '../data/load';
 import {
-  kpisCommunity, kpisEffectiveness, quadrantPoints, satisfactionVerdict,
-  outcomeByYoe, distributionByYoe, returningBySegment,
+  kpisCommunity,
+  kpisEffectiveness,
+  quadrantPoints,
+  satisfactionVerdict,
+  outcomeByYoe,
+  distributionByYoe,
+  returningBySegment,
 } from '../metrics';
 import type { QuadrantMode } from '../metrics';
 import { disclosureGroups, isDisclosureSafe, minimumSegmentSize, protectedCrossTab } from '../privacy';
 import type { DisclosureGroup, ProtectedCrossTab } from '../privacy';
-import type { DashboardData, DataSlice, EventRecord, FeedbackRecord, RegistrationRecord, ResponseRecord } from '../types';
+import type {
+  DashboardData,
+  DataSlice,
+  EventRecord,
+  FeedbackRecord,
+  RegistrationRecord,
+  ResponseRecord,
+} from '../types';
 import { reachableSelections, scopeKey, matchesSelection } from './scope';
 import { scoreFeedback } from './sentiment-score';
 import { SUMMARY_VERSION } from './types';
 import type {
-  CommunityScope, CountGroup, CrossTabGroup, DashboardSummary, EffectivenessScope,
-  ScopeSummary, SegDim, SummaryComment, SummaryEvent,
+  CommunityScope,
+  CountGroup,
+  CrossTabGroup,
+  DashboardSummary,
+  EffectivenessScope,
+  ScopeSummary,
+  SegDim,
+  SummaryComment,
+  SummaryEvent,
 } from './types';
 
 const QUADRANT_MODES: QuadrantMode[] = ['event', 'topic', 'format'];
@@ -30,7 +49,8 @@ const segmentValue = (row: RegistrationRecord, id: SegmentId): string => {
   const segment = communityConfig.segments[id];
   return row[segment.registrationField] ?? segment.unknownLabel;
 };
-const isCommunityStaff = (r: RegistrationRecord) => excludedOrganisations.has(segmentValue(r, 'organization').trim().toLowerCase());
+const isCommunityStaff = (r: RegistrationRecord) =>
+  excludedOrganisations.has(segmentValue(r, 'organization').trim().toLowerCase());
 const experienceOf = (r: RegistrationRecord) => segmentValue(r, 'experience');
 const genderOf = (r: RegistrationRecord) => segmentValue(r, 'gender');
 const participantIdOf = (r: RegistrationRecord) => r.participant_id;
@@ -104,7 +124,9 @@ export function buildSummary(data: DashboardData): DashboardSummary {
         returningRate: isDisclosureSafe(all.returningPopulation) ? all.returningRate : null,
         hotTopic: all.hotTopic,
       },
-      quadrant: Object.fromEntries(QUADRANT_MODES.map((mode) => [mode, quadrantPoints(rated, safeSatByEvent, mode)])) as EffectivenessScope['quadrant'],
+      quadrant: Object.fromEntries(
+        QUADRANT_MODES.map((mode) => [mode, quadrantPoints(rated, safeSatByEvent, mode)]),
+      ) as EffectivenessScope['quadrant'],
       verdict: satisfactionVerdict(rated.responses),
       feedbackSafe: feedback.length > 0,
     };
@@ -117,7 +139,9 @@ export function buildSummary(data: DashboardData): DashboardSummary {
     const gender = disclosureGroups(regs, genderOf, participantIdOf);
     const sectors = disclosureGroups(regs, SEGMENT_KEYS.sector, participantIdOf);
     const jobFamilies = disclosureGroups(regs, SEGMENT_KEYS.jobfam, participantIdOf);
-    const topSector = sectors.hasUnsafeRemainder ? null : [...sectors.groups].sort((a, b) => b.count - a.count)[0] ?? null;
+    const topSector = sectors.hasUnsafeRemainder
+      ? null
+      : ([...sectors.groups].sort((a, b) => b.count - a.count)[0] ?? null);
 
     const surveyBuckets: Record<string, number[]> = {};
     const byBucket = new Map<string, FeedbackRecord[]>();
@@ -126,7 +150,8 @@ export function buildSummary(data: DashboardData): DashboardSummary {
       byBucket.set(bucket, [...(byBucket.get(bucket) ?? []), row]);
     }
     for (const [bucket, rows] of byBucket) {
-      if (isDisclosureSafe(distinctCount(rows, (row) => row.response_id))) surveyBuckets[bucket] = rows.map((row) => commentIndex.get(row)!);
+      if (isDisclosureSafe(distinctCount(rows, (row) => row.response_id)))
+        surveyBuckets[bucket] = rows.map((row) => commentIndex.get(row)!);
     }
 
     return {
@@ -139,12 +164,22 @@ export function buildSummary(data: DashboardData): DashboardSummary {
         gender: !gender.hasUnsafeRemainder && gender.groups.length ? countGroups(gender.groups) : null,
       },
       experienceByGender: crossTabGroups(protectedCrossTab(regs, experienceOf, genderOf, participantIdOf)),
-      topicByGender: crossTabGroups(protectedCrossTab(regs, (r) => data.eventsById.get(r.event_id)?.topic_primary ?? 'Not stated', genderOf, participantIdOf)),
+      topicByGender: crossTabGroups(
+        protectedCrossTab(
+          regs,
+          (r) => data.eventsById.get(r.event_id)?.topic_primary ?? 'Not stated',
+          genderOf,
+          participantIdOf,
+        ),
+      ),
       jobFamilies: jobFamilies.hasUnsafeRemainder ? null : countGroups(jobFamilies.groups),
       sectors: sectors.hasUnsafeRemainder ? null : countGroups(sectors.groups),
       segments: {
         return: Object.fromEntries(
-          (Object.keys(SEGMENT_KEYS) as SegDim[]).map((dim) => [dim, returningBySegment(people, SEGMENT_KEYS[dim]).filter((row) => isDisclosureSafe(row.n))]),
+          (Object.keys(SEGMENT_KEYS) as SegDim[]).map((dim) => [
+            dim,
+            returningBySegment(people, SEGMENT_KEYS[dim]).filter((row) => isDisclosureSafe(row.n)),
+          ]),
         ) as CommunityScope['segments']['return'],
         sat: distributionByYoe(rated).filter((row) => isDisclosureSafe(row.n)),
         rec: outcomeByYoe(rated, 'recommend').filter((row) => isDisclosureSafe(row.n)),
@@ -185,7 +220,9 @@ export function buildSummary(data: DashboardData): DashboardSummary {
   }
 
   const withheldSurveyEvents = new Set(
-    [...data.responses, ...data.feedback].map((r) => r.event_id).filter((id) => !ratingEvents.has(id) || !commentEvents.has(id)),
+    [...data.responses, ...data.feedback]
+      .map((r) => r.event_id)
+      .filter((id) => !ratingEvents.has(id) || !commentEvents.has(id)),
   ).size;
   const limitations = [...data.source.limitations];
   if (withheldSurveyEvents) {
@@ -222,7 +259,11 @@ export function assertNoRowIdentifiers(summary: DashboardSummary, data: Dashboar
   const walk = (value: unknown) => {
     if (typeof value === 'string') published.add(value);
     else if (Array.isArray(value)) value.forEach(walk);
-    else if (value && typeof value === 'object') Object.entries(value).forEach(([key, child]) => { published.add(key); walk(child); });
+    else if (value && typeof value === 'object')
+      Object.entries(value).forEach(([key, child]) => {
+        published.add(key);
+        walk(child);
+      });
   };
   walk(summary);
   const identifiers = [
@@ -231,5 +272,8 @@ export function assertNoRowIdentifiers(summary: DashboardSummary, data: Dashboar
     ...data.responses.map((r) => r.response_id),
   ];
   const leaked = identifiers.filter((id) => id && published.has(id));
-  if (leaked.length) throw new Error(`The summary contains ${new Set(leaked).size} row identifier(s) from the source; refusing to publish it.`);
+  if (leaked.length)
+    throw new Error(
+      `The summary contains ${new Set(leaked).size} row identifier(s) from the source; refusing to publish it.`,
+    );
 }

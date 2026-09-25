@@ -23,7 +23,12 @@ function numberValue(value: unknown, context: IssueContext, issues: ValidationIs
   if (normalized == null) return null;
   const parsed = Number(normalized.replace(/,/g, ''));
   if (!Number.isFinite(parsed)) {
-    issues.push({ ...context, severity: 'error', code: 'invalid_number', message: `${context.dataset}.${context.field} must be numeric.` });
+    issues.push({
+      ...context,
+      severity: 'error',
+      code: 'invalid_number',
+      message: `${context.dataset}.${context.field} must be numeric.`,
+    });
     return null;
   }
   return parsed;
@@ -33,7 +38,12 @@ function countValue(value: unknown, context: IssueContext, issues: ValidationIss
   const parsed = numberValue(value, context, issues);
   if (parsed == null) return null;
   if (!Number.isInteger(parsed) || parsed < 0) {
-    issues.push({ ...context, severity: 'error', code: 'invalid_count', message: `${context.dataset}.${context.field} must be a non-negative integer.` });
+    issues.push({
+      ...context,
+      severity: 'error',
+      code: 'invalid_count',
+      message: `${context.dataset}.${context.field} must be a non-negative integer.`,
+    });
     return null;
   }
   return parsed;
@@ -64,24 +74,31 @@ function booleanValue(value: unknown, context: IssueContext, issues: ValidationI
   if (normalized == null) return null;
   if (['true', 'yes', '1'].includes(normalized)) return true;
   if (['false', 'no', '0'].includes(normalized)) return false;
-  issues.push({ ...context, severity: 'error', code: 'invalid_boolean', message: `${context.dataset}.${context.field} must be a recognized boolean.` });
+  issues.push({
+    ...context,
+    severity: 'error',
+    code: 'invalid_boolean',
+    message: `${context.dataset}.${context.field} must be a recognized boolean.`,
+  });
   return null;
 }
 
-const dateFormatter = (timeZone: string) => new Intl.DateTimeFormat('en-US', {
-  timeZone,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hourCycle: 'h23',
-});
+const dateFormatter = (timeZone: string) =>
+  new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  });
 
 const partsInZone = (date: Date, timeZone: string) => {
   const parts = Object.fromEntries(
-    dateFormatter(timeZone).formatToParts(date)
+    dateFormatter(timeZone)
+      .formatToParts(date)
       .filter((part) => part.type !== 'literal')
       .map((part) => [part.type, Number(part.value)]),
   );
@@ -109,7 +126,14 @@ const dateInZone = (year: number, month: number, day: number, timeZone: string):
   try {
     for (let pass = 0; pass < 3; pass += 1) {
       const observed = partsInZone(new Date(timestamp), timeZone);
-      const observedTimestamp = Date.UTC(observed.year, observed.month - 1, observed.day, observed.hour, observed.minute, observed.second);
+      const observedTimestamp = Date.UTC(
+        observed.year,
+        observed.month - 1,
+        observed.day,
+        observed.hour,
+        observed.minute,
+        observed.second,
+      );
       const adjustment = target - observedTimestamp;
       timestamp += adjustment;
       if (adjustment === 0) break;
@@ -124,7 +148,9 @@ export function assertTimeZone(timeZone: string) {
   try {
     new Intl.DateTimeFormat('en-US', { timeZone });
   } catch {
-    throw new Error(`VITE_REPORTING_TIMEZONE "${timeZone}" is not a recognised IANA timezone, such as UTC or Asia/Singapore.`);
+    throw new Error(
+      `VITE_REPORTING_TIMEZONE "${timeZone}" is not a recognised IANA timezone, such as UTC or Asia/Singapore.`,
+    );
   }
 }
 
@@ -166,17 +192,33 @@ const sourceValue = (row: RawRow, dataset: DatasetKey, canonicalField: string): 
   return null;
 };
 
-function requiredText(value: unknown, field: string, dataset: string, index: number, issues: ValidationIssue[]): string {
+function requiredText(
+  value: unknown,
+  field: string,
+  dataset: string,
+  index: number,
+  issues: ValidationIssue[],
+): string {
   const normalized = text(value);
   if (!normalized) {
-    issues.push({ severity: 'error', code: 'missing_required_field', dataset, row: index + 2, field, message: `${dataset}.${field} is required on source row ${index + 2}.` });
+    issues.push({
+      severity: 'error',
+      code: 'missing_required_field',
+      dataset,
+      row: index + 2,
+      field,
+      message: `${dataset}.${field} is required on source row ${index + 2}.`,
+    });
   }
   return normalized ?? '';
 }
 
 const questionRole = (value: unknown): string => {
   const normalized = text(value) ?? '';
-  return communityConfig.feedbackRoles.find((role) => (role.sourceValues as readonly string[]).includes(normalized))?.id ?? normalized;
+  return (
+    communityConfig.feedbackRoles.find((role) => (role.sourceValues as readonly string[]).includes(normalized))?.id ??
+    normalized
+  );
 };
 
 export function normalizeSource(bundle: RawDataBundle): NormalizedDataBundle {
@@ -188,11 +230,30 @@ export function normalizeSource(bundle: RawDataBundle): NormalizedDataBundle {
     const eventDate = requiredText(sourceValue(row, 'events', 'event_date'), 'event_date', 'events', index, issues);
     const date = parseDate(eventDate, reportingTimezone);
     if (eventDate && !date) {
-      issues.push({ severity: 'error', code: 'invalid_date', dataset: 'events', row: index + 2, field: 'event_date', message: `events.event_date is invalid on source row ${index + 2}.` });
+      issues.push({
+        severity: 'error',
+        code: 'invalid_date',
+        dataset: 'events',
+        row: index + 2,
+        field: 'event_date',
+        message: `events.event_date is invalid on source row ${index + 2}.`,
+      });
     }
-    const registered = countValue(sourceValue(row, 'events', 'registered'), { dataset: 'events', row: index + 2, field: 'registered' }, issues);
-    const medianRegistered = numberValue(sourceValue(row, 'events', 'year_median_registered'), { dataset: 'events', row: index + 2, field: 'year_median_registered' }, issues);
-    const suppliedDemand = numberValue(sourceValue(row, 'events', 'demand_index'), { dataset: 'events', row: index + 2, field: 'demand_index' }, issues);
+    const registered = countValue(
+      sourceValue(row, 'events', 'registered'),
+      { dataset: 'events', row: index + 2, field: 'registered' },
+      issues,
+    );
+    const medianRegistered = numberValue(
+      sourceValue(row, 'events', 'year_median_registered'),
+      { dataset: 'events', row: index + 2, field: 'year_median_registered' },
+      issues,
+    );
+    const suppliedDemand = numberValue(
+      sourceValue(row, 'events', 'demand_index'),
+      { dataset: 'events', row: index + 2, field: 'demand_index' },
+      issues,
+    );
     return {
       ...row,
       event_id: requiredText(sourceValue(row, 'events', 'event_id'), 'event_id', 'events', index, issues),
@@ -202,45 +263,129 @@ export function normalizeSource(bundle: RawDataBundle): NormalizedDataBundle {
       format: text(sourceValue(row, 'events', 'format')),
       topic_primary: text(sourceValue(row, 'events', 'topic_primary')),
       registered,
-      attended: countValue(sourceValue(row, 'events', 'attended'), { dataset: 'events', row: index + 2, field: 'attended' }, issues),
-      capacity: countValue(sourceValue(row, 'events', 'capacity'), { dataset: 'events', row: index + 2, field: 'capacity' }, issues),
-      feedback_responses: countValue(sourceValue(row, 'events', 'feedback_responses'), { dataset: 'events', row: index + 2, field: 'feedback_responses' }, issues),
+      attended: countValue(
+        sourceValue(row, 'events', 'attended'),
+        { dataset: 'events', row: index + 2, field: 'attended' },
+        issues,
+      ),
+      capacity: countValue(
+        sourceValue(row, 'events', 'capacity'),
+        { dataset: 'events', row: index + 2, field: 'capacity' },
+        issues,
+      ),
+      feedback_responses: countValue(
+        sourceValue(row, 'events', 'feedback_responses'),
+        { dataset: 'events', row: index + 2, field: 'feedback_responses' },
+        issues,
+      ),
       year_median_registered: medianRegistered,
-      demand_index: suppliedDemand ?? (registered != null && medianRegistered != null && medianRegistered > 0 ? registered / medianRegistered : null),
+      demand_index:
+        suppliedDemand ??
+        (registered != null && medianRegistered != null && medianRegistered > 0 ? registered / medianRegistered : null),
     } as EventRecord;
   });
 
   const surveyResponses = datasets.surveyResponses.map((row, index) => ({
     ...row,
-    response_id: requiredText(sourceValue(row, 'surveyResponses', 'response_id'), 'response_id', 'surveyResponses', index, issues),
-    event_id: requiredText(sourceValue(row, 'surveyResponses', 'event_id'), 'event_id', 'surveyResponses', index, issues),
-    satisfaction: ratingValue(sourceValue(row, 'surveyResponses', 'satisfaction'), { dataset: 'surveyResponses', row: index + 2, field: 'satisfaction' }, issues, communityConfig.ratings.satisfaction),
-    recommend: ratingValue(sourceValue(row, 'surveyResponses', 'recommend'), { dataset: 'surveyResponses', row: index + 2, field: 'recommend' }, issues, communityConfig.ratings.recommendation),
+    response_id: requiredText(
+      sourceValue(row, 'surveyResponses', 'response_id'),
+      'response_id',
+      'surveyResponses',
+      index,
+      issues,
+    ),
+    event_id: requiredText(
+      sourceValue(row, 'surveyResponses', 'event_id'),
+      'event_id',
+      'surveyResponses',
+      index,
+      issues,
+    ),
+    satisfaction: ratingValue(
+      sourceValue(row, 'surveyResponses', 'satisfaction'),
+      { dataset: 'surveyResponses', row: index + 2, field: 'satisfaction' },
+      issues,
+      communityConfig.ratings.satisfaction,
+    ),
+    recommend: ratingValue(
+      sourceValue(row, 'surveyResponses', 'recommend'),
+      { dataset: 'surveyResponses', row: index + 2, field: 'recommend' },
+      issues,
+      communityConfig.ratings.recommendation,
+    ),
     experience_segment: text(sourceValue(row, 'surveyResponses', 'experience_segment')),
   })) as ResponseRecord[];
 
   const feedbackAnswers = datasets.feedbackAnswers.map((row, index) => ({
     ...row,
-    response_id: requiredText(sourceValue(row, 'feedbackAnswers', 'response_id'), 'response_id', 'feedbackAnswers', index, issues),
-    event_id: requiredText(sourceValue(row, 'feedbackAnswers', 'event_id'), 'event_id', 'feedbackAnswers', index, issues),
+    response_id: requiredText(
+      sourceValue(row, 'feedbackAnswers', 'response_id'),
+      'response_id',
+      'feedbackAnswers',
+      index,
+      issues,
+    ),
+    event_id: requiredText(
+      sourceValue(row, 'feedbackAnswers', 'event_id'),
+      'event_id',
+      'feedbackAnswers',
+      index,
+      issues,
+    ),
     question_role: questionRole(sourceValue(row, 'feedbackAnswers', 'question_role')),
     text: requiredText(sourceValue(row, 'feedbackAnswers', 'text'), 'text', 'feedbackAnswers', index, issues),
   })) as FeedbackRecord[];
 
   const participants = datasets.participants.map((row, index) => ({
     ...row,
-    participant_id: requiredText(sourceValue(row, 'participants', 'participant_id'), 'participant_id', 'participants', index, issues),
-    events_registered: countValue(sourceValue(row, 'participants', 'events_registered'), { dataset: 'participants', row: index + 2, field: 'events_registered' }, issues),
-    events_attended: countValue(sourceValue(row, 'participants', 'events_attended'), { dataset: 'participants', row: index + 2, field: 'events_attended' }, issues),
-    is_returning_attended: booleanValue(sourceValue(row, 'participants', 'is_returning_attended'), { dataset: 'participants', row: index + 2, field: 'is_returning_attended' }, issues),
-    is_returning_registered: booleanValue(sourceValue(row, 'participants', 'is_returning_registered'), { dataset: 'participants', row: index + 2, field: 'is_returning_registered' }, issues),
+    participant_id: requiredText(
+      sourceValue(row, 'participants', 'participant_id'),
+      'participant_id',
+      'participants',
+      index,
+      issues,
+    ),
+    events_registered: countValue(
+      sourceValue(row, 'participants', 'events_registered'),
+      { dataset: 'participants', row: index + 2, field: 'events_registered' },
+      issues,
+    ),
+    events_attended: countValue(
+      sourceValue(row, 'participants', 'events_attended'),
+      { dataset: 'participants', row: index + 2, field: 'events_attended' },
+      issues,
+    ),
+    is_returning_attended: booleanValue(
+      sourceValue(row, 'participants', 'is_returning_attended'),
+      { dataset: 'participants', row: index + 2, field: 'is_returning_attended' },
+      issues,
+    ),
+    is_returning_registered: booleanValue(
+      sourceValue(row, 'participants', 'is_returning_registered'),
+      { dataset: 'participants', row: index + 2, field: 'is_returning_registered' },
+      issues,
+    ),
   })) as PersonRecord[];
   const participantsById = new Map(participants.map((person) => [person.participant_id, person]));
 
   const registrations = datasets.registrations.map((row, index) => {
-    const participantId = requiredText(sourceValue(row, 'registrations', 'participant_id'), 'participant_id', 'registrations', index, issues);
-    const attended = booleanValue(sourceValue(row, 'registrations', 'attended'), { dataset: 'registrations', row: index + 2, field: 'attended' }, issues);
-    const attendanceKnown = booleanValue(sourceValue(row, 'registrations', 'attendance_known'), { dataset: 'registrations', row: index + 2, field: 'attendance_known' }, issues);
+    const participantId = requiredText(
+      sourceValue(row, 'registrations', 'participant_id'),
+      'participant_id',
+      'registrations',
+      index,
+      issues,
+    );
+    const attended = booleanValue(
+      sourceValue(row, 'registrations', 'attended'),
+      { dataset: 'registrations', row: index + 2, field: 'attended' },
+      issues,
+    );
+    const attendanceKnown = booleanValue(
+      sourceValue(row, 'registrations', 'attendance_known'),
+      { dataset: 'registrations', row: index + 2, field: 'attendance_known' },
+      issues,
+    );
     return {
       ...row,
       participant_id: participantId,
@@ -256,5 +401,9 @@ export function normalizeSource(bundle: RawDataBundle): NormalizedDataBundle {
     } as RegistrationRecord;
   });
 
-  return { datasets: { events, surveyResponses, feedbackAnswers, registrations, participants }, source: bundle.source, issues };
+  return {
+    datasets: { events, surveyResponses, feedbackAnswers, registrations, participants },
+    source: bundle.source,
+    issues,
+  };
 }

@@ -39,9 +39,11 @@ export async function loadSummary(): Promise<DashboardSummary> {
     throw new SummaryLoadError('The dashboard data could not be downloaded. Check your connection and reload.');
   }
   if (!response.ok) {
-    throw new SummaryLoadError(`The dashboard data is missing (HTTP ${response.status}). Run "npm run summary" locally, or check that the deployment built it.`);
+    throw new SummaryLoadError(
+      `The dashboard data is missing (HTTP ${response.status}). Run "npm run summary" locally, or check that the deployment built it.`,
+    );
   }
-  const summary = await response.json() as DashboardSummary;
+  const summary = (await response.json()) as DashboardSummary;
   if (summary.version !== SUMMARY_VERSION) {
     throw new SummaryLoadError('The dashboard data was built by a different version of this app. Rebuild the site.');
   }

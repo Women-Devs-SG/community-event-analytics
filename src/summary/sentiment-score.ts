@@ -9,11 +9,15 @@ import type { FeedbackRecord } from '../types';
 const analyzer = new Sentiment();
 
 // "nothing to improve" style answers to text_improve are actually praise
-const NOTHING_RE = /^(nothing|none|nil|nope|no|n\/?a|-|all good|nothing much|nothing really|nothing so far|no comments?|keep it up|great as is)[.!\s]*$/i;
+const NOTHING_RE =
+  /^(nothing|none|nil|nope|no|n\/?a|-|all good|nothing much|nothing really|nothing so far|no comments?|keep it up|great as is)[.!\s]*$/i;
 // bare "nothing/none", under text_good this means nothing WAS good
 const NONE_RE = /^(nothing|none|nil|nope|no|n\/?a|-)[.!\s]*$/i;
 
-export function scoreFeedback(row: Pick<FeedbackRecord, 'text' | 'question_role'>): { score: number; label: SentimentLabel } {
+export function scoreFeedback(row: Pick<FeedbackRecord, 'text' | 'question_role'>): {
+  score: number;
+  label: SentimentLabel;
+} {
   const text = row.text.trim();
   const comparative = analyzer.analyze(text).comparative;
 

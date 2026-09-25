@@ -7,7 +7,10 @@ const rows = (group: string, count: number, child?: string): Row[] =>
 
 describe('privacy suppression', () => {
   it('pools multiple small mutually exclusive groups only when their combined size is safe', () => {
-    const result = disclosureGroups([...rows('Established', 12), ...rows('New', 5), ...rows('Student', 5)], (row) => row.group);
+    const result = disclosureGroups(
+      [...rows('Established', 12), ...rows('New', 5), ...rows('Student', 5)],
+      (row) => row.group,
+    );
 
     expect(result.hasUnsafeRemainder).toBe(false);
     expect(result.groups.map((group) => [group.key, group.count])).toEqual([
@@ -30,7 +33,11 @@ describe('privacy suppression', () => {
       ...rows('Workshop', 10, 'Group A'),
       ...rows('Workshop', 10, 'Group B'),
     ];
-    const result = protectedCrossTab(input, (row) => row.group, (row) => row.child ?? 'Unknown');
+    const result = protectedCrossTab(
+      input,
+      (row) => row.group,
+      (row) => row.child ?? 'Unknown',
+    );
 
     expect(result.map((group) => group.key)).toEqual(['Workshop']);
     expect(result[0].count).toBe(20);
@@ -51,7 +58,11 @@ describe('privacy suppression', () => {
       response_id: `registration-${index}`,
     }));
 
-    const result = disclosureGroups(repeated, (row) => row.group, (row) => row.participant_id);
+    const result = disclosureGroups(
+      repeated,
+      (row) => row.group,
+      (row) => row.participant_id,
+    );
 
     expect(result.groups).toEqual([]);
     expect(result.hasUnsafeRemainder).toBe(true);
@@ -63,7 +74,11 @@ describe('privacy suppression', () => {
       participant_id: `participant-${index}`,
     }));
 
-    const result = disclosureGroups(distinct, (row) => row.group, (row) => row.participant_id);
+    const result = disclosureGroups(
+      distinct,
+      (row) => row.group,
+      (row) => row.participant_id,
+    );
 
     expect(result.groups[0]).toMatchObject({ count: 10, privacyCount: 10 });
     expect(result.hasUnsafeRemainder).toBe(false);

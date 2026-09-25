@@ -1,11 +1,11 @@
 name: 🐛 Bug report
 description: Report a bug, unexpected behavior or problem in the community event analytics dashboard.
-title: "[Bug]: "
+title: '[Bug]: '
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: | 
+      value: |
         Thank you for reporting a problem!
 
         **Privacy:** Do not attach real participant data, credentials, or private spreadsheet links. Use synthetic or fictional data when demonstrating the bug.
@@ -13,9 +13,9 @@ body:
         **If you would like to work on this issue:** Please ask to be assigned and wait for a maintainer to formally assign it before beginning. Commenting on an issue does not count as assignment. Issues labeled `women-devs-only` are reserved for women developers.
 
         Read the full [contribution guidelines](https://github.com/Women-Devs-SG/community-event-analytics/blob/main/CONTRIBUTING.md).
-        
+
         ***
-        
+
   - type: textarea
     id: problem
     attributes:
@@ -24,7 +24,7 @@ body:
       placeholder: Tell us what went wrong.
     validations:
       required: true
-      
+
   - type: textarea
     id: expected
     attributes:
@@ -32,7 +32,7 @@ body:
       description: Describe the behavior you expected instead.
     validations:
       required: true
-      
+
   - type: textarea
     id: reproduce
     attributes:
@@ -44,7 +44,7 @@ body:
         3. Observe...
     validations:
       required: true
-      
+
   - type: textarea
     id: context
     attributes:
@@ -53,5 +53,3 @@ body:
         Add anything else that may help. Before uploading screenshots,
         confirm that they contain no participant information, credentials,
         or private links.
-
-        

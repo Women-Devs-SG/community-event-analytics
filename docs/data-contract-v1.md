@@ -37,13 +37,13 @@ A source does not need full conformance to load. Unsupported modules must be una
 
 Canonical adapters return the following logical datasets. The names below are product concepts; an adapter may map differently named source tabs or tables to them.
 
-| Canonical dataset | Current source name | Grain | Requirement |
-| --- | --- | --- | --- |
-| `events` | `dim_events` | One row per event | Core required |
-| `surveyResponses` | `fact_feedbackscale` | One row per submitted survey response | Optional |
-| `feedbackAnswers` | `fact_feedbacktxt` | One row per free-text answer to one survey question | Optional |
-| `registrations` | `fact_registrants` | One row per participant-event registration | Optional |
-| `participants` | `dim_registrants` | One row per de-identified participant | Optional |
+| Canonical dataset | Current source name  | Grain                                               | Requirement   |
+| ----------------- | -------------------- | --------------------------------------------------- | ------------- |
+| `events`          | `dim_events`         | One row per event                                   | Core required |
+| `surveyResponses` | `fact_feedbackscale` | One row per submitted survey response               | Optional      |
+| `feedbackAnswers` | `fact_feedbacktxt`   | One row per free-text answer to one survey question | Optional      |
+| `registrations`   | `fact_registrants`   | One row per participant-event registration          | Optional      |
+| `participants`    | `dim_registrants`    | One row per de-identified participant               | Optional      |
 
 Unknown source columns may be retained for provenance or adapter debugging, but dashboard logic must depend only on canonical fields.
 
@@ -57,31 +57,31 @@ The requirement column uses:
 
 ### `events`
 
-| Field | Type | Requirement | Meaning |
-| --- | --- | --- | --- |
-| `event_id` | string | Required | Stable unique event identifier. Must not contain a person's identity. |
-| `event_name` | string | Required | Human-readable event title. |
-| `event_date` | date | Required | Event date in the configured reporting timezone. |
-| `format` | string | Feature: format filter/grouping | Organizer-defined delivery format. |
-| `topic_primary` | string | Feature: topic filter/grouping | Organizer-defined primary topic. |
-| `registered` | non-negative integer or null | Feature: demand and registration totals | Count of registrations for the event. |
-| `attended` | non-negative integer or null | Feature: attendance and response rate | Count of attendees for the event. |
-| `capacity` | non-negative integer or null | Optional | Stated venue or platform capacity. |
-| `feedback_responses` | non-negative integer or null | Optional | Source-provided response count for reconciliation only. Canonical response metrics use response rows. |
-| `year_median_registered` | positive number or null | Feature: demand index fallback | Median registrations for comparable events in the same calendar year. |
-| `demand_index` | non-negative number or null | Feature: demand quadrant | `registered / year_median_registered`, or an authoritative equivalent supplied by the source. |
+| Field                    | Type                         | Requirement                             | Meaning                                                                                               |
+| ------------------------ | ---------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `event_id`               | string                       | Required                                | Stable unique event identifier. Must not contain a person's identity.                                 |
+| `event_name`             | string                       | Required                                | Human-readable event title.                                                                           |
+| `event_date`             | date                         | Required                                | Event date in the configured reporting timezone.                                                      |
+| `format`                 | string                       | Feature: format filter/grouping         | Organizer-defined delivery format.                                                                    |
+| `topic_primary`          | string                       | Feature: topic filter/grouping          | Organizer-defined primary topic.                                                                      |
+| `registered`             | non-negative integer or null | Feature: demand and registration totals | Count of registrations for the event.                                                                 |
+| `attended`               | non-negative integer or null | Feature: attendance and response rate   | Count of attendees for the event.                                                                     |
+| `capacity`               | non-negative integer or null | Optional                                | Stated venue or platform capacity.                                                                    |
+| `feedback_responses`     | non-negative integer or null | Optional                                | Source-provided response count for reconciliation only. Canonical response metrics use response rows. |
+| `year_median_registered` | positive number or null      | Feature: demand index fallback          | Median registrations for comparable events in the same calendar year.                                 |
+| `demand_index`           | non-negative number or null  | Feature: demand quadrant                | `registered / year_median_registered`, or an authoritative equivalent supplied by the source.         |
 
 `event_id`, not `event_name`, defines event uniqueness. Repeated event titles remain separate events.
 
 ### `surveyResponses`
 
-| Field | Type | Requirement | Meaning |
-| --- | --- | --- | --- |
-| `response_id` | string | Required | Stable survey-response identifier. It must not encode a participant identity. |
-| `event_id` | string | Required | Event foreign key. |
-| `satisfaction` | number or null | Feature: satisfaction metrics | Participant rating on the configured satisfaction scale. |
-| `recommend` | number or null | Feature: recommendation metrics | Participant rating on the configured recommendation scale. |
-| `experience_segment` | string or null | Feature: direct survey segmentation | Optional segment recorded on the survey response itself. |
+| Field                | Type           | Requirement                         | Meaning                                                                       |
+| -------------------- | -------------- | ----------------------------------- | ----------------------------------------------------------------------------- |
+| `response_id`        | string         | Required                            | Stable survey-response identifier. It must not encode a participant identity. |
+| `event_id`           | string         | Required                            | Event foreign key.                                                            |
+| `satisfaction`       | number or null | Feature: satisfaction metrics       | Participant rating on the configured satisfaction scale.                      |
+| `recommend`          | number or null | Feature: recommendation metrics     | Participant rating on the configured recommendation scale.                    |
+| `experience_segment` | string or null | Feature: direct survey segmentation | Optional segment recorded on the survey response itself.                      |
 
 Rating bounds belong to configuration. Values outside configured bounds are invalid, not silently clamped.
 
@@ -89,42 +89,42 @@ Survey responses are anonymous unless an adopter explicitly extends the contract
 
 ### `feedbackAnswers`
 
-| Field | Type | Requirement | Meaning |
-| --- | --- | --- | --- |
-| `response_id` | string | Required | Survey-response foreign key. |
-| `event_id` | string | Required | Event foreign key, retained for direct event scoping and validation. |
-| `question_role` | string | Required | Configured semantic role, such as `positive`, `improvement`, or `topic_request`. It is not the displayed survey wording. |
-| `text` | non-empty string | Required | The participant's answer. |
-| `answer_id` | string or null | Optional | Stable identifier when the source provides one. Otherwise the compound row identity is adapter-defined. |
+| Field           | Type             | Requirement | Meaning                                                                                                                  |
+| --------------- | ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `response_id`   | string           | Required    | Survey-response foreign key.                                                                                             |
+| `event_id`      | string           | Required    | Event foreign key, retained for direct event scoping and validation.                                                     |
+| `question_role` | string           | Required    | Configured semantic role, such as `positive`, `improvement`, or `topic_request`. It is not the displayed survey wording. |
+| `text`          | non-empty string | Required    | The participant's answer.                                                                                                |
+| `answer_id`     | string or null   | Optional    | Stable identifier when the source provides one. Otherwise the compound row identity is adapter-defined.                  |
 
 Question roles and their displayed labels are configuration. The current source values `text_good`, `text_improve`, and `text_interest` are adapter mappings, not universal product concepts.
 
 ### `registrations`
 
-| Field | Type | Requirement | Meaning |
-| --- | --- | --- | --- |
-| `participant_id` | string | Required | Stable de-identified participant key. |
-| `event_id` | string | Required | Event foreign key. |
-| `attended` | boolean or null | Optional | Attendance outcome when known. Null means unknown. |
-| `attendance_known` | boolean | Optional | Whether attendance was recorded. If omitted, a non-null `attended` value implies known attendance. |
-| `experience_segment` | string or null | Feature: experience views | Configured experience or seniority bucket. |
-| `gender_segment` | string or null | Feature: gender views | Self-described or source-normalized gender bucket. |
-| `job_family_segment` | string or null | Feature: job-family views | Source-normalized job-family bucket. |
-| `sector_segment` | string or null | Feature: sector views | Source-normalized employment-sector bucket. |
-| `organization_segment` | string or null | Feature: organization views and organizer exclusion | Source-normalized organization label. |
-| `status` | string or null | Optional | Organizer-defined registration status. |
+| Field                  | Type            | Requirement                                         | Meaning                                                                                            |
+| ---------------------- | --------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `participant_id`       | string          | Required                                            | Stable de-identified participant key.                                                              |
+| `event_id`             | string          | Required                                            | Event foreign key.                                                                                 |
+| `attended`             | boolean or null | Optional                                            | Attendance outcome when known. Null means unknown.                                                 |
+| `attendance_known`     | boolean         | Optional                                            | Whether attendance was recorded. If omitted, a non-null `attended` value implies known attendance. |
+| `experience_segment`   | string or null  | Feature: experience views                           | Configured experience or seniority bucket.                                                         |
+| `gender_segment`       | string or null  | Feature: gender views                               | Self-described or source-normalized gender bucket.                                                 |
+| `job_family_segment`   | string or null  | Feature: job-family views                           | Source-normalized job-family bucket.                                                               |
+| `sector_segment`       | string or null  | Feature: sector views                               | Source-normalized employment-sector bucket.                                                        |
+| `organization_segment` | string or null  | Feature: organization views and organizer exclusion | Source-normalized organization label.                                                              |
+| `status`               | string or null  | Optional                                            | Organizer-defined registration status.                                                             |
 
 Only configured segment fields may be displayed. Adapters may map other community-relevant dimensions into an extended segment registry in a later contract version; dashboard code must not assume that every adopter collects the five fields above.
 
 ### `participants`
 
-| Field | Type | Requirement | Meaning |
-| --- | --- | --- | --- |
-| `participant_id` | string | Required | Stable de-identified participant key. |
-| `events_registered` | non-negative integer or null | Feature: lifetime returning status | Number of events registered for within the source's declared history window. |
-| `events_attended` | non-negative integer or null | Optional | Number of events attended within that history window. |
-| `is_returning_registered` | boolean or null | Feature: lifetime returning status | Whether `events_registered >= 2`. Supplied values must reconcile with the count when both exist. |
-| `is_returning_attended` | boolean or null | Optional | Whether the participant attended at least two events in the declared history window. |
+| Field                     | Type                         | Requirement                        | Meaning                                                                                          |
+| ------------------------- | ---------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `participant_id`          | string                       | Required                           | Stable de-identified participant key.                                                            |
+| `events_registered`       | non-negative integer or null | Feature: lifetime returning status | Number of events registered for within the source's declared history window.                     |
+| `events_attended`         | non-negative integer or null | Optional                           | Number of events attended within that history window.                                            |
+| `is_returning_registered` | boolean or null              | Feature: lifetime returning status | Whether `events_registered >= 2`. Supplied values must reconcile with the count when both exist. |
+| `is_returning_attended`   | boolean or null              | Optional                           | Whether the participant attended at least two events in the declared history window.             |
 
 Participant records must not contain names, email addresses, phone numbers, raw account IDs, or reversible identifiers. Hashing alone is not sufficient if the input space is easily enumerable; adopters are responsible for producing suitably de-identified keys.
 
@@ -182,16 +182,16 @@ Adapters may accept case-insensitive `true`/`false`, `yes`/`no`, and `1`/`0`. Bl
 
 Every normalized load must provide:
 
-| Field | Meaning |
-| --- | --- |
-| `source_label` | Human-readable source name. |
-| `source_kind` | Adapter identifier such as `synthetic`, `google-sheets`, `csv`, or `api`. |
-| `data_classification` | `synthetic`, `anonymized`, or another explicitly documented classification. |
-| `fetched_at` | Offset-bearing timestamp at which the source was read or generated. |
-| `reporting_timezone` | IANA timezone used for event dates and the year filter. |
-| `contract_version` | `1`. |
-| `history_start` / `history_end` | Available source-history bounds when known. |
-| `limitations` | Adapter or validation limitations that affect interpretation. |
+| Field                           | Meaning                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| `source_label`                  | Human-readable source name.                                                 |
+| `source_kind`                   | Adapter identifier such as `synthetic`, `google-sheets`, `csv`, or `api`.   |
+| `data_classification`           | `synthetic`, `anonymized`, or another explicitly documented classification. |
+| `fetched_at`                    | Offset-bearing timestamp at which the source was read or generated.         |
+| `reporting_timezone`            | IANA timezone used for event dates and the year filter.                     |
+| `contract_version`              | `1`.                                                                        |
+| `history_start` / `history_end` | Available source-history bounds when known.                                 |
+| `limitations`                   | Adapter or validation limitations that affect interpretation.               |
 
 Synthetic data must always remain classified as synthetic. Real participant feedback must never be used as fallback demo content.
 
@@ -199,19 +199,19 @@ Synthetic data must always remain classified as synthetic. Real participant feed
 
 All metrics use the events selected by the active event, year, format, and topic filters. Every reachable filter selection is computed at build time. Fact rows are included only when their `event_id` is in that event set.
 
-| Metric | Definition |
-| --- | --- |
-| Events | Distinct `event_id` count. |
-| Registrations | Sum of non-null `events.registered`. If derived instead from registration rows, label and provenance must state that basis; do not mix bases within one view. |
-| Attendance | Sum of non-null `events.attended`. Registration-level attendance may be used as an explicitly labeled alternative. |
-| Unique participants | Distinct `registrations.participant_id` within the filtered event set. |
-| Average satisfaction | Arithmetic mean of valid, non-null `surveyResponses.satisfaction` values in scope. |
-| Average recommendation | Arithmetic mean of valid, non-null `surveyResponses.recommend` values in scope. |
-| Survey response rate | Distinct in-scope `response_id` count divided by in-scope attendance. Requires a positive attendance denominator. Null when the denominator is missing or zero. |
-| Demand index | Event registrations divided by that event's comparable-year median registrations, or an authoritative supplied equivalent. Null when either input is unavailable or the median is not positive. |
-| Hot topic | Topic with the greatest summed attendance across events in scope. Ties use a deterministic configured ordering and should be disclosed when material. |
+| Metric                  | Definition                                                                                                                                                                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Events                  | Distinct `event_id` count.                                                                                                                                                                                                                         |
+| Registrations           | Sum of non-null `events.registered`. If derived instead from registration rows, label and provenance must state that basis; do not mix bases within one view.                                                                                      |
+| Attendance              | Sum of non-null `events.attended`. Registration-level attendance may be used as an explicitly labeled alternative.                                                                                                                                 |
+| Unique participants     | Distinct `registrations.participant_id` within the filtered event set.                                                                                                                                                                             |
+| Average satisfaction    | Arithmetic mean of valid, non-null `surveyResponses.satisfaction` values in scope.                                                                                                                                                                 |
+| Average recommendation  | Arithmetic mean of valid, non-null `surveyResponses.recommend` values in scope.                                                                                                                                                                    |
+| Survey response rate    | Distinct in-scope `response_id` count divided by in-scope attendance. Requires a positive attendance denominator. Null when the denominator is missing or zero.                                                                                    |
+| Demand index            | Event registrations divided by that event's comparable-year median registrations, or an authoritative supplied equivalent. Null when either input is unavailable or the median is not positive.                                                    |
+| Hot topic               | Topic with the greatest summed attendance across events in scope. Ties use a deterministic configured ordering and should be disclosed when material.                                                                                              |
 | Lifetime returner share | Among distinct participants registered for the selected events, the share whose `is_returning_registered` is true in the declared source-history window. This may include registrations outside the active period and must be labeled accordingly. |
-| Selection return rate | Optional alternative: share of distinct participants with registrations for at least two events inside the current selection. It must not be presented as the lifetime returner share. |
+| Selection return rate   | Optional alternative: share of distinct participants with registrations for at least two events inside the current selection. It must not be presented as the lifetime returner share.                                                             |
 
 ### Demand-satisfaction quadrant
 
@@ -244,19 +244,19 @@ This contract reduces accidental disclosure but does not replace consent, legal 
 
 ## Feature availability and graceful degradation
 
-| Feature | Minimum evidence | Behavior when unavailable |
-| --- | --- | --- |
-| Event and year filters | Valid `events` rows | Application cannot load without them; show a schema-specific error. |
-| Format or topic filters | Corresponding non-null event field | Omit only the unsupported filter and grouping toggle. |
-| Registration totals | `events.registered` | Show unavailable; do not derive unless the configured metric basis is registration rows. |
-| Attendance totals | `events.attended` | Show unavailable. |
-| Response rate | Survey responses plus attendance | Show unavailable with the missing denominator named. |
-| Demand quadrant | Valid demand and satisfaction for at least one event | Omit the quadrant or show an evidence-specific empty state. |
-| Feedback board | Valid feedback answers | Omit the board; never substitute sample comments into live data. |
-| A demographic chart | Registrations plus that configured segment | Omit that chart without disabling unrelated community views. |
-| Unique participants | Registrations | Show unavailable when registration rows are absent. |
-| Lifetime returner share | Registrations plus participant returning status | Show unavailable; do not infer from event totals. |
-| Survey outcome by segment | The segment captured on each survey response | Disable unsupported segment choices and explain why. |
+| Feature                   | Minimum evidence                                     | Behavior when unavailable                                                                |
+| ------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Event and year filters    | Valid `events` rows                                  | Application cannot load without them; show a schema-specific error.                      |
+| Format or topic filters   | Corresponding non-null event field                   | Omit only the unsupported filter and grouping toggle.                                    |
+| Registration totals       | `events.registered`                                  | Show unavailable; do not derive unless the configured metric basis is registration rows. |
+| Attendance totals         | `events.attended`                                    | Show unavailable.                                                                        |
+| Response rate             | Survey responses plus attendance                     | Show unavailable with the missing denominator named.                                     |
+| Demand quadrant           | Valid demand and satisfaction for at least one event | Omit the quadrant or show an evidence-specific empty state.                              |
+| Feedback board            | Valid feedback answers                               | Omit the board; never substitute sample comments into live data.                         |
+| A demographic chart       | Registrations plus that configured segment           | Omit that chart without disabling unrelated community views.                             |
+| Unique participants       | Registrations                                        | Show unavailable when registration rows are absent.                                      |
+| Lifetime returner share   | Registrations plus participant returning status      | Show unavailable; do not infer from event totals.                                        |
+| Survey outcome by segment | The segment captured on each survey response         | Disable unsupported segment choices and explain why.                                     |
 
 The product must distinguish loading, source failure, invalid schema, unsupported feature, legitimate empty selection, all-null measurement, and observed zero.
 

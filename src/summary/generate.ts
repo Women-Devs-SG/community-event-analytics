@@ -49,7 +49,10 @@ export function createConfiguredAdapter(env: BuildEnv, warn: (message: string) =
   });
 }
 
-export async function generateSummary(env: BuildEnv, warn: (message: string) => void = console.warn): Promise<DashboardSummary> {
+export async function generateSummary(
+  env: BuildEnv,
+  warn: (message: string) => void = console.warn,
+): Promise<DashboardSummary> {
   assertTimeZone(communityConfig.data.reportingTimezone);
   const data = await loadData(createConfiguredAdapter(env, warn));
   const summary = buildSummary(data);

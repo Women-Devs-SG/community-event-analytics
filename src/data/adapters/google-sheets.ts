@@ -42,7 +42,9 @@ export function parseServiceAccountKey(json: string): ServiceAccountKey {
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY is not valid JSON. Paste the whole key file downloaded from Google Cloud.');
+    throw new Error(
+      'GOOGLE_SERVICE_ACCOUNT_KEY is not valid JSON. Paste the whole key file downloaded from Google Cloud.',
+    );
   }
   const key = parsed as Partial<ServiceAccountKey>;
   if (typeof key.client_email !== 'string' || typeof key.private_key !== 'string') {
@@ -52,27 +54,50 @@ export function parseServiceAccountKey(json: string): ServiceAccountKey {
 }
 
 const base64Url = (bytes: Uint8Array) =>
-  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 const base64UrlJson = (value: unknown) => base64Url(new TextEncoder().encode(JSON.stringify(value)));
 
 // Signs a service-account JWT with WebCrypto and exchanges it for an access token.
 async function accessToken(key: ServiceAccountKey, fetchImpl: typeof fetch): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const unsigned = `${base64UrlJson({ alg: 'RS256', typ: 'JWT' })}.${base64UrlJson({
-    iss: key.client_email, scope: SHEETS_SCOPE, aud: TOKEN_URL, iat: now, exp: now + 3600,
+    iss: key.client_email,
+    scope: SHEETS_SCOPE,
+    aud: TOKEN_URL,
+    iat: now,
+    exp: now + 3600,
   })}`;
-  const der = Uint8Array.from(atob(key.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')), (c) => c.charCodeAt(0));
-  const signingKey = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
-  const signature = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', signingKey, new TextEncoder().encode(unsigned)));
+  const der = Uint8Array.from(atob(key.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')), (c) =>
+    c.charCodeAt(0),
+  );
+  const signingKey = await crypto.subtle.importKey(
+    'pkcs8',
+    der,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = new Uint8Array(
+    await crypto.subtle.sign('RSASSA-PKCS1-v1_5', signingKey, new TextEncoder().encode(unsigned)),
+  );
 
   const response = await fetchImpl(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${base64Url(signature)}` }),
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: `${unsigned}.${base64Url(signature)}`,
+    }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
-  if (!response.ok) throw new Error(`Google rejected the service-account key (HTTP ${response.status}). Check GOOGLE_SERVICE_ACCOUNT_KEY.`);
-  const body = await response.json() as { access_token?: string };
+  if (!response.ok)
+    throw new Error(
+      `Google rejected the service-account key (HTTP ${response.status}). Check GOOGLE_SERVICE_ACCOUNT_KEY.`,
+    );
+  const body = (await response.json()) as { access_token?: string };
   if (!body.access_token) throw new Error('Google did not return an access token for the service account.');
   return body.access_token;
 }
@@ -84,17 +109,28 @@ function rowsFromValues(values: string[][]): RawRow[] {
     .map((row) => Object.fromEntries(header.map((field, index) => [field, row[index] ?? ''])));
 }
 
-async function fetchTabWithApi(sheetId: string, tab: string, token: string, clientEmail: string, fetchImpl: typeof fetch): Promise<RawRow[]> {
+async function fetchTabWithApi(
+  sheetId: string,
+  tab: string,
+  token: string,
+  clientEmail: string,
+  fetchImpl: typeof fetch,
+): Promise<RawRow[]> {
   const range = encodeURIComponent(`'${tab.replace(/'/g, "''")}'`);
-  const response = await fetchImpl(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sheetId)}/values/${range}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  const response = await fetchImpl(
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(sheetId)}/values/${range}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    },
+  );
   if (response.status === 403 || response.status === 404) {
-    throw new Error(`${tab}: the service account cannot read this sheet or tab (HTTP ${response.status}). Share the sheet with ${clientEmail} as a Viewer and check the tab name.`);
+    throw new Error(
+      `${tab}: the service account cannot read this sheet or tab (HTTP ${response.status}). Share the sheet with ${clientEmail} as a Viewer and check the tab name.`,
+    );
   }
   if (!response.ok) throw new Error(`${tab}: Google Sheets API returned HTTP ${response.status}.`);
-  const body = await response.json() as { values?: string[][] };
+  const body = (await response.json()) as { values?: string[][] };
   return rowsFromValues(body.values ?? []);
 }
 
@@ -103,7 +139,9 @@ async function fetchTabAsPublicCsv(sheetId: string, tab: string, fetchImpl: type
   const response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`${tab}: HTTP ${response.status}`);
   if (response.headers.get('content-type')?.includes('text/html')) {
-    throw new Error(`${tab}: Google returned a web page instead of CSV. The sheet is probably private; set GOOGLE_SERVICE_ACCOUNT_KEY to read it.`);
+    throw new Error(
+      `${tab}: Google returned a web page instead of CSV. The sheet is probably private; set GOOGLE_SERVICE_ACCOUNT_KEY to read it.`,
+    );
   }
   const parsed = Papa.parse<Record<string, string>>(await response.text(), { header: true, skipEmptyLines: true });
   if (parsed.errors.length) {
@@ -126,14 +164,16 @@ export function createGoogleSheetsAdapter(options: GoogleSheetsOptions): DataSou
         fetchTab = (tab) => fetchTabWithApi(sheetId, tab, token, serviceAccountKey.client_email, fetchImpl);
       } else {
         options.onWarning?.(
-          'Reading the sheet through its public link. The dashboard no longer publishes raw rows, but anyone with the sheet ID can still open the sheet. '
-          + 'Make the sheet private and set GOOGLE_SERVICE_ACCOUNT_KEY instead.',
+          'Reading the sheet through its public link. The dashboard no longer publishes raw rows, but anyone with the sheet ID can still open the sheet. ' +
+            'Make the sheet private and set GOOGLE_SERVICE_ACCOUNT_KEY instead.',
         );
         fetchTab = (tab) => fetchTabAsPublicCsv(sheetId, tab, fetchImpl);
       }
 
       const rows = await Promise.all(DATASET_KEYS.map((key) => fetchTab(tabs[key])));
-      const datasets = Object.fromEntries(DATASET_KEYS.map((key, index) => [key, rows[index]])) as unknown as RawDatasets;
+      const datasets = Object.fromEntries(
+        DATASET_KEYS.map((key, index) => [key, rows[index]]),
+      ) as unknown as RawDatasets;
       const source: SourceMetadata = {
         sourceLabel: options.sourceLabel,
         sourceKind: 'google-sheets',

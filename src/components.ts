@@ -27,7 +27,9 @@ const isText = (value: string | null): value is string => Boolean(value);
 
 export function buildFilterBar(container: HTMLElement, summary: DashboardSummary) {
   const unique = (values: (string | null)[]) => [...new Set(values.filter(isText))];
-  const years = unique(summary.events.map((e) => e.year)).sort().reverse();
+  const years = unique(summary.events.map((e) => e.year))
+    .sort()
+    .reverse();
   const formats = unique(summary.events.map((e) => e.format)).sort();
   const topics = unique(summary.events.map((e) => e.topic)).sort();
   const options = (values: string[]) => values.map((v) => `<option>${esc(v)}</option>`).join('');
@@ -51,7 +53,10 @@ export function buildFilterBar(container: HTMLElement, summary: DashboardSummary
     eventSelect.innerHTML =
       '<option value="">All events</option>' +
       opts
-        .map((e) => `<option value="${esc(e.id)}"${filters.eventId === e.id ? ' selected' : ''}>${esc(e.name)}${e.date ? ` (${esc(e.date)})` : ''}</option>`)
+        .map(
+          (e) =>
+            `<option value="${esc(e.id)}"${filters.eventId === e.id ? ' selected' : ''}>${esc(e.name)}${e.date ? ` (${esc(e.date)})` : ''}</option>`,
+        )
         .join('');
   }
   refreshEventOptions();
@@ -82,11 +87,14 @@ export const kpiCard = (value: string, label: string, sub = '', unit = '') => `
 
 // ── sentiment split (stat chips + 100% bar) ───────────────────────────────────
 export function sentimentSplitHtml(split: SentimentSplit, isSafe = true) {
-  if (!isSafe) return '<div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div>';
+  if (!isSafe)
+    return '<div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div>';
   const { counts, share, total } = split;
   if (!total) return '<div class="empty-note">No feedback in this selection</div>';
   const seg = (k: SentimentKey) =>
-    share[k] > 0 ? `<div style="width:${(share[k] * 100).toFixed(1)}%;background:${SENTIMENT_COLORS[k]}" title="${k}: ${counts[k]}"></div>` : '';
+    share[k] > 0
+      ? `<div style="width:${(share[k] * 100).toFixed(1)}%;background:${SENTIMENT_COLORS[k]}" title="${k}: ${counts[k]}"></div>`
+      : '';
   const stat = (k: SentimentKey, name: string) => `
     <div class="senti-stat"><span class="dot" style="background:${SENTIMENT_COLORS[k]}"></span>
       <b>${(share[k] * 100).toFixed(0)}%</b><span>${name} (${counts[k]})</span></div>`;
@@ -154,11 +162,13 @@ export function renderFeedbackBoard(
   onClearBoardFilter: (() => void) | null = null,
 ) {
   if (!isSafe) {
-    container.innerHTML = '<div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div>';
+    container.innerHTML =
+      '<div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div>';
     return;
   }
   const sorted = [...rows].sort((a, b) =>
-    (eventsById.get(b.event_id)?.date ?? '').localeCompare(eventsById.get(a.event_id)?.date ?? ''));
+    (eventsById.get(b.event_id)?.date ?? '').localeCompare(eventsById.get(a.event_id)?.date ?? ''),
+  );
   const nonAnswers = sorted.filter((r) => isNonAnswer(r.text)).length;
 
   const boardChip = boardFilter
@@ -178,14 +188,16 @@ export function renderFeedbackBoard(
       <span class="table-count"></span>
     </div>
     <div class="fb-board">
-      ${FIELD_ORDER.map((f) => `
+      ${FIELD_ORDER.map(
+        (f) => `
         <section class="fb-col" data-field="${f}">
           <header class="fb-col-head">
             <h4>${esc(FIELD_LABELS[f])}</h4>
             <div class="fb-col-overall"></div>
           </header>
           <div class="fb-col-list"></div>
-        </section>`).join('')}
+        </section>`,
+      ).join('')}
     </div>`;
 
   const count = container.querySelector<HTMLElement>('.table-count')!;

@@ -18,7 +18,9 @@ if (current.error || (current.status !== 0 && current.status !== 1)) {
 }
 
 if (current.status === 0 && current.stdout.trim() !== '.githooks') {
-  console.warn('Keeping your existing core.hooksPath. Integrate npm run check:commit into your existing pre-commit hook.');
+  console.warn(
+    'Keeping your existing core.hooksPath. Integrate npm run check:commit into your existing pre-commit hook.',
+  );
   process.exit(0);
 }
 

@@ -5,7 +5,17 @@ import type { ChartParams } from './theme';
 import { commentsFor, eventsIn, filters, scopeFor } from './data';
 import { quadrantAction, fmtPct, fmtNum, fmtInt } from './metrics';
 import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from './metrics';
-import { isNonAnswer, extractThemes, pickQuotes, buildActions, minHitsFor, unmatchedCount, matchExcerpt, KEEP_RULES, FIX_RULES } from './sentiment';
+import {
+  isNonAnswer,
+  extractThemes,
+  pickQuotes,
+  buildActions,
+  minHitsFor,
+  unmatchedCount,
+  matchExcerpt,
+  KEEP_RULES,
+  FIX_RULES,
+} from './sentiment';
 import type { ActionRule, RankedAction } from './sentiment';
 import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from './components';
 import type { BoardFilter } from './components';
@@ -77,8 +87,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
     drawFeedbackBoard();
   }
 
-  const scopeLabel = () =>
-    boardFilter ? `${boardFilter.dim}: ${boardFilter.label}` : 'the current filters';
+  const scopeLabel = () => (boardFilter ? `${boardFilter.dim}: ${boardFilter.label}` : 'the current filters');
 
   quadChart.on('click', (params) => {
     const meta = (params.data as { meta?: QuadrantPoint } | undefined)?.meta;
@@ -98,23 +107,44 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
 
   function drawKpis() {
     const k = scope!.kpis;
-    const returningSummary = k.returningRate != null
-      ? `${fmtPct(k.returningRate)} are returning ${terms.participants}`
-      : 'Returning share hidden below the privacy threshold';
+    const returningSummary =
+      k.returningRate != null
+        ? `${fmtPct(k.returningRate)} are returning ${terms.participants}`
+        : 'Returning share hidden below the privacy threshold';
     q('#eff-kpis').innerHTML = [
-      kpiCard(fmtInt(k.uniqueEvents), communityConfig.terminology.events[0].toUpperCase() + communityConfig.terminology.events.slice(1), `unique ${terms.events} in view`),
       kpiCard(
-        fmtNum(k.avgSatisfaction), 'Avg satisfaction',
-        k.avgSatisfaction != null ? `mean of survey scores from ${terms.events} with enough responses` : `no ${terms.events} with enough responses to show`,
+        fmtInt(k.uniqueEvents),
+        communityConfig.terminology.events[0].toUpperCase() + communityConfig.terminology.events.slice(1),
+        `unique ${terms.events} in view`,
+      ),
+      kpiCard(
+        fmtNum(k.avgSatisfaction),
+        'Avg satisfaction',
+        k.avgSatisfaction != null
+          ? `mean of survey scores from ${terms.events} with enough responses`
+          : `no ${terms.events} with enough responses to show`,
         k.avgSatisfaction != null ? `/ ${satisfaction.max}` : '',
       ),
-      kpiCard(fmtPct(k.responseRate), 'Response rate', `${fmtInt(k.responses)} responses ÷ ${fmtInt(k.totalAttended)} attendees`),
-      kpiCard(fmtInt(k.totalRegistered), terms.registrations[0].toUpperCase() + terms.registrations.slice(1), returningSummary),
-      kpiCard(k.hotTopic ? esc(k.hotTopic[0]) : '–', 'Hot topic', k.hotTopic ? `${fmtInt(k.hotTopic[1])} attendees` : ''),
+      kpiCard(
+        fmtPct(k.responseRate),
+        'Response rate',
+        `${fmtInt(k.responses)} responses ÷ ${fmtInt(k.totalAttended)} attendees`,
+      ),
+      kpiCard(
+        fmtInt(k.totalRegistered),
+        terms.registrations[0].toUpperCase() + terms.registrations.slice(1),
+        returningSummary,
+      ),
+      kpiCard(
+        k.hotTopic ? esc(k.hotTopic[0]) : '–',
+        'Hot topic',
+        k.hotTopic ? `${fmtInt(k.hotTopic[1])} attendees` : '',
+      ),
     ].join('');
   }
 
-  const isSelected = (meta: QuadrantPoint) => !!boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
+  const isSelected = (meta: QuadrantPoint) =>
+    !!boardFilter && boardFilter.dim === quadMode && boardFilter.id === meta.id;
 
   function drawQuadrant() {
     const { points, skipped } = scope!.quadrant[quadMode];
@@ -136,54 +166,74 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
         },
         grid: { left: 48, right: 24, top: 36, bottom: 44 },
         xAxis: {
-          ...baseAxis, type: 'value', name: 'Demand index (registered ÷ year median)',
-          nameLocation: 'middle', nameGap: 28, min: 0, max: +maxDemand.toFixed(1),
+          ...baseAxis,
+          type: 'value',
+          name: 'Demand index (registered ÷ year median)',
+          nameLocation: 'middle',
+          nameGap: 28,
+          min: 0,
+          max: +maxDemand.toFixed(1),
         },
         yAxis: {
-          ...baseAxis, type: 'value', name: `Satisfaction (${satisfaction.min}–${satisfaction.max})`,
-          nameLocation: 'middle', nameGap: 34,
-          min: Math.max(0, Math.floor(Math.min(refs.medianSatisfaction ?? Infinity, ...points.map((p) => p.satisfaction)) - 1)),
+          ...baseAxis,
+          type: 'value',
+          name: `Satisfaction (${satisfaction.min}–${satisfaction.max})`,
+          nameLocation: 'middle',
+          nameGap: 34,
+          min: Math.max(
+            0,
+            Math.floor(Math.min(refs.medianSatisfaction ?? Infinity, ...points.map((p) => p.satisfaction)) - 1),
+          ),
           max: 10,
         },
-        series: [{
-          type: 'scatter',
-          cursor: 'pointer',
-          data: points.map((p) => {
-            const sel = isSelected(p);
-            // bubbles wear their quadrant's action colour (same hues as the corner labels);
-            // a selection dims every other bubble so the drilled one is unmistakable
-            const color = ACTION_COLORS[quadrantAction(p.satisfaction, p.demand, refs)];
-            return {
-              value: [p.demand, p.satisfaction],
-              name: p.name,
-              meta: p,
-              itemStyle: {
-                color,
-                opacity: sel ? 1 : boardFilter ? 0.2 : 0.72,
-                borderColor: sel ? C.ink : C.surface,
-                borderWidth: sel ? 2.5 : 2,
-              },
-              label: {
-                show: sel || (!boardFilter && (quadMode !== 'event' || points.length <= 14)),
-                color: sel ? C.ink : C.ink2,
-                fontWeight: sel ? 700 : 400,
-              },
-            };
-          }),
-          symbolSize: (_v: unknown, p: ScatterParams) => 10 + 26 * Math.sqrt(p.data.meta.registered / maxReg),
-          emphasis: { focus: 'self', itemStyle: { opacity: 1 } },
-          label: { show: false, formatter: (p: ChartParams) => p.name, position: 'top', color: C.ink2, fontSize: 10 },
-          labelLayout: { hideOverlap: true },
-          markLine: {
-            silent: true, symbol: 'none',
-            lineStyle: { color: C.axis, type: 'dashed', width: 1.5 },
-            label: { color: C.muted, fontSize: 10 },
-            data: [
-              { xAxis: refs.medianDemand, label: { formatter: 'median demand', position: 'insideStartBottom', rotate: 0 } },
-              { yAxis: refs.medianSatisfaction, label: { formatter: 'median satisfaction', position: 'insideEndTop' } },
-            ],
+        series: [
+          {
+            type: 'scatter',
+            cursor: 'pointer',
+            data: points.map((p) => {
+              const sel = isSelected(p);
+              // bubbles wear their quadrant's action colour (same hues as the corner labels);
+              // a selection dims every other bubble so the drilled one is unmistakable
+              const color = ACTION_COLORS[quadrantAction(p.satisfaction, p.demand, refs)];
+              return {
+                value: [p.demand, p.satisfaction],
+                name: p.name,
+                meta: p,
+                itemStyle: {
+                  color,
+                  opacity: sel ? 1 : boardFilter ? 0.2 : 0.72,
+                  borderColor: sel ? C.ink : C.surface,
+                  borderWidth: sel ? 2.5 : 2,
+                },
+                label: {
+                  show: sel || (!boardFilter && (quadMode !== 'event' || points.length <= 14)),
+                  color: sel ? C.ink : C.ink2,
+                  fontWeight: sel ? 700 : 400,
+                },
+              };
+            }),
+            symbolSize: (_v: unknown, p: ScatterParams) => 10 + 26 * Math.sqrt(p.data.meta.registered / maxReg),
+            emphasis: { focus: 'self', itemStyle: { opacity: 1 } },
+            label: { show: false, formatter: (p: ChartParams) => p.name, position: 'top', color: C.ink2, fontSize: 10 },
+            labelLayout: { hideOverlap: true },
+            markLine: {
+              silent: true,
+              symbol: 'none',
+              lineStyle: { color: C.axis, type: 'dashed', width: 1.5 },
+              label: { color: C.muted, fontSize: 10 },
+              data: [
+                {
+                  xAxis: refs.medianDemand,
+                  label: { formatter: 'median demand', position: 'insideStartBottom', rotate: 0 },
+                },
+                {
+                  yAxis: refs.medianSatisfaction,
+                  label: { formatter: 'median satisfaction', position: 'insideEndTop' },
+                },
+              ],
+            },
           },
-        }],
+        ],
         graphic: [
           corner('SCALE', 'high demand, high satisfaction', 'right', 'top', C.green),
           corner('IMPROVE', 'high demand, low satisfaction', 'right', 'bottom', C.jasper),
@@ -198,14 +248,20 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
       : '';
   }
 
-  const ACTION_COLORS: Record<QuadrantActionLabel, string> = { Scale: C.green, Improve: C.jasper, Maintain: C.blue, Deprioritise: C.muted };
+  const ACTION_COLORS: Record<QuadrantActionLabel, string> = {
+    Scale: C.green,
+    Improve: C.jasper,
+    Maintain: C.blue,
+    Deprioritise: C.muted,
+  };
 
   // corner label + a small muted caption underneath naming the axes and the action,
   // e.g. "high demand, high satisfaction" under SCALE, so the quadrant reads on its
   // own without the reader needing the paragraph above the chart
   const corner = (action: string, caption: string, h: 'left' | 'right', v: 'top' | 'bottom', color: string) => ({
     type: 'text',
-    [h]: h === 'left' ? 56 : 30, [v]: v === 'top' ? 42 : 52,
+    [h]: h === 'left' ? 56 : 30,
+    [v]: v === 'top' ? 42 : 52,
     style: {
       text: `{action|${action}}\n{caption|${caption}}`,
       rich: {
@@ -251,7 +307,9 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
         ? `<div class="theme-chips">${themes.map((t) => `<span class="chip theme">${esc(t.theme)} <b>×${t.count}</b></span>`).join('')}</div>`
         : '<div class="table-count">No recurring themes yet, too few comments.</div>';
     const quoteHtml = (rs: SummaryComment[]) =>
-      pickQuotes(rs, 2).map((r) => `<div class="quote">“${esc(r.text)}”</div>`).join('');
+      pickQuotes(rs, 2)
+        .map((r) => `<div class="quote">“${esc(r.text)}”</div>`)
+        .join('');
 
     // Each action point carries the comment that produced it, so a director can
     // see exactly what they are acting on rather than trusting a keyword.
@@ -356,7 +414,9 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
               topInterest.length || rawInterest.length
                 ? `<div class="rec-topics">${
                     topInterest.length
-                      ? topInterest.map((t) => `<span class="chip theme">${esc(t.theme)} <b>×${t.count}</b></span>`).join('')
+                      ? topInterest
+                          .map((t) => `<span class="chip theme">${esc(t.theme)} <b>×${t.count}</b></span>`)
+                          .join('')
                       : rawInterest.map((t) => `<span class="chip theme">${esc(t)}</span>`).join('')
                   }</div>
                   <div class="rec-why">${
@@ -383,7 +443,9 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
   const boardRows = () => commentsFor(summary, eventsIn(summary, boardSelection()));
 
   function drawFeedbackBoard() {
-    renderFeedbackBoard(q('#fb-table'), boardRows(), eventsById, !!boardScope()?.feedbackSafe, boardFilter, () => setBoardFilter(null));
+    renderFeedbackBoard(q('#fb-table'), boardRows(), eventsById, !!boardScope()?.feedbackSafe, boardFilter, () =>
+      setBoardFilter(null),
+    );
   }
 
   function update() {

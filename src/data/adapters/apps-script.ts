@@ -7,7 +7,8 @@ import type { RawRow } from '../../types';
 const DATASET_KEYS = ['events', 'surveyResponses', 'feedbackAnswers', 'registrations', 'participants'] as const;
 const REQUEST_TIMEOUT_MS = 60_000;
 
-export type SignInErrorCode = 'invalid_token' | 'not_authorized' | 'missing_tab' | 'server_error' | 'network_error' | 'bad_response';
+export type SignInErrorCode =
+  'invalid_token' | 'not_authorized' | 'missing_tab' | 'server_error' | 'network_error' | 'bad_response';
 
 export class SignInDataError extends Error {
   readonly code: SignInErrorCode;
@@ -28,8 +29,7 @@ export interface AppsScriptOptions {
 }
 
 type AppsScriptResponse =
-  | { ok: true; datasets: Record<string, RawRow[]>; fetchedAt: string }
-  | { ok: false; code: string; message: string };
+  { ok: true; datasets: Record<string, RawRow[]>; fetchedAt: string } | { ok: false; code: string; message: string };
 
 const KNOWN_CODES: SignInErrorCode[] = ['invalid_token', 'not_authorized', 'missing_tab', 'server_error'];
 
@@ -48,21 +48,31 @@ export function createAppsScriptAdapter(options: AppsScriptOptions): DataSourceA
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
       } catch {
-        throw new SignInDataError('network_error', 'The reporting sheet could not be reached. Check your connection and try again.');
+        throw new SignInDataError(
+          'network_error',
+          'The reporting sheet could not be reached. Check your connection and try again.',
+        );
       }
 
       let body: AppsScriptResponse;
       try {
-        body = await response.json() as AppsScriptResponse;
+        body = (await response.json()) as AppsScriptResponse;
       } catch {
-        throw new SignInDataError('bad_response', 'The sheet backend returned an unexpected response. Check that VITE_APPS_SCRIPT_URL is the web app URL ending in /exec.');
+        throw new SignInDataError(
+          'bad_response',
+          'The sheet backend returned an unexpected response. Check that VITE_APPS_SCRIPT_URL is the web app URL ending in /exec.',
+        );
       }
       if (!body.ok) {
-        const code = KNOWN_CODES.includes(body.code as SignInErrorCode) ? body.code as SignInErrorCode : 'server_error';
+        const code = KNOWN_CODES.includes(body.code as SignInErrorCode)
+          ? (body.code as SignInErrorCode)
+          : 'server_error';
         throw new SignInDataError(code, body.message);
       }
 
-      const datasets = Object.fromEntries(DATASET_KEYS.map((key) => [key, body.datasets[key] ?? []])) as unknown as RawDatasets;
+      const datasets = Object.fromEntries(
+        DATASET_KEYS.map((key) => [key, body.datasets[key] ?? []]),
+      ) as unknown as RawDatasets;
       return {
         datasets,
         source: {

@@ -7,8 +7,7 @@ export const isDisclosureSafe = (count: number) => count >= minimumSegmentSize()
 export const distinctResponseCount = (rows: Array<{ response_id?: string }>) =>
   new Set(rows.map((row) => row.response_id).filter(Boolean)).size;
 
-export const canShowFeedback = (rows: Array<{ response_id?: string }>) =>
-  isDisclosureSafe(distinctResponseCount(rows));
+export const canShowFeedback = (rows: Array<{ response_id?: string }>) => isDisclosureSafe(distinctResponseCount(rows));
 
 export type DisclosureGroup<T> = {
   key: string;

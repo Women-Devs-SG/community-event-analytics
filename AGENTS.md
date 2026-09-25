@@ -16,21 +16,23 @@ Community Event Analytics is a static dashboard for event organizers, built with
 
 Run commands from the repository root. Use npm and the committed `package-lock.json`; `.nvmrc` pins Node 22 and `package.json` requires Node >=22.
 
-| Command | Purpose |
-| --- | --- |
-| `npm ci` | Install the locked dependencies for a fresh checkout. |
-| `npm run hooks:install` | Enable the shared pre-commit hook for an existing checkout. |
-| `npm run check:commit` | Check staged whitespace, generic scan, types, and all tests. |
-| `npm run dev` | Generate the summary in development mode, then start Vite. |
-| `npm run summary` | Regenerate `public/dashboard-summary.json` in production mode. |
-| `npm test` | Run all Vitest tests once. |
-| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path. |
-| `npm run typecheck` | Check strict TypeScript without emitting files. |
-| `npm run scan:generic` | Scan for selected source-project identifiers and deployment values. |
-| `npm run build` | Typecheck, regenerate the summary, and build into `dist/`. |
-| `npm run preview` | Serve the existing production build locally. |
+| Command                           | Purpose                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| `npm ci`                          | Install the locked dependencies for a fresh checkout.                    |
+| `npm run hooks:install`           | Enable the shared pre-commit hook for an existing checkout.              |
+| `npm run check:commit`            | Check staged whitespace, formatting, generic scan, types, and all tests. |
+| `npm run format`                  | Apply Prettier formatting to supported repository files.                 |
+| `npm run format:check`            | Check formatting without modifying files.                                |
+| `npm run dev`                     | Generate the summary in development mode, then start Vite.               |
+| `npm run summary`                 | Regenerate `public/dashboard-summary.json` in production mode.           |
+| `npm test`                        | Run all Vitest tests once.                                               |
+| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path.                   |
+| `npm run typecheck`               | Check strict TypeScript without emitting files.                          |
+| `npm run scan:generic`            | Scan for selected source-project identifiers and deployment values.      |
+| `npm run build`                   | Typecheck, regenerate the summary, and build into `dist/`.               |
+| `npm run preview`                 | Serve the existing production build locally.                             |
 
-There is no configured lint, formatter, or end-to-end test command. Do not invent one or add tooling just to complete an unrelated change. Use the URL printed by Vite rather than assuming a port.
+Prettier is pinned in `package.json` and configured in `.prettierrc.json`, including Apps Script `.gs` support. Respect `.prettierignore` and LF line endings in `.gitattributes`. There is no configured lint or end-to-end test command. Do not invent one or add tooling just to complete an unrelated change. Use the URL printed by Vite rather than assuming a port.
 
 `npm ci` installs `.githooks/pre-commit` via the `prepare` script outside CI. The hook forces synthetic data and runs `check:commit`; it does not build, modify, or stage files. Only the whitespace check reads the index; other checks inspect the working tree. Preserve custom hook configurations and keep `.githooks/*` LF-terminated through `.gitattributes`.
 
@@ -40,23 +42,23 @@ Environment files can change the source. Keep routine checks on `VITE_DATA_SOURC
 
 ## Code map
 
-| Area | Responsibility |
-| --- | --- |
-| `src/main.tsx` | React application shell, sign-in state, dashboard lifecycle. |
-| `src/dash-effectiveness.ts`, `src/dash-community.ts` | Imperative DOM/ECharts dashboard controllers. |
-| `src/components.ts` | Shared DOM components, filters, feedback board, HTML escaping. |
-| `src/style.css`, `src/theme.ts` | Page styles and chart styles. |
-| `src/config.ts`, `src/vite-env.d.ts`, `.env.example` | Community configuration and public environment settings. |
-| `src/data.ts` | Browser summary loading, shared filters, scope lookup, error presentation. |
-| `src/data/contract.ts`, `src/types.ts` | Source contract and normalized row/runtime types. |
-| `src/data/adapters/` | Synthetic, build-time Google Sheets, and authenticated Apps Script sources. |
-| `src/data/normalize.ts`, `src/data/validate.ts`, `src/data/load.ts` | Normalize aliases/values, validate keys/joins, assemble row-level data. |
-| `src/metrics.ts`, `src/privacy.ts` | Metric calculations and disclosure controls. |
+| Area                                                                   | Responsibility                                                                |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/main.tsx`                                                         | React application shell, sign-in state, dashboard lifecycle.                  |
+| `src/dash-effectiveness.ts`, `src/dash-community.ts`                   | Imperative DOM/ECharts dashboard controllers.                                 |
+| `src/components.ts`                                                    | Shared DOM components, filters, feedback board, HTML escaping.                |
+| `src/style.css`, `src/theme.ts`                                        | Page styles and chart styles.                                                 |
+| `src/config.ts`, `src/vite-env.d.ts`, `.env.example`                   | Community configuration and public environment settings.                      |
+| `src/data.ts`                                                          | Browser summary loading, shared filters, scope lookup, error presentation.    |
+| `src/data/contract.ts`, `src/types.ts`                                 | Source contract and normalized row/runtime types.                             |
+| `src/data/adapters/`                                                   | Synthetic, build-time Google Sheets, and authenticated Apps Script sources.   |
+| `src/data/normalize.ts`, `src/data/validate.ts`, `src/data/load.ts`    | Normalize aliases/values, validate keys/joins, assemble row-level data.       |
+| `src/metrics.ts`, `src/privacy.ts`                                     | Metric calculations and disclosure controls.                                  |
 | `src/summary/build.ts`, `src/summary/scope.ts`, `src/summary/types.ts` | Summary generation, reachable filter selections, serialized summary contract. |
-| `src/summary/generate.ts`, `scripts/build-summary.mjs` | Build-time source selection and summary output. |
-| `src/summary/live.ts`, `src/auth/`, `apps-script/Code.gs` | Authenticated browser loading and server-side access checks. |
-| `src/sentiment.ts`, `src/summary/sentiment-score.ts` | Feedback themes/actions and sentiment scoring. |
-| `.github/workflows/` | Pull-request validation and GitHub Pages deployment. |
+| `src/summary/generate.ts`, `scripts/build-summary.mjs`                 | Build-time source selection and summary output.                               |
+| `src/summary/live.ts`, `src/auth/`, `apps-script/Code.gs`              | Authenticated browser loading and server-side access checks.                  |
+| `src/sentiment.ts`, `src/summary/sentiment-score.ts`                   | Feedback themes/actions and sentiment scoring.                                |
+| `.github/workflows/`                                                   | Pull-request validation and GitHub Pages deployment.                          |
 
 ## Data and security boundaries
 
@@ -90,7 +92,7 @@ There are two distinct paths; preserve both:
 
 ## Verification and handoff
 
-For code changes, run the relevant focused tests while working, then `npm run scan:generic`, `npm test`, and `npm run build` before handoff. The build includes typechecking. For documentation-only edits, check links/commands and run the generic scan; do not add tests for prose.
+For code changes, run the relevant focused tests while working, then `npm run format:check`, `npm run scan:generic`, `npm test`, and `npm run build` before handoff. The build includes typechecking. For documentation-only edits, check links/commands and run formatting and generic checks; do not add tests for prose. Use `npm run format` to fix formatting and review the resulting diff before staging.
 
 Existing test coverage is organized by behavior:
 

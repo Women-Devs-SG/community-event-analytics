@@ -5,7 +5,8 @@ export type SegmentId = 'experience' | 'gender' | 'jobFamily' | 'sector' | 'orga
 export interface SegmentConfig {
   label: string;
   shortLabel: string;
-  registrationField: 'experience_segment' | 'gender_segment' | 'job_family_segment' | 'sector_segment' | 'organization_segment';
+  registrationField:
+    'experience_segment' | 'gender_segment' | 'job_family_segment' | 'sector_segment' | 'organization_segment';
   responseField: 'experience_segment' | null;
   order: readonly string[];
   unknownLabel: string;
@@ -108,10 +109,14 @@ export const communityConfig = {
     events: 'events',
   },
   data: {
-    sourceKind: env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin' ? env.VITE_DATA_SOURCE : 'synthetic',
-    sourceLabel: env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin'
-      ? (env.VITE_SOURCE_LABEL || 'Google Sheets')
-      : 'Synthetic demo data',
+    sourceKind:
+      env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin'
+        ? env.VITE_DATA_SOURCE
+        : 'synthetic',
+    sourceLabel:
+      env.VITE_DATA_SOURCE === 'google-sheets' || env.VITE_DATA_SOURCE === 'google-signin'
+        ? env.VITE_SOURCE_LABEL || 'Google Sheets'
+        : 'Synthetic demo data',
     // google-signin only: viewers sign in with Google, and the Apps Script web app
     // (apps-script/Code.gs) returns the sheet's rows to people it is shared with.
     // Neither value grants access on its own.
@@ -172,24 +177,44 @@ export const communityConfig = {
   },
   segments: {
     experience: {
-      label: 'Experience level', shortLabel: 'Experience', registrationField: 'experience_segment', responseField: 'experience_segment',
-      order: ['Student', '0-2', '3-5', '6-10', '10+', 'Not stated'], unknownLabel: 'Not stated',
+      label: 'Experience level',
+      shortLabel: 'Experience',
+      registrationField: 'experience_segment',
+      responseField: 'experience_segment',
+      order: ['Student', '0-2', '3-5', '6-10', '10+', 'Not stated'],
+      unknownLabel: 'Not stated',
     },
     gender: {
-      label: 'Gender', shortLabel: 'Gender', registrationField: 'gender_segment', responseField: null,
-      order: ['Female', 'Male', 'Other', 'Not stated'], unknownLabel: 'Not stated',
+      label: 'Gender',
+      shortLabel: 'Gender',
+      registrationField: 'gender_segment',
+      responseField: null,
+      order: ['Female', 'Male', 'Other', 'Not stated'],
+      unknownLabel: 'Not stated',
     },
     jobFamily: {
-      label: 'Job family', shortLabel: 'Job family', registrationField: 'job_family_segment', responseField: null,
-      order: [], unknownLabel: 'Unmapped',
+      label: 'Job family',
+      shortLabel: 'Job family',
+      registrationField: 'job_family_segment',
+      responseField: null,
+      order: [],
+      unknownLabel: 'Unmapped',
     },
     sector: {
-      label: 'Sector', shortLabel: 'Sector', registrationField: 'sector_segment', responseField: null,
-      order: ['Private', 'Public', 'Academia', 'Non-profit', 'Self-employed', 'Not stated'], unknownLabel: 'Not stated',
+      label: 'Sector',
+      shortLabel: 'Sector',
+      registrationField: 'sector_segment',
+      responseField: null,
+      order: ['Private', 'Public', 'Academia', 'Non-profit', 'Self-employed', 'Not stated'],
+      unknownLabel: 'Not stated',
     },
     organization: {
-      label: 'Organization', shortLabel: 'Organization', registrationField: 'organization_segment', responseField: null,
-      order: [], unknownLabel: 'Not stated',
+      label: 'Organization',
+      shortLabel: 'Organization',
+      registrationField: 'organization_segment',
+      responseField: null,
+      order: [],
+      unknownLabel: 'Not stated',
     },
   },
   privacy: {
@@ -198,4 +223,11 @@ export const communityConfig = {
   },
 } as const satisfies CommunityConfig;
 
-export const surveyExperienceOrder = ['0-1 year', '2-3 years', '3-4 years', '5-6 years', '7+ years', 'Not stated'] as const;
+export const surveyExperienceOrder = [
+  '0-1 year',
+  '2-3 years',
+  '3-4 years',
+  '5-6 years',
+  '7+ years',
+  'Not stated',
+] as const;

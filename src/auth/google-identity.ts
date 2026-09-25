@@ -36,10 +36,15 @@ function loadGoogleIdentity(): Promise<GoogleAccountsId> {
     const script = document.createElement('script');
     script.src = SCRIPT_URL;
     script.async = true;
-    script.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error('Google sign-in did not start.')));
+    script.onload = () =>
+      window.google?.accounts?.id
+        ? resolve(window.google.accounts.id)
+        : reject(new Error('Google sign-in did not start.'));
     script.onerror = () => {
       loading = null;
-      reject(new Error('Google sign-in could not be loaded. Check your connection or any content blocker, then reload.'));
+      reject(
+        new Error('Google sign-in could not be loaded. Check your connection or any content blocker, then reload.'),
+      );
     };
     document.head.append(script);
   });
@@ -47,14 +52,23 @@ function loadGoogleIdentity(): Promise<GoogleAccountsId> {
 }
 
 /** Renders the Google button into `container`. `onCredential` receives the ID token. */
-export async function showSignInButton(clientId: string, container: HTMLElement, onCredential: (credential: string) => void) {
+export async function showSignInButton(
+  clientId: string,
+  container: HTMLElement,
+  onCredential: (credential: string) => void,
+) {
   if (!clientId) throw new Error('Sign-in is not configured: VITE_GOOGLE_OAUTH_CLIENT_ID is missing.');
   const id = await loadGoogleIdentity();
   credentialHandler = onCredential;
   if (initializedFor !== clientId) {
     // auto_select signs a returning viewer straight back in when their
     // one-hour sign-in has expired.
-    id.initialize({ client_id: clientId, callback: (response) => credentialHandler(response.credential), auto_select: true, cancel_on_tap_outside: false });
+    id.initialize({
+      client_id: clientId,
+      callback: (response) => credentialHandler(response.credential),
+      auto_select: true,
+      cancel_on_tap_outside: false,
+    });
     initializedFor = clientId;
     id.prompt();
   }
@@ -76,7 +90,9 @@ export interface SignedInUser {
 export function readIdToken(jwt: string): SignedInUser {
   try {
     const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const bytes = Uint8Array.from(atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')), (c) => c.charCodeAt(0));
+    const bytes = Uint8Array.from(atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')), (c) =>
+      c.charCodeAt(0),
+    );
     const claims = JSON.parse(new TextDecoder().decode(bytes)) as { email?: string; name?: string };
     return { email: claims.email ?? '', name: claims.name ?? claims.email ?? '' };
   } catch {

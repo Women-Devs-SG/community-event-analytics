@@ -21,7 +21,9 @@ function BrandLogo() {
   const initials = config.community.shortName.slice(0, 4).toUpperCase();
   return (
     <div className="brand" aria-label={config.community.name}>
-      <span className="brand-mark" aria-hidden="true">{initials}</span>
+      <span className="brand-mark" aria-hidden="true">
+        {initials}
+      </span>
       <span className="brand-copy">
         <strong>{config.community.name}</strong>
         {config.community.locationLabel && <small>{config.community.locationLabel}</small>}
@@ -88,10 +90,12 @@ function App() {
   // Show the Google button whenever the sign-in card is on screen.
   useEffect(() => {
     if (!signInMode || data || signingIn || !signInButtonRef.current) return;
-    showSignInButton(config.data.googleSignIn.clientId, signInButtonRef.current, onCredential).catch((reason: unknown) => {
-      console.error(reason);
-      setError(reason instanceof Error ? reason.message : 'Google sign-in could not be started.');
-    });
+    showSignInButton(config.data.googleSignIn.clientId, signInButtonRef.current, onCredential).catch(
+      (reason: unknown) => {
+        console.error(reason);
+        setError(reason instanceof Error ? reason.message : 'Google sign-in could not be started.');
+      },
+    );
   }, [data, signingIn, onCredential]);
 
   const signOut = () => {
@@ -171,8 +175,12 @@ function App() {
           </nav>
           {signInMode && user && data && (
             <div className="account">
-              <span className="account-email" title={user.name}>{user.email}</span>
-              <button type="button" className="account-signout" onClick={signOut}>Sign out</button>
+              <span className="account-email" title={user.name}>
+                {user.email}
+              </span>
+              <button type="button" className="account-signout" onClick={signOut}>
+                Sign out
+              </button>
             </div>
           )}
         </div>
@@ -185,25 +193,34 @@ function App() {
           <div className="card signin-card">
             <h2>Sign in to view the dashboard</h2>
             <p>
-              Use the Google account the reporting sheet is shared with. Data is read live from the sheet
-              and kept only in this browser tab.
+              Use the Google account the reporting sheet is shared with. Data is read live from the sheet and kept only
+              in this browser tab.
             </p>
-            {signingIn
-              ? <div className="status" role="status">Loading data from {config.data.sourceLabel}…</div>
-              : <div ref={signInButtonRef} className="signin-button" />}
+            {signingIn ? (
+              <div className="status" role="status">
+                Loading data from {config.data.sourceLabel}…
+              </div>
+            ) : (
+              <div ref={signInButtonRef} className="signin-button" />
+            )}
             {error && (
               <div className="status error" role="alert">
                 {error}
-                {user && <> <button type="button" className="account-signout" onClick={signOut}>Use another account</button></>}
+                {user && (
+                  <>
+                    {' '}
+                    <button type="button" className="account-signout" onClick={signOut}>
+                      Use another account
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
         )}
         {!signInMode && !data && (
           <div className={`status${error ? ' error' : ''}`} role="status">
-            {error
-              ? error
-              : 'Loading dashboard data…'}
+            {error ? error : 'Loading dashboard data…'}
           </div>
         )}
         <section
@@ -224,9 +241,10 @@ function App() {
 
       <footer className="footer">
         <span>
-          {data && (signInMode
-            ? `Live data from ${data.source.label}, loaded ${new Date(data.generatedAt).toLocaleString()}`
-            : `Summarised from ${data.source.label} on ${new Date(data.generatedAt).toLocaleString()}`)}
+          {data &&
+            (signInMode
+              ? `Live data from ${data.source.label}, loaded ${new Date(data.generatedAt).toLocaleString()}`
+              : `Summarised from ${data.source.label} on ${new Date(data.generatedAt).toLocaleString()}`)}
         </span>
         <span>{config.community.footer}</span>
       </footer>

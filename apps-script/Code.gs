@@ -38,7 +38,8 @@ class RequestError extends Error {
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (typeof body.idToken !== 'string' || !body.idToken) throw new RequestError('invalid_token', 'No sign-in token was sent.');
+    if (typeof body.idToken !== 'string' || !body.idToken)
+      throw new RequestError('invalid_token', 'No sign-in token was sent.');
 
     const claims = checkClaims_(fetchTokenClaims_(body.idToken), CLIENT_ID, Math.floor(Date.now() / 1000));
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -56,7 +57,11 @@ function doPost(e) {
   } catch (error) {
     if (error instanceof RequestError) return json_({ ok: false, code: error.code, message: error.message });
     console.error(error);
-    return json_({ ok: false, code: 'server_error', message: 'The sheet could not be read. See the Apps Script executions log.' });
+    return json_({
+      ok: false,
+      code: 'server_error',
+      message: 'The sheet could not be read. See the Apps Script executions log.',
+    });
   }
 }
 
@@ -66,19 +71,26 @@ function doGet() {
 
 // Google's tokeninfo endpoint checks the JWT signature and expiry, and returns its claims.
 function fetchTokenClaims_(idToken) {
-  const response = UrlFetchApp.fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
-    muteHttpExceptions: true,
-  });
-  if (response.getResponseCode() !== 200) throw new RequestError('invalid_token', 'The sign-in has expired or could not be verified.');
+  const response = UrlFetchApp.fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+    {
+      muteHttpExceptions: true,
+    },
+  );
+  if (response.getResponseCode() !== 200)
+    throw new RequestError('invalid_token', 'The sign-in has expired or could not be verified.');
   return JSON.parse(response.getContentText());
 }
 
 // The claims must be for this dashboard, from Google, unexpired, and for a verified email.
 function checkClaims_(claims, clientId, nowSeconds) {
-  if (!claims || claims.aud !== clientId) throw new RequestError('invalid_token', 'The sign-in was issued for a different app.');
-  if (TOKEN_ISSUERS.indexOf(claims.iss) === -1) throw new RequestError('invalid_token', 'The sign-in was not issued by Google.');
+  if (!claims || claims.aud !== clientId)
+    throw new RequestError('invalid_token', 'The sign-in was issued for a different app.');
+  if (TOKEN_ISSUERS.indexOf(claims.iss) === -1)
+    throw new RequestError('invalid_token', 'The sign-in was not issued by Google.');
   if (!(Number(claims.exp) > nowSeconds)) throw new RequestError('invalid_token', 'The sign-in has expired.');
-  if (String(claims.email_verified) !== 'true' || !claims.email) throw new RequestError('invalid_token', 'The Google account has no verified email address.');
+  if (String(claims.email_verified) !== 'true' || !claims.email)
+    throw new RequestError('invalid_token', 'The Google account has no verified email address.');
   return { email: String(claims.email).toLowerCase() };
 }
 
@@ -97,7 +109,8 @@ function isAllowed_(email, sharedEmails) {
 // First row is the header; fully blank rows are skipped.
 function rowsFromValues_(values) {
   const header = (values[0] || []).map((field) => String(field).trim());
-  return values.slice(1)
+  return values
+    .slice(1)
     .filter((row) => row.some((cell) => String(cell).trim() !== ''))
     .map((row) => {
       const record = {};

@@ -29,7 +29,7 @@ No service account, no billing account, and no server are needed.
    - User type: **External** (for regular Gmail accounts). Choose **Internal** only if everyone uses one Google Workspace.
    - Fill in the app name, a support email, and the developer contact email.
    - Scopes: add nothing. Sign-in needs only the basic `openid`, `email`, and `profile` scopes.
-   - When the form is complete, **publish** the app (move it from *Testing* to *In production*). With only the basic scopes, Google does not normally require a review. Check the console for any notice, as Google's requirements change.
+   - When the form is complete, **publish** the app (move it from _Testing_ to _In production_). With only the basic scopes, Google does not normally require a review. Check the console for any notice, as Google's requirements change.
 3. Go to **APIs & Services → Credentials → Create credentials → OAuth client ID**:
    - Application type: **Web application**.
    - **Authorized JavaScript origins:** the dashboard's origin without a path, e.g. `https://<account>.github.io`. Add `http://localhost:5173` for local development.
@@ -46,7 +46,7 @@ No service account, no billing account, and no server are needed.
    - **Who has access:** Anyone
 5. Click **Deploy**, approve the permissions it asks for (it reads this spreadsheet and calls Google's token check), and copy the **Web app URL**. It ends in `/exec`.
 
-"Anyone" means anyone may *call* the URL. The script answers only requests that carry a valid sign-in from someone on the sharing list.
+"Anyone" means anyone may _call_ the URL. The script answers only requests that carry a valid sign-in from someone on the sharing list.
 
 After editing the script later, use **Deploy → Manage deployments → Edit → Version: New version** so the URL stays the same.
 
@@ -80,12 +80,12 @@ Run `npm run dev`, sign in, and check both dashboard tabs.
 
 ## Troubleshooting
 
-| Message | Cause |
-| --- | --- |
-| "…doesn't have access" | The account isn't on the sheet's sharing list, or was shared through a link or group. |
-| "Your sign-in expired or could not be verified" | Sign in again. If it keeps happening, check that `CLIENT_ID` in the script matches `VITE_GOOGLE_OAUTH_CLIENT_ID`. |
-| "…unexpected response. Check that VITE_APPS_SCRIPT_URL…" | The URL is wrong, isn't the `/exec` URL, or the deployment isn't set to "Anyone". |
-| "The sheet has no tab named…" | Update `TABS` in the script, then deploy a new version. |
-| The Google button shows an error | The dashboard's origin is missing from **Authorized JavaScript origins**. |
+| Message                                                  | Cause                                                                                                             |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| "…doesn't have access"                                   | The account isn't on the sheet's sharing list, or was shared through a link or group.                             |
+| "Your sign-in expired or could not be verified"          | Sign in again. If it keeps happening, check that `CLIENT_ID` in the script matches `VITE_GOOGLE_OAUTH_CLIENT_ID`. |
+| "…unexpected response. Check that VITE_APPS_SCRIPT_URL…" | The URL is wrong, isn't the `/exec` URL, or the deployment isn't set to "Anyone".                                 |
+| "The sheet has no tab named…"                            | Update `TABS` in the script, then deploy a new version.                                                           |
+| The Google button shows an error                         | The dashboard's origin is missing from **Authorized JavaScript origins**.                                         |
 
 The Apps Script's **Executions** page lists every request and any server errors.

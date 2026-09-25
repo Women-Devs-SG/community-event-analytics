@@ -84,7 +84,8 @@ export function satisfactionVerdict(responses: ResponseRecord[]) {
   const sats = responses.map((r) => r.satisfaction).filter((v): v is number => v != null);
   if (!sats.length) return null;
   const mean = sats.reduce((a, b) => a + b, 0) / sats.length;
-  const label: VerdictLabel = mean >= SAT_BANDS.positive ? 'positive' : mean >= SAT_BANDS.neutral ? 'neutral' : 'negative';
+  const label: VerdictLabel =
+    mean >= SAT_BANDS.positive ? 'positive' : mean >= SAT_BANDS.neutral ? 'neutral' : 'negative';
   return {
     label,
     mean,
@@ -125,7 +126,9 @@ export function quadrantPoints(
     const groupKey = e[key];
     if (groupKey == null) continue;
     const g = groups.get(groupKey) ?? { satW: 0, respW: 0, demandSum: 0, registered: 0, n: 0 };
-    const resp = slice.responses.filter((response) => response.event_id === e.event_id && response.satisfaction != null).length;
+    const resp = slice.responses.filter(
+      (response) => response.event_id === e.event_id && response.satisfaction != null,
+    ).length;
     if (!resp) continue;
     g.satW += (satByEvent.get(e.event_id) as number) * resp;
     g.respW += resp;
@@ -151,7 +154,8 @@ export function quadrantPoints(
 export type QuadrantActionLabel = 'Scale' | 'Improve' | 'Maintain' | 'Deprioritise';
 
 export const quadrantAction = (sat: number, demand: number, refs: QuadrantRefs): QuadrantActionLabel => {
-  const hiSat = sat >= (refs.medianSatisfaction ?? 0), hiDem = demand >= (refs.medianDemand ?? 0);
+  const hiSat = sat >= (refs.medianSatisfaction ?? 0),
+    hiDem = demand >= (refs.medianDemand ?? 0);
   if (hiSat && hiDem) return 'Scale';
   if (!hiSat && hiDem) return 'Improve';
   if (hiSat && !hiDem) return 'Maintain';
@@ -178,7 +182,14 @@ export function kpisCommunity(slice: DataSlice) {
   const topSector = [...sectorCounts.entries()].sort((a, b) => b[1] - a[1])[0] ?? null;
   const sectorTotal = registrations.length;
 
-  return { uniquePeople: people.size, genderCounts, returningRate, returningPopulation: persons.length, topSector, sectorTotal };
+  return {
+    uniquePeople: people.size,
+    genderCounts,
+    returningRate,
+    returningPopulation: persons.length,
+    topSector,
+    sectorTotal,
+  };
 }
 
 export function countBy<T>(rows: T[], keyFn: (row: T) => string): Map<string, number> {
@@ -259,7 +270,6 @@ export function distributionByYoe(slice: DataSlice): DistributionRow[] {
   }
   return [...groups.entries()].map(([bucket, g]) => ({ bucket, ...g }));
 }
-
 
 // person-level returning rate per segment, behaviour, not stated opinion, and valid
 // for every segment dimension since it never touches the anonymous survey

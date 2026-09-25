@@ -1,6 +1,17 @@
 // Dashboard 2, Community profile
 import * as echarts from 'echarts';
-import { C, baseAxis, baseTooltip, baseChart, GENDER_ORDER, GENDER_COLORS, SECTOR_ORDER, SECTOR_COLORS, SEQ_BLUE, indexOfOrLast } from './theme';
+import {
+  C,
+  baseAxis,
+  baseTooltip,
+  baseChart,
+  GENDER_ORDER,
+  GENDER_COLORS,
+  SECTOR_ORDER,
+  SECTOR_COLORS,
+  SEQ_BLUE,
+  indexOfOrLast,
+} from './theme';
 import type { ChartParams } from './theme';
 import { scopeFor } from './data';
 import { fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER } from './metrics';
@@ -126,7 +137,9 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     root.querySelectorAll<HTMLElement>('#seg-toggle .toggle-chip').forEach((b) => {
       const off = !validCombo(b.dataset.dim, segOutcome);
       b.classList.toggle('disabled', off);
-      b.title = off ? `The survey only records ${responseSegmentLabel.toLowerCase()}; pick Returning rate to use this segment` : '';
+      b.title = off
+        ? `The survey only records ${responseSegmentLabel.toLowerCase()}; pick Returning rate to use this segment`
+        : '';
     });
     root.querySelectorAll<HTMLElement>('#outcome-toggle .toggle-chip').forEach((b) => {
       const off = !validCombo(segDim, b.dataset.out);
@@ -176,70 +189,123 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const safeGender = gender.length > 0;
     const genderTotal = gender.reduce((total, group) => total + group.count, 0) || 1;
     q('#comm-kpis').innerHTML = [
-      kpiCard(k.uniquePeople != null ? fmtInt(k.uniquePeople) : 'Hidden', `Unique ${terms.participants}`, k.uniquePeople != null ? 'distinct de-identified participant keys' : 'Selection is below the privacy threshold'),
+      kpiCard(
+        k.uniquePeople != null ? fmtInt(k.uniquePeople) : 'Hidden',
+        `Unique ${terms.participants}`,
+        k.uniquePeople != null ? 'distinct de-identified participant keys' : 'Selection is below the privacy threshold',
+      ),
       `<div class="card kpi"><div class="kpi-label" style="margin-top:0">${esc(segments.gender.label)} mix</div>${safeGender ? '<div id="gender-donut" style="height:110px"></div>' : '<div class="empty-note">Hidden to protect privacy</div>'}</div>`,
-      kpiCard(k.returningRate != null ? fmtPct(k.returningRate) : 'Hidden', 'Returning rate', k.returningRate != null ? `share of ${terms.participants} who registered for another ${terms.event}` : 'Selection is below the privacy threshold'),
-      kpiCard(k.topSector ? esc(k.topSector.key) : 'Hidden', `Largest ${segments.sector.shortLabel.toLowerCase()}`, k.topSector ? `${fmtInt(k.topSector.count)} ${terms.registrations}` : 'Segment totals would reveal a small group'),
+      kpiCard(
+        k.returningRate != null ? fmtPct(k.returningRate) : 'Hidden',
+        'Returning rate',
+        k.returningRate != null
+          ? `share of ${terms.participants} who registered for another ${terms.event}`
+          : 'Selection is below the privacy threshold',
+      ),
+      kpiCard(
+        k.topSector ? esc(k.topSector.key) : 'Hidden',
+        `Largest ${segments.sector.shortLabel.toLowerCase()}`,
+        k.topSector
+          ? `${fmtInt(k.topSector.count)} ${terms.registrations}`
+          : 'Segment totals would reveal a small group',
+      ),
     ].join('');
 
     donutChart?.dispose();
     if (!safeGender) return;
     donutChart = echarts.init(donutEl());
     const gData = gender.map((group) => ({
-      name: group.key, value: group.count, itemStyle: { color: genderColors[group.key] ?? C.notStated },
+      name: group.key,
+      value: group.count,
+      itemStyle: { color: genderColors[group.key] ?? C.notStated },
     }));
     donutChart.setOption({
       ...baseChart,
-      tooltip: { ...baseTooltip, formatter: (p: ChartParams) => `${esc(p.name)}: <b>${fmtInt(p.value)}</b> (${p.percent}%)` },
-      series: [{
-        type: 'pie', radius: ['58%', '85%'], center: ['30%', '50%'],
-        itemStyle: { borderColor: C.card, borderWidth: 2 },
-        label: { show: false },
-        data: gData,
-      }],
+      tooltip: {
+        ...baseTooltip,
+        formatter: (p: ChartParams) => `${esc(p.name)}: <b>${fmtInt(p.value)}</b> (${p.percent}%)`,
+      },
+      series: [
+        {
+          type: 'pie',
+          radius: ['58%', '85%'],
+          center: ['30%', '50%'],
+          itemStyle: { borderColor: C.card, borderWidth: 2 },
+          label: { show: false },
+          data: gData,
+        },
+      ],
       legend: {
-        orient: 'vertical', right: 0, top: 'middle', itemWidth: 10, itemHeight: 10,
+        orient: 'vertical',
+        right: 0,
+        top: 'middle',
+        itemWidth: 10,
+        itemHeight: 10,
         textStyle: { color: C.ink2, fontSize: 11 },
-        formatter: (name: string) => `${name} ${(((gData.find((item) => item.name === name)?.value ?? 0) / genderTotal) * 100).toFixed(0)}%`,
+        formatter: (name: string) =>
+          `${name} ${(((gData.find((item) => item.name === name)?.value ?? 0) / genderTotal) * 100).toFixed(0)}%`,
       },
     });
   }
 
   const stackedGenderSeries = (buckets: string[], tab: Map<string, CrossTabGroup>) => {
     const genderKeys = [...new Set(buckets.flatMap((b) => tab.get(b)?.children.map((child) => child.key) ?? []))];
-    return genderKeys.sort((a, b) => indexOfOrLast(GENDER_ORDER, a) - indexOfOrLast(GENDER_ORDER, b)).map((g) => ({
-      name: g, type: 'bar', stack: 'g', barMaxWidth: 22,
-      itemStyle: { color: genderColors[g] ?? C.notStated, borderColor: C.card, borderWidth: 1 },
-      data: buckets.map((b) => tab.get(b)?.children.find((child) => child.key === g)?.count ?? 0),
-    }));
+    return genderKeys
+      .sort((a, b) => indexOfOrLast(GENDER_ORDER, a) - indexOfOrLast(GENDER_ORDER, b))
+      .map((g) => ({
+        name: g,
+        type: 'bar',
+        stack: 'g',
+        barMaxWidth: 22,
+        itemStyle: { color: genderColors[g] ?? C.notStated, borderColor: C.card, borderWidth: 1 },
+        data: buckets.map((b) => tab.get(b)?.children.find((child) => child.key === g)?.count ?? 0),
+      }));
   };
 
-  const hideChart = (chart: echarts.ECharts, message: string) => chart.setOption({
-    ...baseChart,
-    xAxis: { show: false }, yAxis: { show: false }, series: [],
-    graphic: [{ type: 'text', left: 'center', top: 'middle', style: { text: message, fill: C.muted, fontSize: 12 } }],
-  }, true);
+  const hideChart = (chart: echarts.ECharts, message: string) =>
+    chart.setOption(
+      {
+        ...baseChart,
+        xAxis: { show: false },
+        yAxis: { show: false },
+        series: [],
+        graphic: [
+          { type: 'text', left: 'center', top: 'middle', style: { text: message, fill: C.muted, fontSize: 12 } },
+        ],
+      },
+      true,
+    );
 
   function drawYoe() {
     const tab = new Map(scope!.experienceByGender.map((group) => [group.key, group]));
     const buckets = YOE_ORDER.filter((b) => tab.has(b));
     if (!buckets.length) return hideChart(yoeChart, 'No privacy-safe segments for this selection.');
-    yoeChart.setOption({
-      ...baseChart,
-      tooltip: {
-        ...baseTooltip, trigger: 'axis', axisPointer: { type: 'shadow' },
-        formatter: (ps: ChartParams[]) => {
-          const total = ps.reduce((s, p) => s + p.value, 0);
-          return `<b>${esc(ps[0].name)}</b> · ${fmtInt(total)} ${terms.registrations}<br/>` +
-            ps.filter((p) => p.value).map((p) => `${p.marker} ${esc(p.seriesName)}: ${fmtInt(p.value)}`).join('<br/>');
+    yoeChart.setOption(
+      {
+        ...baseChart,
+        tooltip: {
+          ...baseTooltip,
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: (ps: ChartParams[]) => {
+            const total = ps.reduce((s, p) => s + p.value, 0);
+            return (
+              `<b>${esc(ps[0].name)}</b> · ${fmtInt(total)} ${terms.registrations}<br/>` +
+              ps
+                .filter((p) => p.value)
+                .map((p) => `${p.marker} ${esc(p.seriesName)}: ${fmtInt(p.value)}`)
+                .join('<br/>')
+            );
+          },
         },
+        legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 } },
+        grid: { left: 8, right: 30, top: 8, bottom: 28, containLabel: true },
+        xAxis: { ...baseAxis, type: 'value' },
+        yAxis: { ...baseAxis, type: 'category', inverse: true, data: buckets, splitLine: { show: false } },
+        series: stackedGenderSeries(buckets, tab),
       },
-      legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 } },
-      grid: { left: 8, right: 30, top: 8, bottom: 28, containLabel: true },
-      xAxis: { ...baseAxis, type: 'value' },
-      yAxis: { ...baseAxis, type: 'category', inverse: true, data: buckets, splitLine: { show: false } },
-      series: stackedGenderSeries(buckets, tab),
-    }, true);
+      true,
+    );
   }
 
   function drawTopicGender() {
@@ -250,30 +316,51 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const totals = topics.map(tot);
     const genders = [...new Set(topics.flatMap((t) => tab.get(t)?.children.map((child) => child.key) ?? []))];
     const series = genders.map((g) => ({
-      name: g, type: 'bar', stack: 'g', barMaxWidth: 18,
+      name: g,
+      type: 'bar',
+      stack: 'g',
+      barMaxWidth: 18,
       itemStyle: { color: genderColors[g] ?? C.notStated, borderColor: C.card, borderWidth: 1 },
       label: {
-        show: true, color: '#fff', fontSize: 10,
+        show: true,
+        color: '#fff',
+        fontSize: 10,
         formatter: (p: ChartParams) => (p.value >= 15 ? `${Math.round(p.value)}%` : ''),
       },
-      data: topics.map((t, i) => +(((tab.get(t)?.children.find((child) => child.key === g)?.count ?? 0) / (totals[i] || 1)) * 100).toFixed(1)),
+      data: topics.map(
+        (t, i) =>
+          +(((tab.get(t)?.children.find((child) => child.key === g)?.count ?? 0) / (totals[i] || 1)) * 100).toFixed(1),
+      ),
     }));
-    topicGenderChart.setOption({
-      ...baseChart,
-      tooltip: {
-        ...baseTooltip, trigger: 'axis', axisPointer: { type: 'shadow' },
-        formatter: (ps: ChartParams[]) => `<b>${esc(ps[0].name)}</b> · ${fmtInt(totals[ps[0].dataIndex])} ${terms.registrations}<br/>` +
-          ps.filter((p) => p.value).map((p) => `${p.marker} ${esc(p.seriesName)}: ${Math.round(p.value)}%`).join('<br/>'),
+    topicGenderChart.setOption(
+      {
+        ...baseChart,
+        tooltip: {
+          ...baseTooltip,
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: (ps: ChartParams[]) =>
+            `<b>${esc(ps[0].name)}</b> · ${fmtInt(totals[ps[0].dataIndex])} ${terms.registrations}<br/>` +
+            ps
+              .filter((p) => p.value)
+              .map((p) => `${p.marker} ${esc(p.seriesName)}: ${Math.round(p.value)}%`)
+              .join('<br/>'),
+        },
+        legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 } },
+        grid: { left: 8, right: 16, top: 8, bottom: 28, containLabel: true },
+        xAxis: { ...baseAxis, type: 'value', max: 100, axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' } },
+        yAxis: {
+          ...baseAxis,
+          type: 'category',
+          inverse: true,
+          data: topics,
+          splitLine: { show: false },
+          axisLabel: { ...baseAxis.axisLabel, width: 110, overflow: 'truncate' },
+        },
+        series,
       },
-      legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 } },
-      grid: { left: 8, right: 16, top: 8, bottom: 28, containLabel: true },
-      xAxis: { ...baseAxis, type: 'value', max: 100, axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' } },
-      yAxis: {
-        ...baseAxis, type: 'category', inverse: true, data: topics, splitLine: { show: false },
-        axisLabel: { ...baseAxis.axisLabel, width: 110, overflow: 'truncate' },
-      },
-      series,
-    }, true);
+      true,
+    );
   }
 
   function drawJobFamilies() {
@@ -281,25 +368,45 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     if (!groups) return hideChart(jobfamChart, 'Hidden because a total could reveal a small group.');
     const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
     const items = [...groups].sort((a, b) => b.count - a.count);
-    jobfamChart.setOption({
-      ...baseChart,
-      tooltip: { ...baseTooltip, formatter: (p: ChartParams) => `<b>${esc(p.name)}</b><br/>${fmtInt(p.value)} ${terms.registrations} (${fmtPct(p.value / total)})` },
-      series: [{
-        type: 'treemap', roam: false, nodeClick: false, breadcrumb: { show: false },
-        left: 0, right: 0, top: 0, bottom: 0,
-        visualMin: 0, visualMax: items[0]?.count ?? 1,
-        label: {
-          color: '#fff', fontSize: 11, fontWeight: 600,
-          formatter: (p: ChartParams) => `${p.name}\n${fmtInt(p.value)} · ${fmtPct(p.value / total)}`,
+    jobfamChart.setOption(
+      {
+        ...baseChart,
+        tooltip: {
+          ...baseTooltip,
+          formatter: (p: ChartParams) =>
+            `<b>${esc(p.name)}</b><br/>${fmtInt(p.value)} ${terms.registrations} (${fmtPct(p.value / total)})`,
         },
-        levels: [{
-          color: SEQ_BLUE.slice(3), // light -> dark so the biggest family reads darkest, white labels stay legible
-          colorMappingBy: 'value',
-          itemStyle: { borderColor: C.card, borderWidth: 2, gapWidth: 2 },
-        }],
-        data: items.map((group) => ({ name: group.key, value: group.count })),
-      }],
-    }, true);
+        series: [
+          {
+            type: 'treemap',
+            roam: false,
+            nodeClick: false,
+            breadcrumb: { show: false },
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            visualMin: 0,
+            visualMax: items[0]?.count ?? 1,
+            label: {
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 600,
+              formatter: (p: ChartParams) => `${p.name}\n${fmtInt(p.value)} · ${fmtPct(p.value / total)}`,
+            },
+            levels: [
+              {
+                color: SEQ_BLUE.slice(3), // light -> dark so the biggest family reads darkest, white labels stay legible
+                colorMappingBy: 'value',
+                itemStyle: { borderColor: C.card, borderWidth: 2, gapWidth: 2 },
+              },
+            ],
+            data: items.map((group) => ({ name: group.key, value: group.count })),
+          },
+        ],
+      },
+      true,
+    );
   }
 
   function drawSector() {
@@ -312,25 +419,50 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const counts = new Map(groups.map((group) => [group.key, group.count]));
     const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
     const sectors = [...counts.keys()].sort((a, b) => indexOfOrLast(SECTOR_ORDER, a) - indexOfOrLast(SECTOR_ORDER, b));
-    sectorChart.setOption({
-      ...baseChart,
-      tooltip: {
-        ...baseTooltip, trigger: 'axis', axisPointer: { type: 'shadow' },
-        formatter: (ps: ChartParams[]) => ps.filter((p) => p.value).map((p) => `${p.marker} ${esc(p.seriesName)}: <b>${fmtInt(counts.get(p.seriesName))}</b> (${Math.round(p.value)}%)`).join('<br/>'),
+    sectorChart.setOption(
+      {
+        ...baseChart,
+        tooltip: {
+          ...baseTooltip,
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: (ps: ChartParams[]) =>
+            ps
+              .filter((p) => p.value)
+              .map(
+                (p) =>
+                  `${p.marker} ${esc(p.seriesName)}: <b>${fmtInt(counts.get(p.seriesName))}</b> (${Math.round(p.value)}%)`,
+              )
+              .join('<br/>'),
+        },
+        grid: { left: 8, right: 60, top: 6, bottom: 6, containLabel: true },
+        xAxis: { ...baseAxis, type: 'value', max: 100, show: false },
+        yAxis: { ...baseAxis, type: 'category', data: ['All'], show: false },
+        series: sectors.map((s) => ({
+          name: s,
+          type: 'bar',
+          stack: 's',
+          barMaxWidth: 34,
+          itemStyle: { color: sectorColors[s] ?? C.notStated, borderColor: C.card, borderWidth: 1 },
+          label: {
+            show: true,
+            color: '#fff',
+            fontSize: 10,
+            formatter: (p: ChartParams) => (p.value >= 9 ? `${Math.round(p.value)}%` : ''),
+          },
+          data: [+(((counts.get(s) ?? 0) / total) * 100).toFixed(1)],
+        })),
       },
-      grid: { left: 8, right: 60, top: 6, bottom: 6, containLabel: true },
-      xAxis: { ...baseAxis, type: 'value', max: 100, show: false },
-      yAxis: { ...baseAxis, type: 'category', data: ['All'], show: false },
-      series: sectors.map((s) => ({
-        name: s, type: 'bar', stack: 's', barMaxWidth: 34,
-        itemStyle: { color: sectorColors[s] ?? C.notStated, borderColor: C.card, borderWidth: 1 },
-        label: { show: true, color: '#fff', fontSize: 10, formatter: (p: ChartParams) => (p.value >= 9 ? `${Math.round(p.value)}%` : '') },
-        data: [+(((counts.get(s) ?? 0) / total) * 100).toFixed(1)],
-      })),
-    }, true);
+      true,
+    );
     q('#sector-legend').innerHTML =
       `<div class="senti-row" style="gap:12px">` +
-      sectors.map((s) => `<div class="senti-stat"><span class="dot" style="background:${sectorColors[s] ?? C.notStated}"></span><span>${esc(s)} · ${fmtInt(counts.get(s))}</span></div>`).join('') +
+      sectors
+        .map(
+          (s) =>
+            `<div class="senti-stat"><span class="dot" style="background:${sectorColors[s] ?? C.notStated}"></span><span>${esc(s)} · ${fmtInt(counts.get(s))}</span></div>`,
+        )
+        .join('') +
       `</div><div class="table-count">${fmtInt(total)} ${terms.registrations}</div>`;
   }
 
@@ -359,9 +491,11 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     rows.sort((a, b) => b.n - a.n);
     rows = rows.slice(0, 12);
     const metric: (r: SegRow) => number =
-      segOutcome === 'return' ? (r) => r.rate ?? 0
-      : segOutcome === 'sat' ? (r) => (r.promoters ?? 0) / (r.n || 1)
-      : (r) => r.avg ?? 0;
+      segOutcome === 'return'
+        ? (r) => r.rate ?? 0
+        : segOutcome === 'sat'
+          ? (r) => (r.promoters ?? 0) / (r.n || 1)
+          : (r) => r.avg ?? 0;
     rows.sort((a, b) => metric(b) - metric(a));
     return rows;
   }
@@ -381,7 +515,10 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     if (segOutcome === 'return')
       return `Share of each segment's ${terms.participants} who registered for 2+ ${terms.events}, by ${dim}.`;
     if (segOutcome === 'sat')
-      return `Satisfaction mix by ${dim}: promoters scored ${satisfaction.promoterMin}–${satisfaction.max}, passives ${satisfaction.passiveMin}–${satisfaction.promoterMin - 1}, detractors ${satisfaction.passiveMin - 1} or below.` + surveyNote;
+      return (
+        `Satisfaction mix by ${dim}: promoters scored ${satisfaction.promoterMin}–${satisfaction.max}, passives ${satisfaction.passiveMin}–${satisfaction.promoterMin - 1}, detractors ${satisfaction.passiveMin - 1} or below.` +
+        surveyNote
+      );
     return `Average "would you recommend" score by ${dim}, shown as the gap vs the overall average.` + surveyNote;
   }
 
@@ -401,7 +538,10 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
       ...baseChart,
       grid: { left: 8, right: 90, top: 12, bottom: 30, containLabel: true },
       yAxis: {
-        ...baseAxis, type: 'category', inverse: true, data: rows.map((r) => r.bucket),
+        ...baseAxis,
+        type: 'category',
+        inverse: true,
+        data: rows.map((r) => r.bucket),
         splitLine: { show: false },
         axisLabel: { ...baseAxis.axisLabel, interval: 0, width: 120, overflow: 'truncate' },
       },
@@ -409,30 +549,41 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const valueAxisName = (name: string) => ({ name, nameLocation: 'middle', nameGap: 24 });
 
     if (segOutcome === 'return') {
-      segChart.setOption({
-        ...base,
-        tooltip: {
-          ...baseTooltip,
-          formatter: (p: ChartParams) => {
-            const r = rows[p.dataIndex];
-            return `<b>${esc(r.bucket)}</b><br/>Returning: <b>${fmtPct(r.rate)}</b> of ${fmtInt(r.n)} people`;
+      segChart.setOption(
+        {
+          ...base,
+          tooltip: {
+            ...baseTooltip,
+            formatter: (p: ChartParams) => {
+              const r = rows[p.dataIndex];
+              return `<b>${esc(r.bucket)}</b><br/>Returning: <b>${fmtPct(r.rate)}</b> of ${fmtInt(r.n)} people`;
+            },
           },
-        },
-        xAxis: {
-          ...baseAxis, type: 'value', ...valueAxisName('Returning %'),
-          axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' },
-        },
-        series: [{
-          type: 'bar', barMaxWidth: 26,
-          itemStyle: { color: C.green, borderRadius: [0, 4, 4, 0] },
-          label: {
-            show: true, position: 'right', color: C.ink2, fontSize: 11,
-            formatter: (p: ChartParams) => `${Math.round(p.value)}% {n|· n=${fmtInt(rows[p.dataIndex].n)}}`,
-            rich: { n: { color: C.muted, fontSize: 10 } },
+          xAxis: {
+            ...baseAxis,
+            type: 'value',
+            ...valueAxisName('Returning %'),
+            axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' },
           },
-          data: rows.map((r) => +((r.rate ?? 0) * 100).toFixed(1)),
-        }],
-      }, true);
+          series: [
+            {
+              type: 'bar',
+              barMaxWidth: 26,
+              itemStyle: { color: C.green, borderRadius: [0, 4, 4, 0] },
+              label: {
+                show: true,
+                position: 'right',
+                color: C.ink2,
+                fontSize: 11,
+                formatter: (p: ChartParams) => `${Math.round(p.value)}% {n|· n=${fmtInt(rows[p.dataIndex].n)}}`,
+                rich: { n: { color: C.muted, fontSize: 10 } },
+              },
+              data: rows.map((r) => +((r.rate ?? 0) * 100).toFixed(1)),
+            },
+          ],
+        },
+        true,
+      );
       return;
     }
 
@@ -445,48 +596,83 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
         return { promoters: +(100 - pa - d).toFixed(1), passives: pa, detractors: d };
       });
       const mk = (key: 'promoters' | 'passives' | 'detractors', name: string, color: string) => ({
-        name, type: 'bar', stack: 'd', barMaxWidth: 26,
+        name,
+        type: 'bar',
+        stack: 'd',
+        barMaxWidth: 26,
         itemStyle: { color, borderColor: C.card, borderWidth: 1 },
-        label: { show: true, color: '#fff', fontSize: 10, formatter: (p: ChartParams) => (p.value >= 12 ? `${Math.round(p.value)}%` : '') },
+        label: {
+          show: true,
+          color: '#fff',
+          fontSize: 10,
+          formatter: (p: ChartParams) => (p.value >= 12 ? `${Math.round(p.value)}%` : ''),
+        },
         data: rows.map((_r, i) => ({
           value: shares[i][key],
         })),
       });
       // invisible stack cap that carries the n= label past the 100% mark
       const nCap = {
-        name: '__n', type: 'bar', stack: 'd', silent: true, itemStyle: { color: 'transparent' },
+        name: '__n',
+        type: 'bar',
+        stack: 'd',
+        silent: true,
+        itemStyle: { color: 'transparent' },
         label: {
-          show: true, position: 'right', color: C.muted, fontSize: 10,
+          show: true,
+          position: 'right',
+          color: C.muted,
+          fontSize: 10,
           formatter: (p: ChartParams) => `n=${fmtInt(rows[p.dataIndex].n)}`,
         },
         data: rows.map(() => 0),
       };
-      segChart.setOption({
-        ...base,
-        tooltip: {
-          ...baseTooltip, trigger: 'axis', axisPointer: { type: 'shadow' },
-          formatter: (ps: ChartParams[]) => {
-            const r = rows[ps[0].dataIndex];
-            return `<b>${esc(r.bucket)}</b> · n=${fmtInt(r.n)} responses<br/>` +
-              ps.filter((p) => p.seriesName !== '__n').map((p) => `${p.marker} ${p.seriesName}: ${Math.round(p.value)}%`).join('<br/>');
+      segChart.setOption(
+        {
+          ...base,
+          tooltip: {
+            ...baseTooltip,
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            formatter: (ps: ChartParams[]) => {
+              const r = rows[ps[0].dataIndex];
+              return (
+                `<b>${esc(r.bucket)}</b> · n=${fmtInt(r.n)} responses<br/>` +
+                ps
+                  .filter((p) => p.seriesName !== '__n')
+                  .map((p) => `${p.marker} ${p.seriesName}: ${Math.round(p.value)}%`)
+                  .join('<br/>')
+              );
+            },
           },
+          legend: {
+            bottom: 0,
+            itemWidth: 12,
+            itemHeight: 12,
+            textStyle: { color: C.ink2, fontSize: 11 },
+            data: [
+              `Promoters (${satisfaction.promoterMin}–${satisfaction.max})`,
+              `Passives (${satisfaction.passiveMin}–${satisfaction.promoterMin - 1})`,
+              `Detractors (≤${satisfaction.passiveMin - 1})`,
+            ],
+          },
+          grid: { ...base.grid, bottom: 46 },
+          xAxis: {
+            ...baseAxis,
+            type: 'value',
+            max: 100,
+            ...valueAxisName('Share of responses'),
+            axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' },
+          },
+          series: [
+            mk('promoters', `Promoters (${satisfaction.promoterMin}–${satisfaction.max})`, C.green),
+            mk('passives', `Passives (${satisfaction.passiveMin}–${satisfaction.promoterMin - 1})`, C.muted),
+            mk('detractors', `Detractors (≤${satisfaction.passiveMin - 1})`, C.jasper),
+            nCap,
+          ],
         },
-        legend: {
-          bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 },
-          data: [`Promoters (${satisfaction.promoterMin}–${satisfaction.max})`, `Passives (${satisfaction.passiveMin}–${satisfaction.promoterMin - 1})`, `Detractors (≤${satisfaction.passiveMin - 1})`],
-        },
-        grid: { ...base.grid, bottom: 46 },
-        xAxis: {
-          ...baseAxis, type: 'value', max: 100, ...valueAxisName('Share of responses'),
-          axisLabel: { ...baseAxis.axisLabel, formatter: '{value}%' },
-        },
-        series: [
-          mk('promoters', `Promoters (${satisfaction.promoterMin}–${satisfaction.max})`, C.green),
-          mk('passives', `Passives (${satisfaction.passiveMin}–${satisfaction.promoterMin - 1})`, C.muted),
-          mk('detractors', `Detractors (≤${satisfaction.passiveMin - 1})`, C.jasper),
-          nCap,
-        ],
-      }, true);
+        true,
+      );
       return;
     }
 
@@ -495,38 +681,58 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const totalN = rows.reduce((s, r) => s + r.n, 0);
     const overall = totalN ? rows.reduce((s, r) => s + avgOf(r) * r.n, 0) / totalN : 0;
     const maxAbs = Math.max(0.3, ...rows.map((r) => Math.abs(avgOf(r) - overall))) * 1.35;
-    segChart.setOption({
-      ...base,
-      tooltip: {
-        ...baseTooltip,
-        formatter: (p: ChartParams) => {
-          const r = rows[p.dataIndex];
-          return `<b>${esc(r.bucket)}</b><br/>Avg recommend: <b>${fmtNum(r.avg)}</b> / ${recommendation.max} (overall ${fmtNum(overall)})<br/>` +
-            `n=${fmtInt(r.n)} responses`;
-        },
-      },
-      xAxis: {
-        ...baseAxis, type: 'value', min: -maxAbs, max: maxAbs,
-        ...valueAxisName(`Δ vs overall recommend (${fmtNum(overall)})`),
-        axisLabel: { ...baseAxis.axisLabel, formatter: (v: number) => (v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)) },
-      },
-      series: [{
-        type: 'bar', barMaxWidth: 26,
-        itemStyle: {
-          color: (p: ChartParams) => (avgOf(rows[p.dataIndex]) >= overall ? C.green : C.jasper),
-          borderRadius: 4,
-        },
-        data: rows.map((r) => ({
-          value: +(avgOf(r) - overall).toFixed(2),
-          label: {
-            show: true, position: avgOf(r) >= overall ? 'right' : 'left', color: C.ink2, fontSize: 11,
-            formatter: () => `${fmtNum(r.avg)} {n|· n=${fmtInt(r.n)}}`,
-            rich: { n: { color: C.muted, fontSize: 10 } },
+    segChart.setOption(
+      {
+        ...base,
+        tooltip: {
+          ...baseTooltip,
+          formatter: (p: ChartParams) => {
+            const r = rows[p.dataIndex];
+            return (
+              `<b>${esc(r.bucket)}</b><br/>Avg recommend: <b>${fmtNum(r.avg)}</b> / ${recommendation.max} (overall ${fmtNum(overall)})<br/>` +
+              `n=${fmtInt(r.n)} responses`
+            );
           },
-        })),
-        markLine: { silent: true, symbol: 'none', lineStyle: { color: C.axis }, label: { show: false }, data: [{ xAxis: 0 }] },
-      }],
-    }, true);
+        },
+        xAxis: {
+          ...baseAxis,
+          type: 'value',
+          min: -maxAbs,
+          max: maxAbs,
+          ...valueAxisName(`Δ vs overall recommend (${fmtNum(overall)})`),
+          axisLabel: { ...baseAxis.axisLabel, formatter: (v: number) => (v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)) },
+        },
+        series: [
+          {
+            type: 'bar',
+            barMaxWidth: 26,
+            itemStyle: {
+              color: (p: ChartParams) => (avgOf(rows[p.dataIndex]) >= overall ? C.green : C.jasper),
+              borderRadius: 4,
+            },
+            data: rows.map((r) => ({
+              value: +(avgOf(r) - overall).toFixed(2),
+              label: {
+                show: true,
+                position: avgOf(r) >= overall ? 'right' : 'left',
+                color: C.ink2,
+                fontSize: 11,
+                formatter: () => `${fmtNum(r.avg)} {n|· n=${fmtInt(r.n)}}`,
+                rich: { n: { color: C.muted, fontSize: 10 } },
+              },
+            })),
+            markLine: {
+              silent: true,
+              symbol: 'none',
+              lineStyle: { color: C.axis },
+              label: { show: false },
+              data: [{ xAxis: 0 }],
+            },
+          },
+        ],
+      },
+      true,
+    );
   }
 
   function drawSegmentFeedback() {
@@ -568,7 +774,9 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
 
   return {
     update,
-    resize: () => [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.resize()),
-    dispose: () => [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.dispose()),
+    resize: () =>
+      [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.resize()),
+    dispose: () =>
+      [yoeChart, topicGenderChart, jobfamChart, sectorChart, segChart, donutChart].forEach((c) => c?.dispose()),
   };
 }

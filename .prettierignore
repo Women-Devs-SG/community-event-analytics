@@ -1,0 +1,11 @@
+# Generated artifacts, dependencies, and local data/configuration.
+node_modules/
+dist/
+coverage/
+package-lock.json
+public/dashboard-summary.json
+data-source-excel/
+.env
+.env.*
+.claude/
+*.stackdump
