@@ -19,6 +19,8 @@ Run commands from the repository root. Use npm and the committed `package-lock.j
 | Command | Purpose |
 | --- | --- |
 | `npm ci` | Install the locked dependencies for a fresh checkout. |
+| `npm run hooks:install` | Enable the shared pre-commit hook for an existing checkout. |
+| `npm run check:commit` | Check staged whitespace, generic scan, types, and all tests. |
 | `npm run dev` | Generate the summary in development mode, then start Vite. |
 | `npm run summary` | Regenerate `public/dashboard-summary.json` in production mode. |
 | `npm test` | Run all Vitest tests once. |
@@ -29,6 +31,8 @@ Run commands from the repository root. Use npm and the committed `package-lock.j
 | `npm run preview` | Serve the existing production build locally. |
 
 There is no configured lint, formatter, or end-to-end test command. Do not invent one or add tooling just to complete an unrelated change. Use the URL printed by Vite rather than assuming a port.
+
+`npm ci` installs `.githooks/pre-commit` via the `prepare` script outside CI. The hook forces synthetic data and runs `check:commit`; it does not build, modify, or stage files. Only the whitespace check reads the index; other checks inspect the working tree. Preserve custom hook configurations and keep `.githooks/*` LF-terminated through `.gitattributes`.
 
 Environment files can change the source. Keep routine checks on `VITE_DATA_SOURCE=synthetic`; do not read real community data merely to verify a code change. Process environment overrides can be set with `$env:VITE_DATA_SOURCE='synthetic'` in PowerShell or `export VITE_DATA_SOURCE=synthetic` in a POSIX shell. Do not print environment contents or credentials.
 

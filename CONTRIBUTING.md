@@ -122,6 +122,23 @@ AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENT
 
 ---
 
+## Pre-commit checks
+
+`npm ci` (or `npm install`) enables the shared hook through npm's `prepare` script. In an existing checkout, run `npm run hooks:install` once. Git and Node/npm must be available on your PATH, including when committing from an editor.
+
+Before each commit, the hook runs `npm run check:commit`:
+
+1. Check staged changes for whitespace errors with `git diff --cached --check`.
+2. Run the generic repository scan.
+3. Run TypeScript typechecking.
+4. Run all Vitest tests.
+
+A failed check stops the commit. The hook sets the data source to synthetic and does not build the site or fetch a real sheet. It does not modify or stage files. Apart from the staged whitespace check, checks inspect the working tree, so unstaged changes can affect the result; review partially staged files carefully. You can run `npm run check:commit` manually too.
+
+Hook setup skips CI and source archives without Git metadata. It preserves an existing custom `core.hooksPath`; if setup reports one, add `npm run check:commit` to your existing hook and use the synthetic source. If npm lifecycle scripts were disabled during installation, run `npm run hooks:install` explicitly.
+
+Local hooks can be bypassed, so CI remains the shared validation gate. Formatting and linting are not currently configured; these checks do not replace those tools.
+
 ## Creating a Pull Request  
 
 Once you've completed your changes:  

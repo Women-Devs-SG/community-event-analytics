@@ -4,6 +4,9 @@
   "description": "Configurable event analytics dashboards for community organizers",
   "private": true,
   "scripts": {
+    "prepare": "node scripts/install-hooks.mjs",
+    "hooks:install": "node scripts/install-hooks.mjs",
+    "check:commit": "git diff --cached --check && npm run scan:generic && npm run typecheck && npm test",
     "summary": "node scripts/build-summary.mjs",
     "dev": "node scripts/build-summary.mjs development && vite",
     "test": "vitest run",

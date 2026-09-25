@@ -1,0 +1,4 @@
+#!/bin/sh
+# Keep commit checks offline and independent of an adopter's configured source.
+export VITE_DATA_SOURCE=synthetic
+exec npm run check:commit
