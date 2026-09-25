@@ -54,7 +54,7 @@ Before you dive in:
 1. **Read Our Code of Conduct:** This ensures a welcoming and collaborative space for everyone.  
 2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.  
 3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.  
-4. **Add yourself as a member:** If you are a WDS member, feel free to read how to [add your own profile](../src/content/blog/adding-yourself-as-member.md) to our website.  
+4. **Understand the project:** Read the [README](README.md) and [agent guide](AGENTS.md) for setup, architecture, and data-safety conventions.
 5. **Join our Telegram group:** To participate in Community Coding Month activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**. 
 
 ---
@@ -115,7 +115,10 @@ To work on an issue:
 4. Follow the steps in the project’s README to set up your environment.  
 5. Make your changes.  
 6. Test the changes on your local environment.
-7. Run `npm run test:e2e` to run the e2e (end to end) tests (Runs by default on `http://localhost:4321`, you can change it to another port in your environment variables by duplicating `.env.example` into `.env` and changing the `PLAYWRIGHT_BASE_URL` value). 
+7. Use Node 22 and run `npm ci`, then `npm run dev` to start the synthetic demo. Use the local URL printed by Vite. No credentials are needed.
+8. Before opening a PR, run `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
+
+AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENTS.md), verify generated changes, and describe the checks you actually ran. Keep all fixtures synthetic and follow [SECURITY.md](SECURITY.md) when handling data or reporting vulnerabilities.
 
 ---
 

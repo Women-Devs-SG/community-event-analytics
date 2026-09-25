@@ -33,21 +33,24 @@ Build time (npm run summary)                       Browser
   → public/dashboard-summary.json   ──────────▶   dashboards
 ```
 
-The browser only ever receives the summary: aggregates that met the privacy threshold, event metadata, and comments from events with enough respondents. It never receives participant IDs, response IDs, or registration rows, and never contacts the data source.
+In the public modes (`synthetic` and `google-sheets`), the browser receives only the summary: aggregates that met the privacy threshold, event metadata, and comments from events with enough respondents. It never receives participant IDs, response IDs, or registration rows, and never contacts the data source. The optional `google-signin` mode described below loads source rows for authorized viewers and builds the summary in their browser.
 
 The source architecture lives under `src/data/` and the build-time summary under `src/summary/`. `src/data.ts` is the browser-side facade that loads the summary.
 
 ## Develop
 
+Use Node 22 (see `.nvmrc`) and npm. AI coding contributors should read [`AGENTS.md`](AGENTS.md) for the code map, data boundaries, conventions, and verification workflow.
+
 ```bash
-npm install
+npm ci
 npm run dev        # builds the summary, then starts Vite
 npm run summary    # rebuild the summary after changing data or config
 npm test
+npm run scan:generic
 npm run build
 ```
 
-Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The published site is fully static: no backend, database, API keys, or paid services are required. PapaParse and Sentiment run at build time only.
+Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The synthetic demo is fully static and requires no backend, database, API keys, or paid services. Public summaries are generated at build time; Google sign-in mode uses an Apps Script backend and performs summary generation, including sentiment scoring, in the browser.
 
 ## Optional Google Sheets source
 

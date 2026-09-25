@@ -16,7 +16,7 @@ Do not ask adopters to fork a repository whose earlier history contained materia
 After pushing the clean snapshot:
 
 1. In **Settings → General**, enable **Template repository**.
-2. Replace the placeholder security advisory URL in `.github/ISSUE_TEMPLATE/config.yml` with the final owner and repository name.
+2. Confirm `.github/ISSUE_TEMPLATE/config.yml` and `SECURITY.md` direct security reports to the repository's private reporting channel.
 3. In **Settings → Pages**, choose **GitHub Actions** as the source.
 4. In **Settings → Actions → General**, keep workflow permissions read-only unless a workflow explicitly needs more.
 5. Enable private vulnerability reporting and dependency alerts where available.

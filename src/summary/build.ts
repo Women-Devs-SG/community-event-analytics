@@ -1,5 +1,6 @@
 // Turns the full, validated source data into the privacy-safe summary the
-// browser loads. Runs at build time only. Everything published here is either
+// browser loads. Runs at build time in public modes, or in the authorized
+// viewer's browser in google-signin mode. Everything published here is either
 // event metadata, an aggregate that met the privacy threshold, or a free-text
 // answer from an event with enough respondents.
 import { communityConfig } from '../config';

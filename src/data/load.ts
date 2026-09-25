@@ -10,8 +10,9 @@ export const median = (values: Array<number | null>): number | null => {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 };
 
-// Build-time only: assembles the full, row-level data that src/summary/build.ts
-// reduces to the privacy-safe summary. Never import this from browser code.
+// Assembles row-level data for src/summary/build.ts. Runs at build time in public
+// modes, or in the browser after authorized loading in google-signin mode.
+// Keep this out of the public browser data-loading path.
 export async function loadData(adapter: DataSourceAdapter): Promise<DashboardData> {
   const normalized = validateSource(normalizeSource(await adapter.load()));
   const { events, surveyResponses, feedbackAnswers, registrations, participants } = normalized.datasets;

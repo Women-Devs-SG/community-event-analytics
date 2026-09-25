@@ -18,6 +18,8 @@ Run `npm run summary` with the proposed source and resolve contract errors befor
 
 ## 3. Review disclosure risk
 
+Review and redact free-text answers before connecting a public source. Eligible comments are published verbatim: a respondent-count threshold does not remove names, email addresses, or identifying details from the text. The identifier assertion checks exact participant/response identifier strings; it is not a general personal-information detector.
+
 Set `privacy.minimumSegmentSize` before publishing. The build applies it before anything is published: small segments, feedback, and comparisons that could reveal a suppressed group through subtraction are left out of the summary, and survey ratings and comments from any event with fewer respondents than the threshold are left out of every figure. This is a safeguard, not a substitute for consent, policy, or legal review.
 
 Because filters work on precomputed selections, overlapping selections (for example a topic, and one event within it) are each checked on their own. Comparing two published registration breakdowns can still narrow down a small group in rare cases; review the community tab with small selections before publishing.
