@@ -55,6 +55,110 @@ describe('Apps Script access checks', () => {
   });
 });
 
+// Exercise the web-app entry point without an active spreadsheet or real Google services.
+function webAppHarness(sheetId: string | null = 'test-reporting-sheet', claims: Claims = {}) {
+  const getSheetByName = vi.fn(() => ({
+    getDataRange: () => ({ getDisplayValues: () => [['event_id'], ['test-event']] }),
+  }));
+  const openById = vi.fn(() => ({
+    getOwner: () => ({ getEmail: () => 'organiser@example.com' }),
+    getEditors: () => [],
+    getViewers: () => [],
+    getSheetByName,
+  }));
+  const getProperty = vi.fn(() => sheetId);
+  const handler = new Function(
+    'PropertiesService',
+    'SpreadsheetApp',
+    'UrlFetchApp',
+    'ContentService',
+    'console',
+    `${appsScriptSource}\nreturn doPost;`,
+  )(
+    { getScriptProperties: () => ({ getProperty }) },
+    { openById },
+    {
+      fetch: () => ({
+        getResponseCode: () => 200,
+        getContentText: () =>
+          JSON.stringify({
+            ...validClaims,
+            aud: 'replace-with-your-client-id.apps.googleusercontent.com',
+            exp: Math.floor(Date.now() / 1000) + 600,
+            ...claims,
+          }),
+      }),
+    },
+    { MimeType: { JSON: 'application/json' }, createTextOutput: (text: string) => ({ setMimeType: () => text }) },
+    { error: vi.fn() },
+  ) as (event: { postData: { contents: string } }) => string;
+  return {
+    openById,
+    getProperty,
+    getSheetByName,
+    request: () =>
+      JSON.parse(handler({ postData: { contents: JSON.stringify({ idToken: 'test-token' }) } })) as {
+        ok: boolean;
+        code?: string;
+        message?: string;
+        datasets?: Record<string, RawRow[]>;
+      },
+  };
+}
+
+describe('Apps Script web-app handler', () => {
+  it('opens the configured sheet and returns rows for an authorized viewer without active context', () => {
+    const app = webAppHarness('  test-reporting-sheet  ');
+    const response = app.request();
+    expect(app.getProperty).toHaveBeenCalledWith('REPORTING_SHEET_ID');
+    expect(app.openById).toHaveBeenCalledExactlyOnceWith('test-reporting-sheet');
+    expect(response).toMatchObject({ ok: true, datasets: { events: [{ event_id: 'test-event' }] } });
+    expect(Object.keys(response.datasets!)).toEqual([
+      'events',
+      'surveyResponses',
+      'feedbackAnswers',
+      'registrations',
+      'participants',
+    ]);
+  });
+
+  it.each([null, '', '   '])('fails clearly before opening a sheet when its ID is %j', (sheetId) => {
+    const app = webAppHarness(sheetId);
+    expect(app.request()).toMatchObject({
+      ok: false,
+      code: 'server_error',
+      message: expect.stringContaining('REPORTING_SHEET_ID'),
+    });
+    expect(app.openById).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid token before accessing spreadsheet configuration', () => {
+    const app = webAppHarness('test-reporting-sheet', { aud: 'another-app' });
+    expect(app.request()).toMatchObject({ ok: false, code: 'invalid_token' });
+    expect(app.getProperty).not.toHaveBeenCalled();
+    expect(app.openById).not.toHaveBeenCalled();
+  });
+
+  it('checks the configured spreadsheet sharing list before reading rows', () => {
+    const app = webAppHarness('test-reporting-sheet', { email: 'stranger@example.com' });
+    expect(app.request()).toMatchObject({ ok: false, code: 'not_authorized' });
+    expect(app.openById).toHaveBeenCalledWith('test-reporting-sheet');
+    expect(app.getSheetByName).not.toHaveBeenCalled();
+  });
+
+  it('returns a generic error when the configured spreadsheet cannot be opened', () => {
+    const app = webAppHarness();
+    app.openById.mockImplementation(() => {
+      throw new Error('Private spreadsheet details');
+    });
+    const response = app.request();
+    expect(response).toMatchObject({ ok: false, code: 'server_error' });
+    expect(response.message).not.toContain('Private spreadsheet details');
+    expect(response.datasets).toBeUndefined();
+    expect(app.getSheetByName).not.toHaveBeenCalled();
+  });
+});
+
 // Mimics the Apps Script: every value arrives as displayed text.
 const asDisplayedText = (rows: RawRow[]) =>
   rows.map((row) =>

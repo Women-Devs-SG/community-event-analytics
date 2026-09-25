@@ -41,14 +41,17 @@ No service account, no billing account, and no server are needed.
 1. Open the sheet and choose **Extensions → Apps Script**.
 2. Replace the editor's contents with [`apps-script/Code.gs`](../apps-script/Code.gs) from this repository.
 3. At the top of the script, set `CLIENT_ID` to the client ID from step 1, and adjust `TABS` if your tab names differ.
-4. Click **Deploy → New deployment**, choose type **Web app**, and set:
+4. Open **Project Settings → Script properties** and add `REPORTING_SHEET_ID`. Set its value to the reporting spreadsheet's ID: the part between `/d/` and `/edit` in its URL. Save the property. This is server-side Apps Script configuration; do not add it to `VITE_` variables or commit its value. Web-app requests open this sheet explicitly because they have no active spreadsheet context.
+5. Click **Deploy → New deployment**, choose type **Web app**, and set:
    - **Execute as:** Me
    - **Who has access:** Anyone
-5. Click **Deploy**, approve the permissions it asks for (it reads this spreadsheet and calls Google's token check), and copy the **Web app URL**. It ends in `/exec`.
+6. Click **Deploy**, approve the permissions it asks for (it reads this spreadsheet and calls Google's token check), and copy the **Web app URL**. It ends in `/exec`.
 
 "Anyone" means anyone may _call_ the URL. The script answers only requests that carry a valid sign-in from someone on the sharing list.
 
 After editing the script later, use **Deploy → Manage deployments → Edit → Version: New version** so the URL stays the same.
+
+For an existing deployment, add `REPORTING_SHEET_ID` before deploying this updated script. The deploying account must have access to that spreadsheet; its sharing list remains the access list checked for viewers.
 
 ## 3. Share the sheet
 
@@ -80,12 +83,14 @@ Run `npm run dev`, sign in, and check both dashboard tabs.
 
 ## Troubleshooting
 
-| Message                                                  | Cause                                                                                                             |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| "…doesn't have access"                                   | The account isn't on the sheet's sharing list, or was shared through a link or group.                             |
-| "Your sign-in expired or could not be verified"          | Sign in again. If it keeps happening, check that `CLIENT_ID` in the script matches `VITE_GOOGLE_OAUTH_CLIENT_ID`. |
-| "…unexpected response. Check that VITE_APPS_SCRIPT_URL…" | The URL is wrong, isn't the `/exec` URL, or the deployment isn't set to "Anyone".                                 |
-| "The sheet has no tab named…"                            | Update `TABS` in the script, then deploy a new version.                                                           |
-| The Google button shows an error                         | The dashboard's origin is missing from **Authorized JavaScript origins**.                                         |
+| Message                                                  | Cause                                                                                                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| "…doesn't have access"                                   | The account isn't on the sheet's sharing list, or was shared through a link or group.                                                 |
+| "Your sign-in expired or could not be verified"          | Sign in again. If it keeps happening, check that `CLIENT_ID` in the script matches `VITE_GOOGLE_OAUTH_CLIENT_ID`.                     |
+| "…unexpected response. Check that VITE_APPS_SCRIPT_URL…" | The URL is wrong, isn't the `/exec` URL, or the deployment isn't set to "Anyone".                                                     |
+| "The sheet has no tab named…"                            | Update `TABS` in the script, then deploy a new version.                                                                               |
+| "Set REPORTING_SHEET_ID…"                                | Add the reporting spreadsheet ID in Apps Script **Project Settings → Script properties**.                                             |
+| "The sheet could not be read…"                           | Check that `REPORTING_SHEET_ID` is correct and the deploying account can open that spreadsheet. Check the Apps Script executions log. |
+| The Google button shows an error                         | The dashboard's origin is missing from **Authorized JavaScript origins**.                                                             |
 
 The Apps Script's **Executions** page lists every request and any server errors.

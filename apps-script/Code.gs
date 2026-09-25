@@ -15,6 +15,7 @@
  */
 
 // ── Configure these two values ────────────────────────────────────────────────
+// Also set REPORTING_SHEET_ID under Project Settings → Script properties.
 // The OAuth client ID of the dashboard (same value as VITE_GOOGLE_OAUTH_CLIENT_ID).
 const CLIENT_ID = 'replace-with-your-client-id.apps.googleusercontent.com';
 
@@ -45,7 +46,14 @@ function doPost(e) {
       throw new RequestError('invalid_token', 'No sign-in token was sent.');
 
     const claims = checkClaims_(fetchTokenClaims_(body.idToken), CLIENT_ID, Math.floor(Date.now() / 1000));
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    // Web-app requests have no active spreadsheet, even for a bound script.
+    const sheetId = (PropertiesService.getScriptProperties().getProperty('REPORTING_SHEET_ID') || '').trim();
+    if (!sheetId)
+      throw new RequestError(
+        'server_error',
+        'Set REPORTING_SHEET_ID in Apps Script Project Settings → Script properties.',
+      );
+    const spreadsheet = SpreadsheetApp.openById(sheetId);
     if (!isAllowed_(claims.email, sharedWith_(spreadsheet))) {
       throw new RequestError('not_authorized', `${claims.email} is not on this sheet's sharing list.`);
     }

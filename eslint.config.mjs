@@ -44,6 +44,7 @@ export default defineConfig([
       sourceType: 'script',
       globals: {
         console: 'readonly',
+        PropertiesService: 'readonly',
         SpreadsheetApp: 'readonly',
         UrlFetchApp: 'readonly',
         ContentService: 'readonly',
