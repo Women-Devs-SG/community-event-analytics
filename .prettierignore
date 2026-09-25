@@ -7,5 +7,6 @@ public/dashboard-summary.json
 data-source-excel/
 .env
 .env.*
-.claude/
+.claude/settings.local.json
+.claude/review-findings/
 *.stackdump

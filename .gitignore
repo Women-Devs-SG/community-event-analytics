@@ -5,7 +5,10 @@ dist/
 .env.*.local
 .DS_Store
 *.stackdump
-.claude/
+# Shared Claude Code skills in .claude/skills/ are committed for contributors.
+# Keep personal settings and local review notes out of the repo.
+.claude/settings.local.json
+.claude/review-findings/
 
 # local data exports — never commit data to the open-source repo
 data-source-excel/
