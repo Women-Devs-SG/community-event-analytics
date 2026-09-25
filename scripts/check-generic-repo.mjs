@@ -8,6 +8,7 @@ const ignoredFiles = new Set(['package-lock.json', 'check-generic-repo.mjs', 'da
 const allowedSourceUrlFiles = new Set(['src/data/adapters/google-sheets.ts']);
 const allowedBrandFiles = new Set([
   'CONTRIBUTING.md',
+  '.github/CODE_OF_CONDUCT.md',
   '.github/ISSUE_TEMPLATE/bug-report.yml',
   '.github/ISSUE_TEMPLATE/feature-request.yml',
   '.github/ISSUE_TEMPLATE/documentation-improvement.yml',

@@ -4,7 +4,7 @@
 
 Thank you for considering contributing to **Community Event Analytics Dashboard**! Your involvement helps us create an inclusive and impactful space for developers of all levels. This guide provides a clear pathway for you to start contributing, whether you’re new to open source or an experienced contributor.
 
-By contributing, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md) and treat everyone with respect and kindness. If you witness or experience a violation of the Code of Conduct, please report it to womendevssg@gmail.com.
+By contributing, you agree to follow our [Code of Conduct](.github/CODE_OF_CONDUCT.md) and treat everyone with respect and kindness. If you witness or experience a violation of the Code of Conduct, please report it to [womendevssg@gmail.com](mailto:womendevssg@gmail.com).
 
 ## Table of Contents
 

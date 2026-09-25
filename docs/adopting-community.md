@@ -8,6 +8,7 @@ This workflow is designed for a community that wants its own public dashboard re
 2. Create a new repository under the adopting community's GitHub organisation. Do not fork an older repository history that contained private exports, attendee data, branding assets, or planning artefacts.
 3. Replace the placeholder security-advisory link in `.github/ISSUE_TEMPLATE/config.yml` with the new owner and repository name.
 4. Set the new repository description, topics, and social preview using only generic or community-approved material.
+5. Review the [Code of Conduct](../.github/CODE_OF_CONDUCT.md) and [contribution guide](../CONTRIBUTING.md). Replace the conduct-reporting email in both files with your community's monitored private contact, and confirm who will enforce the policy.
 
 ## Configure and validate
 
