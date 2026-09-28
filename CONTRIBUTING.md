@@ -12,6 +12,7 @@ By contributing, you agree to follow our [Code of Conduct](.github/CODE_OF_CONDU
 - [Getting Started](#getting-started)
 - [Working with Issues](#working-with-issues)
 - [Setting Up Your Local Environment](#setting-up-your-local-environment)
+- [Pre-commit checks](#pre-commit-checks)
 - [Creating a Pull Request](#creating-a-pull-request)
 - [Awaiting Review](#awaiting-review)
 
@@ -109,19 +110,28 @@ If you spot a bug or have an idea that isn’t already listed:
 To work on an issue:
 
 1. Fork the repository to your GitHub account.
-2. Clone the forked repository to your local machine:
+2. Clone your fork and move into it:
    ```bash
-   git clone https://github.com/your-username/repo-name.git
+   git clone https://github.com/your-username/community-event-analytics.git
+   cd community-event-analytics
    ```
-3. Create a new branch for your changes:
+3. Add the original repository as `upstream` so you can keep your fork in sync:
    ```bash
-   git checkout -b your-branch-name
+   git remote add upstream https://github.com/Women-Devs-SG/community-event-analytics.git
    ```
-4. Follow the steps in the project’s README to set up your environment.
-5. Make your changes.
-6. Test the changes on your local environment.
-7. Use Node 22 and run `npm ci`, then `npm run dev` to start the synthetic demo. Use the local URL printed by Vite. No credentials are needed.
-8. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
+4. Install dependencies and start the synthetic demo, using Node 22 (see `.nvmrc`):
+   ```bash
+   npm ci
+   npm run dev
+   ```
+   Open the local URL printed by Vite. No credentials are needed. `npm ci` also installs the [pre-commit hook](#pre-commit-checks).
+5. Create a branch from the latest `upstream/main`:
+   ```bash
+   git fetch upstream
+   git checkout -b your-branch-name upstream/main
+   ```
+6. Make your changes.
+7. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
 
 AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENTS.md), verify generated changes, and describe the checks you actually ran. Keep all fixtures synthetic and follow [SECURITY.md](SECURITY.md) when handling data or reporting vulnerabilities.
 
@@ -129,34 +139,9 @@ AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENT
 
 ## Pre-commit checks
 
-`npm ci` (or `npm install`) enables the shared hook through npm's `prepare` script. In an existing checkout, run `npm run hooks:install` once. Git and Node/npm must be available on your PATH, including when committing from an editor.
+`npm ci` installs a pre-commit hook that runs `npm run check:commit` (whitespace, formatting, lint, generic scan, typecheck, and tests, all on synthetic data). If a check fails, run `npm run lint:fix` and `npm run format`, review the diff, and commit again.
 
-Before each commit, the hook runs `npm run check:commit`:
-
-1. Check staged changes for whitespace errors with `git diff --cached --check`.
-2. Check formatting with Prettier.
-3. Run ESLint with zero warnings allowed.
-4. Run the generic repository scan.
-5. Run TypeScript typechecking.
-6. Run all Vitest tests.
-
-A failed check stops the commit. The hook sets the data source to synthetic and does not build the site or fetch a real sheet. It does not modify or stage files. Apart from the staged whitespace check, checks inspect the working tree, so unstaged changes can affect the result; review partially staged files carefully. You can run `npm run check:commit` manually too.
-
-Hook setup skips CI and source archives without Git metadata. It preserves an existing custom `core.hooksPath`; if setup reports one, add `npm run check:commit` to your existing hook and use the synthetic source. If npm lifecycle scripts were disabled during installation, run `npm run hooks:install` explicitly.
-
-Local hooks can be bypassed, so CI remains the shared validation gate. Both validation and deployment workflows check formatting and linting.
-
-### Linting
-
-Run `npm run lint` to check code without changing it. Run `npm run lint:fix` to apply available automatic fixes, then `npm run format` and review the diff. Some lint errors require a manual fix. Pre-commit and CI run the check only, with zero warnings allowed.
-
-`eslint.config.mjs` covers TypeScript/TSX, JavaScript build/configuration scripts, and Apps Script `.gs` files. It uses ESLint and TypeScript recommended rules plus React hook ordering and dependency checks. Runtime globals are scoped to browser, Node, or Apps Script files. Generated artifacts and local data are excluded. Prettier owns formatting, while `npm run typecheck` remains the separate TypeScript compiler check. Fix the underlying issue instead of disabling a rule globally; explain any necessary narrow suppression beside the code.
-
-### Formatting
-
-Run `npm run format` to apply the pinned Prettier version, then review and stage the changes. Run `npm run format:check` to check without modifying files. Pre-commit and CI only check formatting; they never automatically rewrite or stage files.
-
-The shared `.prettierrc.json` uses two-space indentation, single quotes, semicolons, a 120-column target, and LF line endings. It also formats Apps Script `.gs` files as JavaScript. Prettier checks supported source, style, markup, configuration, and documentation files; generated files, dependencies, local data, environment files, and the npm lockfile are excluded. `.gitattributes` keeps text line endings consistent on Windows and Unix. Editor integrations should use the repository's local Prettier version and configuration.
+For hook setup in existing checkouts, custom hook paths, and the lint and formatting configuration, see [development tooling](docs/development-tooling.md).
 
 ## Creating a Pull Request
 
@@ -167,13 +152,15 @@ Once you've completed your changes:
    git push origin your-branch-name
    ```
 2. Open a pull request (PR) from your branch to the repository's `main` branch.
-3. Include a clear description of your changes and link the issue it resolves.
+3. Fill in the [pull request template](.github/PULL_REQUEST_TEMPLATE.md), which GitHub adds to the description automatically. Link the issue it resolves (for example, `Closes #123`).
 
 ### PR Checklist:
 
-- Your changes follow the repository’s coding guidelines.
-- You've tested your changes locally.
-- Your PR has a descriptive title and follows best practices.
+- The PR solves only the one issue you were assigned.
+- The checks from step 7 of [Setting Up Your Local Environment](#setting-up-your-local-environment) pass, and you've ticked the ones you ran in the template.
+- Any test data, fixtures, and screenshots are synthetic: no real participant data, credentials, or private sheet links.
+- For UI changes, you've reviewed both dashboard tabs and their filters, and added a screenshot.
+- Your changes follow the repository’s coding guidelines in [AGENTS.md](AGENTS.md), and your PR has a descriptive title.
 
 ---
 

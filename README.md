@@ -52,7 +52,7 @@ npm run scan:generic
 npm run build
 ```
 
-`npm ci` installs the shared pre-commit hook automatically. For an existing checkout, run `npm run hooks:install`. Each commit checks staged whitespace and formatting, runs ESLint and the generic scan, typechecks, and runs all tests using synthetic data. Run `npm run lint:fix` for available lint fixes and `npm run format` to fix formatting before committing. See [the contributor guide](CONTRIBUTING.md#pre-commit-checks) for details.
+`npm ci` installs the shared pre-commit hook automatically. For an existing checkout, run `npm run hooks:install`. Each commit checks staged whitespace and formatting, runs ESLint and the generic scan, typechecks, and runs all tests using synthetic data. Run `npm run lint:fix` for available lint fixes and `npm run format` to fix formatting before committing. See [development tooling](docs/development-tooling.md) for details.
 
 Stack: React, TypeScript, Vite, Apache ECharts, PapaParse, Sentiment, and Vitest. The synthetic demo is fully static and requires no backend, database, API keys, or paid services. Public summaries are generated at build time; Google sign-in mode uses an Apps Script backend and performs summary generation, including sentiment scoring, in the browser.
 

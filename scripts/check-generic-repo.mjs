@@ -12,6 +12,7 @@ const allowedBrandFiles = new Set([
   '.github/ISSUE_TEMPLATE/bug-report.yml',
   '.github/ISSUE_TEMPLATE/feature-request.yml',
   '.github/ISSUE_TEMPLATE/documentation-improvement.yml',
+  '.claude/skills/create-issue/SKILL.md',
 ]);
 
 const brandLabels = new Set(['WDS name', 'WDS abbreviation']);

@@ -105,6 +105,28 @@ Use the form's field labels as `###` headings — that is how GitHub renders iss
 
 ---
 
+## Step 2.4 — Contributor notice (always first)
+
+Every issue body must start with this notice, verbatim, before the form headings from Step 2. Do not reword, shorten, or omit it, regardless of issue type or labels:
+
+```markdown
+---
+
+**⚠️ Before You Contribute: Please Review These Guidelines ⚠️**
+
+Thank you for your interest in contributing! Before you ask to be assigned, please understand our workflow:
+
+1. **Do not start work before being assigned.**
+2. **Wait for a maintainer to assign this issue to you.** Just posting a comment does not count as an assignment.
+3. **We reserve `women-devs-only` issues for women developers.** As our mission is to empower women in tech, we hold this space for them.
+
+This process ensures fairness and helps us uphold our community's mission. Thank you for your understanding!
+
+---
+```
+
+---
+
 ## Step 2.5 — Shared sections (always add, regardless of type)
 
 `implement-issue`, `pre-push-audit`, and `review-pr` key off these exact headings — **always emit every one**, even when the answer is "None stated", so an empty section reads as intentional.
@@ -239,7 +261,7 @@ Write the body to a scratch file — shell quoting is unreliable for Markdown wi
 ```bash
 BODY_FILE="$(mktemp)"
 cat > "$BODY_FILE" <<'ISSUE_BODY_EOF'
-<full body from Steps 2 and 2.5>
+<contributor notice from Step 2.4, then the full body from Steps 2 and 2.5>
 ISSUE_BODY_EOF
 
 gh issue create --repo Women-Devs-SG/community-event-analytics \
@@ -315,6 +337,7 @@ In under 10 lines:
 
 - **Never** publish a security vulnerability or possible participant-data exposure report as an issue or comment; follow SECURITY.md and Step 0's private-reporting route.
 - **Never** run `gh issue create` before the user confirms the preview.
+- **Never** file an issue without the Step 2.4 contributor notice at the top of the body.
 - **Never** put real participant data, community sheet IDs, Apps Script URLs, OAuth client IDs, credentials, or personal contact details in an issue — the repo is public.
 - **Never** invent a label; ask before creating one.
 - **Never** apply `women-devs-only` unless the user explicitly asked for it.
