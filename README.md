@@ -35,7 +35,7 @@ Build time (npm run summary)                       Browser
 
 In the public modes (`synthetic` and `google-sheets`), the browser receives only the summary: aggregates that met the privacy threshold, event metadata, and comments from events with enough respondents. It never receives participant IDs, response IDs, or registration rows, and never contacts the data source. The optional `google-signin` mode described below loads source rows for authorized viewers and builds the summary in their browser.
 
-The source architecture lives under `src/data/` and the build-time summary under `src/summary/`. `src/data.ts` is the browser-side facade that loads the summary.
+The source architecture lives under `src/data/` and the build-time summary under `src/summary/`. `src/data.ts` is the browser-side facade that loads the summary. See the [architecture overview](docs/architecture.md) for how the pieces fit together.
 
 ## Develop
 

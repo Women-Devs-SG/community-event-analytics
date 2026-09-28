@@ -56,7 +56,7 @@ Before you dive in:
 1. **Read Our Code of Conduct:** This ensures a welcoming and collaborative space for everyone.
 2. **Check Existing Issues:** Look for open issues in the repository to see where help is needed.
 3. **Start Small:** We label beginner-friendly issues as `good first issue` to help you ease into the project.
-4. **Understand the project:** Read the [README](README.md) and [agent guide](AGENTS.md) for setup, architecture, and data-safety conventions.
+4. **Understand the project:** Read the [README](README.md) for setup and the [architecture overview](docs/architecture.md) for how the code fits together. The [agent guide](AGENTS.md) has the detailed code map and data-safety conventions.
 5. **Join our Telegram group:** To participate in Community Coding Month activities and connect with the community, please join the **[WDS Telegram group](https://t.me/+hh3Fts4oDG41NzQ1)**.
 
 ---
