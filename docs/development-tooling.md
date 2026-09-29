@@ -4,7 +4,7 @@ This page describes the pre-commit hook, linting, and formatting setup. For the 
 
 ## Pre-commit checks
 
-`npm ci` (or `npm install`) enables the shared hook through npm's `prepare` script. In an existing checkout, run `npm run hooks:install` once. Git and Node/npm must be available on your PATH, including when committing from an editor.
+The shared hook is managed by [Husky](https://typicode.github.io/husky/) and lives in `.husky/pre-commit`. `npm ci` (or `npm install`) enables it through npm's `prepare` script. In an existing checkout, run `npm run hooks:install` once. Git and Node/npm must be available on your PATH, including when committing from an editor.
 
 Before each commit, the hook runs `npm run check:commit`:
 
@@ -17,7 +17,7 @@ Before each commit, the hook runs `npm run check:commit`:
 
 A failed check stops the commit. The hook sets the data source to synthetic and does not build the site or fetch a real sheet. It does not modify or stage files. Apart from the staged whitespace check, checks inspect the working tree, so unstaged changes can affect the result; review partially staged files carefully. You can run `npm run check:commit` manually too.
 
-Hook setup skips CI and source archives without Git metadata. It preserves an existing custom `core.hooksPath`; if setup reports one, add `npm run check:commit` to your existing hook and use the synthetic source. If npm lifecycle scripts were disabled during installation, run `npm run hooks:install` explicitly.
+Hook setup skips source archives without Git metadata, and CI workflows set `HUSKY=0` to skip it. Husky sets `core.hooksPath` to `.husky/_`, replacing any custom hooks path you had configured; if you rely on your own hooks, add them to `.husky/` locally or restore your setting and add `npm run check:commit` to your existing hook with the synthetic source. If npm lifecycle scripts were disabled during installation, run `npm run hooks:install` explicitly. If Git clients launched outside your shell (such as some editors) cannot find Node, see Husky's guidance on `~/.config/husky/init.sh`.
 
 Local hooks can be bypassed, so CI remains the shared validation gate. Both validation and deployment workflows check formatting and linting.
 

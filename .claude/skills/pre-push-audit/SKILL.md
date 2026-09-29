@@ -115,16 +115,16 @@ git diff --name-only "$BASE_REMOTE/main"...HEAD
 
 Sort each file into buckets (a file can be in more than one):
 
-| Bucket                                     | Paths                                                                                                                                                                                            |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Public summary path (privacy-critical)** | `src/summary/build.ts`, `src/summary/scope.ts`, `src/summary/types.ts`, `src/summary/generate.ts`, `src/privacy.ts`, `scripts/build-summary.mjs`                                                 |
-| **Data pipeline**                          | `src/data/**` (adapters, normalize, validate, load, contract), `src/types.ts`, `src/metrics.ts`, `src/summary/sentiment-score.ts`                                                                |
-| **Sign-in path (access-critical)**         | `src/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`                                                                                                  |
-| **Presentation**                           | `src/main.tsx`, `src/dash-*.ts`, `src/components.ts`, `src/sentiment.ts`, `src/style.css`, `src/theme.ts`, `index.html`, `public/**`                                                             |
-| **Configuration**                          | `src/config.ts`, `src/vite-env.d.ts`, `.env.example`                                                                                                                                             |
-| **Tooling / CI**                           | `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.js`, `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.gitattributes`, `.githooks/**`, `scripts/**`, `.github/**` |
-| **Docs**                                   | `*.md`, `docs/**`, `LICENSE`                                                                                                                                                                     |
-| **Tests**                                  | `src/**/*.test.ts`                                                                                                                                                                               |
+| Bucket                                     | Paths                                                                                                                                                                                         |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Public summary path (privacy-critical)** | `src/summary/build.ts`, `src/summary/scope.ts`, `src/summary/types.ts`, `src/summary/generate.ts`, `src/privacy.ts`, `scripts/build-summary.mjs`                                              |
+| **Data pipeline**                          | `src/data/**` (adapters, normalize, validate, load, contract), `src/types.ts`, `src/metrics.ts`, `src/summary/sentiment-score.ts`                                                             |
+| **Sign-in path (access-critical)**         | `src/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`                                                                                               |
+| **Presentation**                           | `src/main.tsx`, `src/dash-*.ts`, `src/components.ts`, `src/sentiment.ts`, `src/style.css`, `src/theme.ts`, `index.html`, `public/**`                                                          |
+| **Configuration**                          | `src/config.ts`, `src/vite-env.d.ts`, `.env.example`                                                                                                                                          |
+| **Tooling / CI**                           | `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.js`, `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.gitattributes`, `.husky/**`, `scripts/**`, `.github/**` |
+| **Docs**                                   | `*.md`, `docs/**`, `LICENSE`                                                                                                                                                                  |
+| **Tests**                                  | `src/**/*.test.ts`                                                                                                                                                                            |
 
 Flag now:
 
