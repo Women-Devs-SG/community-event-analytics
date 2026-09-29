@@ -18,6 +18,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+        env:
+          HUSKY: '0' # CI does not commit; skip local Git hook setup.
       - run: npm run format:check
       - run: npm run lint
       - run: npm run scan:generic
