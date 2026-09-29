@@ -2,4 +2,4 @@
 * text=auto eol=lf
 
 # Git hooks must retain Unix line endings, including on Windows.
-.githooks/* text eol=lf
+.husky/* text eol=lf

@@ -9,7 +9,7 @@ Use this procedure for `review-pr` and `pre-push-audit`. It changes no contribut
 3. Choose a unique temporary directory outside the original checkout, with separate unused child paths for the submitted-tip and integration worktrees. Record those absolute paths. Create the first worktree with `git worktree add --detach <tip-path> <AUDIT_HEAD>`.
 4. Run source inspection, issue-scope comparisons, and submitted-tip checks in that worktree. In the calling skill and its references, substitute the pinned SHAs in diff/log commands: `git diff <BASE_SHA>...<AUDIT_HEAD>` describes the submitted change. Never derive the PR diff from the experimental merged tree. Keep the recorded contributor branch name for PR lookup and push instructions.
 
-Temporary worktrees start without dependencies. Use Node 22 and the committed lockfile. Set `VITE_DATA_SOURCE=synthetic` for every check. During `npm ci`, set `CI=true` for that command so `scripts/install-hooks.mjs` skips changes to the shared Git hook configuration; restore the prior environment value afterward if the shell requires a process-level assignment. Do not copy `.env` files, credentials, or real data into these worktrees.
+Temporary worktrees start without dependencies. Use Node 22 and the committed lockfile. Set `VITE_DATA_SOURCE=synthetic` for every check. During `npm ci`, set `HUSKY=0` for that command so Husky skips changes to the shared Git hook configuration; restore the prior environment value afterward if the shell requires a process-level assignment. Do not copy `.env` files, credentials, or real data into these worktrees.
 
 ## Test integration after testing the submitted tip
 

@@ -4,8 +4,8 @@
   "description": "Configurable event analytics dashboards for community organizers",
   "private": true,
   "scripts": {
-    "prepare": "node scripts/install-hooks.mjs",
-    "hooks:install": "node scripts/install-hooks.mjs",
+    "prepare": "husky",
+    "hooks:install": "husky",
     "check:commit": "git diff --cached --check && npm run format:check && npm run lint && npm run scan:generic && npm run typecheck && npm test",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
@@ -48,6 +48,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.12.0",
+    "husky": "9.1.7",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.1",
