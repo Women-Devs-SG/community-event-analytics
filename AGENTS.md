@@ -16,27 +16,30 @@ Community Event Analytics is a static dashboard for event organizers, built with
 
 Run commands from the repository root. Use npm and the committed `package-lock.json`; `.nvmrc` pins Node 22 and `package.json` requires Node >=22.
 
-| Command                           | Purpose                                                                        |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| `npm ci`                          | Install the locked dependencies for a fresh checkout.                          |
-| `npm run hooks:install`           | Enable the shared pre-commit hook for an existing checkout.                    |
-| `npm run check:commit`            | Check staged whitespace, formatting, lint, generic scan, types, and all tests. |
-| `npm run lint`                    | Run ESLint with zero warnings allowed.                                         |
-| `npm run lint:fix`                | Apply available ESLint fixes; review and format afterward.                     |
-| `npm run format`                  | Apply Prettier formatting to supported repository files.                       |
-| `npm run format:check`            | Check formatting without modifying files.                                      |
-| `npm run dev`                     | Generate the summary in development mode, then start Vite.                     |
-| `npm run summary`                 | Regenerate `public/dashboard-summary.json` in production mode.                 |
-| `npm test`                        | Run all Vitest tests once.                                                     |
-| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path.                         |
-| `npm run typecheck`               | Check strict TypeScript without emitting files.                                |
-| `npm run scan:generic`            | Scan for selected source-project identifiers and deployment values.            |
-| `npm run build`                   | Typecheck, regenerate the summary, and build into `dist/`.                     |
-| `npm run preview`                 | Serve the existing production build locally.                                   |
+| Command                           | Purpose                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `npm ci`                          | Install the locked dependencies for a fresh checkout.                            |
+| `npm run hooks:install`           | Enable the shared pre-commit and pre-push hooks for an existing checkout.        |
+| `npm run check:commit`            | Auto-fix lint/format in staged files, check staged whitespace, run generic scan. |
+| `npm run verify`                  | Run every CI check: format, lint, generic scan, types, coverage tests, build.    |
+| `npm run fix`                     | Apply ESLint fixes and Prettier formatting across the repository.                |
+| `npm run lint`                    | Run ESLint with zero warnings allowed.                                           |
+| `npm run lint:fix`                | Apply available ESLint fixes; review and format afterward.                       |
+| `npm run format`                  | Apply Prettier formatting to supported repository files.                         |
+| `npm run format:check`            | Check formatting without modifying files.                                        |
+| `npm run dev`                     | Generate the summary in development mode, then start Vite.                       |
+| `npm run summary`                 | Regenerate `public/dashboard-summary.json` in production mode.                   |
+| `npm test`                        | Run all Vitest tests once.                                                       |
+| `npm test -- src/privacy.test.ts` | Run a focused test file; substitute the relevant path.                           |
+| `npm run test:coverage`           | Run all tests with coverage thresholds, as CI does.                              |
+| `npm run typecheck`               | Check strict TypeScript without emitting files.                                  |
+| `npm run scan:generic`            | Scan for selected source-project identifiers and deployment values.              |
+| `npm run build`                   | Typecheck, regenerate the summary, and build into `dist/`.                       |
+| `npm run preview`                 | Serve the existing production build locally.                                     |
 
-Prettier is pinned in `package.json` and configured in `.prettierrc.json`, including Apps Script `.gs` support. Respect `.prettierignore` and LF line endings in `.gitattributes`. ESLint is configured in `eslint.config.mjs` for TypeScript, JavaScript, Apps Script, and React hook correctness. Run `npm run lint` to check with zero warnings allowed, or `npm run lint:fix` for available automatic fixes followed by formatting and diff review. Fix causes rather than disabling rules globally. There is no configured end-to-end test command. Use the URL printed by Vite rather than assuming a port.
+Prettier is pinned in `package.json` and configured in `.prettierrc.json`, including Apps Script `.gs` support. Respect `.prettierignore` and LF line endings in `.gitattributes`. ESLint is configured in `eslint.config.mjs` for TypeScript, JavaScript, Apps Script, and React hook correctness. Use `npm run fix` for available lint fixes plus formatting, then review the diff. Fix causes rather than disabling rules globally. There is no configured end-to-end test command. Use the URL printed by Vite rather than assuming a port.
 
-`npm ci` installs the Husky pre-commit hook in `.husky/pre-commit` via the `prepare` script; CI workflows set `HUSKY=0` to skip it. Husky sets `core.hooksPath` to `.husky/_`, replacing any custom hooks path. The hook forces synthetic data and runs `check:commit`; it does not build, modify, or stage files. Only the whitespace check reads the index; other checks inspect the working tree. Keep `.husky/*` LF-terminated through `.gitattributes`.
+`npm ci` installs the Husky hooks in `.husky/pre-commit` and `.husky/pre-push` via the `prepare` script; CI workflows set `HUSKY=0` to skip them. Husky sets `core.hooksPath` to `.husky/_`, replacing any custom hooks path. Both hooks force synthetic data. Pre-commit runs `check:commit`: lint-staged applies ESLint fixes and Prettier to staged files and re-stages them (unstaged hunks are preserved), then the staged whitespace check and generic scan run. Pre-push runs `verify` against the working tree, including build. Lint-staged globs live in `package.json`. Keep `.husky/*` LF-terminated through `.gitattributes`.
 
 Environment files can change the source. Keep routine checks on `VITE_DATA_SOURCE=synthetic`; do not read real community data merely to verify a code change. Process environment overrides can be set with `$env:VITE_DATA_SOURCE='synthetic'` in PowerShell or `export VITE_DATA_SOURCE=synthetic` in a POSIX shell. Do not print environment contents or credentials.
 
@@ -60,7 +63,7 @@ Environment files can change the source. Keep routine checks on `VITE_DATA_SOURC
 | `src/summary/generate.ts`, `scripts/build-summary.mjs`                 | Build-time source selection and summary output.                               |
 | `src/summary/live.ts`, `src/auth/`, `apps-script/Code.gs`              | Authenticated browser loading and server-side access checks.                  |
 | `src/sentiment.ts`, `src/summary/sentiment-score.ts`                   | Feedback themes/actions and sentiment scoring.                                |
-| `.github/workflows/`                                                   | Pull-request validation and GitHub Pages deployment.                          |
+| `.github/workflows/`                                                   | Validation, PR hygiene (linked issue), and Pages deployment.                  |
 
 ## Data and security boundaries
 
@@ -95,7 +98,7 @@ There are two distinct paths; preserve both:
 
 ## Verification and handoff
 
-For code changes, run the relevant focused tests while working, then `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` before handoff. The build includes typechecking. For documentation-only edits, check links/commands and run formatting and generic checks; do not add tests for prose. Use `npm run format` to fix formatting and review the resulting diff before staging.
+For code changes, run the relevant focused tests while working, then `npm run verify` (format check, lint, generic scan, typecheck, coverage tests, build) before handoff. Coverage thresholds live in `vite.config.js`; add tests rather than lowering them, and keep `src/privacy.ts` fully covered. For documentation-only edits, check links/commands and run formatting and generic checks; do not add tests for prose. Use `npm run format` to fix formatting and review the resulting diff before staging.
 
 Existing test coverage is organized by behavior:
 

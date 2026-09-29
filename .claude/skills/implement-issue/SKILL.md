@@ -101,7 +101,7 @@ git status --short && git log --oneline -5
 
 ### 1d. Install and hooks
 
-If `node_modules/` is missing, run `npm ci` (this also installs the shared pre-commit hook). Keep routine work on synthetic data for this shell — never read real community data to verify a code change:
+If `node_modules/` is missing, run `npm ci` (this also installs the shared pre-commit and pre-push hooks). Keep routine work on synthetic data for this shell — never read real community data to verify a code change:
 
 ```bash
 export VITE_DATA_SOURCE=synthetic          # PowerShell: $env:VITE_DATA_SOURCE='synthetic'
@@ -291,7 +291,7 @@ EOF
 )"
 ```
 
-The pre-commit hook runs `npm run check:commit` (whitespace, format, lint, generic scan, typecheck, tests) with synthetic data. If it fails, fix the cause and commit again — never use `--no-verify`, and don't amend to hide a hook failure.
+The pre-commit hook runs `npm run check:commit` (auto-fixes lint and formatting in staged files, then staged whitespace and the generic scan) with synthetic data; the pre-push hook runs `npm run verify` (every CI check). If either fails, fix the cause and commit or push again — never use `--no-verify`, and don't amend to hide a hook failure.
 
 Repeat Step 5 for each planned commit.
 
@@ -331,7 +331,7 @@ For each AC, record its verification category, concrete evidence, and PASS/FAIL/
 ```
 AC #1 — PASS → src/summary/summary.test.ts › "lists withheld events in limitations"
 AC #2 — PASS (manual UI) → both tabs show the notes; checked in the browser on synthetic data
-AC #3 — PASS → npm run check:commit and npm run build
+AC #3 — PASS → npm run verify
 AC #4 — PASS (documentation) → README reset instructions match src/components.ts; links, format, and scan checked
 ```
 
@@ -390,7 +390,7 @@ Don't repeat code that's visible in the diff.
 
 - **Never** commit to `main`. Pushing to `main` on the upstream repo deploys GitHub Pages.
 - **Never** use `git add -A` / `git add .`; name files.
-- **Never** use `--no-verify` or disable the pre-commit hook.
+- **Never** use `--no-verify` or disable the pre-commit or pre-push hook.
 - **Never** mark work done while required checks fail or required verification remains unavailable. Use the documentation-only check set where applicable; never bypass existing hooks or CI, or ignore failures from checks that ran.
 - **Never** read real community data, print environment contents, or commit local/configured `.env*` files, real sheet IDs, Apps Script URLs, OAuth client IDs, or credentials. The tracked `.env.example` is the sole environment-file exception: update it when settings change, using only documented demo defaults or placeholders, never real deployment identifiers or secrets.
 - **Never** weaken `scan:generic`, `assertNoRowIdentifiers`, privacy thresholds, or Apps Script access checks to get a change through.

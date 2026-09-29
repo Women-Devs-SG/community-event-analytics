@@ -110,7 +110,7 @@ Use the acceptance criteria and changed-file buckets (the table in `pre-push-aud
 ```
 Test plan (derived):
 Automated:
-□ npm run format:check · npm run lint · npm run scan:generic · npm test · npm run build
+□ npm run verify (format, lint, generic scan, typecheck, coverage tests, build)
 □ <specific test file(s) that must cover the change>
 
 Manual (reviewer, synthetic data):

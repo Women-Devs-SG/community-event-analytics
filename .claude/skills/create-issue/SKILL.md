@@ -193,7 +193,7 @@ When the user asks for a good first issue, also include under `### Additional co
 
 - **Getting started:** ask to be assigned and wait for a maintainer (per CONTRIBUTING.md); fork; `npm ci`; `npm run dev` (synthetic data, no accounts needed).
 - **Where to make the change:** a file table with line numbers confirmed by reading the files.
-- **Done when:** a checklist that ends with `npm run check:commit` passing and a screenshot for UI changes.
+- **Done when:** a checklist that ends with `npm run verify` passing and a screenshot for UI changes.
 - **Skills involved:** e.g. "basic React (JSX) and CSS; no charting or data knowledge needed".
 
 Keep good first issues to one or two files and one behavior. If the work needs a maintainer decision, a privacy judgement, or a real Google account, it is not a good first issue — say so and suggest `help wanted` instead.

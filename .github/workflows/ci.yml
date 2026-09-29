@@ -8,21 +8,45 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels its older, now-outdated run. Runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate:
+    # This name is the required status check in the main branch ruleset. Renaming it
+    # requires updating the ruleset, or pull requests will wait on a check that never runs.
+    name: Validate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Checks always use the deterministic synthetic demo, never a real source.
+      VITE_DATA_SOURCE: synthetic
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - name: Install locked dependencies
+        run: npm ci
         env:
           HUSKY: '0' # CI does not commit; skip local Git hook setup.
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run scan:generic
-      - run: npm test
-      - run: npm run typecheck
-      - run: npm run build
+      - name: Check formatting (fix locally with `npm run format`)
+        run: npm run format:check
+      - name: Lint (fix locally with `npm run lint:fix`)
+        run: npm run lint
+      - name: Scan for source-project identifiers
+        run: npm run scan:generic
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test with coverage thresholds
+        run: npm run test:coverage
+      - name: Publish coverage summary
+        if: ${{ !cancelled() }}
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      - name: Build
+        run: npm run build
