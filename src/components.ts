@@ -1,9 +1,9 @@
 // Shared DOM components: filter bar, KPI cards, sentiment split, feedback table
 import { eventsIn, filters, setFilters } from './data';
-import { SENTIMENT_COLORS } from './theme';
-import { FIELD_LABELS, isNonAnswer } from './sentiment';
+import { SENTIMENT_COLORS } from './shared/chart-theme';
+import { FIELD_LABELS, isNonAnswer } from './features/feedback/themes';
 import { communityConfig } from './config';
-import type { VerdictLabel } from './metrics';
+import type { VerdictLabel } from './analytics/metrics';
 import type { DashboardSummary, SummaryComment, SummaryEvent } from './summary/types';
 
 export interface BoardFilter {

@@ -1,10 +1,10 @@
 // Dashboard 1, Event effectiveness
 import * as echarts from 'echarts';
-import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from './theme';
-import type { ChartParams } from './theme';
-import { commentsFor, eventsIn, filters, scopeFor } from './data';
-import { quadrantAction, fmtPct, fmtNum, fmtInt } from './metrics';
-import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from './metrics';
+import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from '../shared/chart-theme';
+import type { ChartParams } from '../shared/chart-theme';
+import { commentsFor, eventsIn, filters, scopeFor } from '../data';
+import { quadrantAction, fmtPct, fmtNum, fmtInt } from '../analytics/metrics';
+import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from '../analytics/metrics';
 import {
   isNonAnswer,
   extractThemes,
@@ -15,15 +15,15 @@ import {
   matchExcerpt,
   KEEP_RULES,
   FIX_RULES,
-} from './sentiment';
-import type { ActionRule, RankedAction } from './sentiment';
-import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from './components';
-import type { BoardFilter } from './components';
-import { communityConfig } from './config';
-import { ALL_EVENTS } from './summary/scope';
-import type { ScopeSelection } from './summary/scope';
-import type { DashboardSummary, EffectivenessScope, SummaryComment } from './summary/types';
-import type { DashboardController } from './types';
+} from '../features/feedback/themes';
+import type { ActionRule, RankedAction } from '../features/feedback/themes';
+import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from '../components';
+import type { BoardFilter } from '../components';
+import { communityConfig } from '../config';
+import { ALL_EVENTS } from '../summary/scope';
+import type { ScopeSelection } from '../summary/scope';
+import type { DashboardSummary, EffectivenessScope, SummaryComment } from '../summary/types';
+import type { DashboardController } from '../types';
 
 // scatter callbacks receive the plotted point back under `data.meta`
 type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };

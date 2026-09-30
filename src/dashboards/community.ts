@@ -11,15 +11,15 @@ import {
   SECTOR_COLORS,
   SEQ_BLUE,
   indexOfOrLast,
-} from './theme';
-import type { ChartParams } from './theme';
-import { scopeFor } from './data';
-import { fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER } from './metrics';
-import { sentimentSplit } from './sentiment';
-import { kpiCard, sentimentSplitHtml, renderFeedbackBoard, esc } from './components';
-import { communityConfig } from './config';
-import type { CommunityScope, CrossTabGroup, DashboardSummary, SegDim } from './summary/types';
-import type { DashboardController } from './types';
+} from '../shared/chart-theme';
+import type { ChartParams } from '../shared/chart-theme';
+import { scopeFor } from '../data';
+import { fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER } from '../analytics/metrics';
+import { sentimentSplit } from '../features/feedback/themes';
+import { kpiCard, sentimentSplitHtml, renderFeedbackBoard, esc } from '../components';
+import { communityConfig } from '../config';
+import type { CommunityScope, CrossTabGroup, DashboardSummary, SegDim } from '../summary/types';
+import type { DashboardController } from '../types';
 
 type SegOutcome = 'return' | 'sat' | 'rec';
 

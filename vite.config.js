@@ -18,7 +18,7 @@ export default defineConfig({
         functions: 40,
         lines: 46,
         // Disclosure controls are a privacy boundary and must stay fully covered.
-        'src/privacy.ts': {
+        'src/analytics/privacy.ts': {
           statements: 100,
           branches: 100,
           functions: 100,

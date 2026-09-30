@@ -1,4 +1,4 @@
-import { communityConfig } from './config';
+import { communityConfig } from '../config';
 
 export const minimumSegmentSize = () => communityConfig.privacy.minimumSegmentSize;
 

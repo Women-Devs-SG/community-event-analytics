@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client';
 import './style.css';
 import { communityConfig as config } from './config';
 import { formatLoadError, formatSignInError, loadSummary, onFilterChange, setFilters } from './data';
-import { readIdToken, showSignInButton, signOutOfGoogle } from './auth/google-identity';
-import type { SignedInUser } from './auth/google-identity';
+import { readIdToken, showSignInButton, signOutOfGoogle } from './features/auth/google-identity';
+import type { SignedInUser } from './features/auth/google-identity';
 import { buildFilterBar } from './components';
-import { initEffectiveness } from './dash-effectiveness';
-import { initCommunity } from './dash-community';
+import { initEffectiveness } from './dashboards/effectiveness';
+import { initCommunity } from './dashboards/community';
 import type { DashboardController } from './types';
 import type { DashboardSummary } from './summary/types';
 

@@ -1,9 +1,9 @@
 // Browser-side helpers for reading free-text feedback: sentiment split,
 // recurring themes, quotes, and rule-based action suggestions. Lexicon scoring
-// runs at build time (src/summary/sentiment-score.ts) so the browser only
+// runs at build time (src/analytics/sentiment-score.ts) so the browser only
 // receives each answer's label.
-import { communityConfig } from './config';
-import type { FeedbackRecord } from './types';
+import { communityConfig } from '../../config';
+import type { FeedbackRecord } from '../../types';
 
 export type SentimentLabel = 'positive' | 'neutral' | 'negative';
 

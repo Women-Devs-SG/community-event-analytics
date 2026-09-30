@@ -3,8 +3,8 @@
 // been applied. It must never contain participant IDs, response IDs, or any
 // other row-level record from the source.
 import type { DataClassification } from '../types';
-import type { DistributionRow, OutcomeRow, QuadrantMode, QuadrantPoint, ReturningRow } from '../metrics';
-import type { SentimentLabel } from '../sentiment';
+import type { DistributionRow, OutcomeRow, QuadrantMode, QuadrantPoint, ReturningRow } from '../analytics/metrics';
+import type { SentimentLabel } from '../features/feedback/themes';
 
 export const SUMMARY_VERSION = 1;
 export const SUMMARY_FILE = 'dashboard-summary.json';

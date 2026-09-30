@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import appsScriptSource from '../../apps-script/Code.gs?raw';
-import { createAppsScriptAdapter, SignInDataError } from '../data/adapters/apps-script';
-import { createSyntheticAdapter } from '../data/adapters/synthetic';
-import { loadData } from '../data/load';
-import { buildSummary } from '../summary/build';
-import { formatSignInError } from '../data';
+import appsScriptSource from '../../../apps-script/Code.gs?raw';
+import { createAppsScriptAdapter, SignInDataError } from '../../data/adapters/apps-script';
+import { createSyntheticAdapter } from '../../data/adapters/synthetic';
+import { loadData } from '../../data/load';
+import { buildSummary } from '../../summary/build';
+import { formatSignInError } from '../../data';
 import { readIdToken } from './google-identity';
-import type { RawRow } from '../types';
+import type { RawRow } from '../../types';
 
 // The Apps Script's pure checks, evaluated without Google's services.
 type Claims = Record<string, unknown>;

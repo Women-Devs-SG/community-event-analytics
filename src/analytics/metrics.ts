@@ -1,6 +1,6 @@
 // Pure metric computations over the filtered slice.
-import { communityConfig, surveyExperienceOrder } from './config';
-import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from './types';
+import { communityConfig, surveyExperienceOrder } from '../config';
+import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from '../types';
 
 type Numeric = number | null | undefined;
 
