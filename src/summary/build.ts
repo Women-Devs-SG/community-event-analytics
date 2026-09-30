@@ -25,7 +25,7 @@ import type {
   FeedbackRecord,
   RegistrationRecord,
   ResponseRecord,
-} from '../types';
+} from '../data/types';
 import { reachableSelections, scopeKey, matchesSelection } from './scope';
 import { scoreFeedback } from '../analytics/sentiment-score';
 import { SUMMARY_VERSION } from './types';

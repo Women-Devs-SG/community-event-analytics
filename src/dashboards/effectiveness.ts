@@ -2,9 +2,11 @@
 import * as echarts from 'echarts';
 import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from '../shared/chart-theme';
 import type { ChartParams } from '../shared/chart-theme';
-import { commentsFor, eventsIn, filters, scopeFor } from '../data';
-import { quadrantAction, fmtPct, fmtNum, fmtInt } from '../analytics/metrics';
-import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint } from '../analytics/metrics';
+import { commentsFor, eventsIn, scopeFor } from '../summary/client';
+import { filters } from '../features/filters/filter-state';
+import { quadrantAction } from '../analytics/metrics';
+import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint, VerdictLabel } from '../analytics/metrics';
+import { fmtPct, fmtNum, fmtInt } from '../shared/format';
 import {
   isNonAnswer,
   extractThemes,
@@ -17,19 +19,55 @@ import {
   FIX_RULES,
 } from '../features/feedback/themes';
 import type { ActionRule, RankedAction } from '../features/feedback/themes';
-import { kpiCard, verdictBannerHtml, renderFeedbackBoard, esc } from '../components';
-import type { BoardFilter } from '../components';
+import { renderFeedbackBoard } from '../features/feedback/feedback-board';
+import { kpiCard, esc } from '../shared/html';
+import type { BoardFilter } from '../features/feedback/feedback-board';
 import { communityConfig } from '../config';
 import { ALL_EVENTS } from '../summary/scope';
 import type { ScopeSelection } from '../summary/scope';
 import type { DashboardSummary, EffectivenessScope, SummaryComment } from '../summary/types';
-import type { DashboardController } from '../types';
+import type { DashboardController } from '../shared/types';
 
 // scatter callbacks receive the plotted point back under `data.meta`
 type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };
 
 const terms = communityConfig.terminology;
 const satisfaction = communityConfig.ratings.satisfaction;
+
+// ── overall verdict banner ───────────────────────────────────────────────────
+// One verdict from the satisfaction rating, not a three-way sentiment split.
+type Verdict = { label: VerdictLabel; mean: number; total: number; highShare: number };
+
+const VERDICT_COPY: Record<VerdictLabel, { word: string; gloss: string }> = {
+  positive: { word: 'Positive', gloss: 'Attendees rate these events highly.' },
+  neutral: { word: 'Mixed', gloss: 'Ratings are middling, read the themes below before repeating the formula.' },
+  negative: { word: 'Negative', gloss: 'Ratings are low, treat the themes below as priorities.' },
+};
+
+function verdictBannerHtml(verdict: Verdict | null, scopeLabel: string, isSafe = true) {
+  if (!isSafe) {
+    return '<div class="verdict-inner"><div class="empty-note">Feedback is hidden for this selection to protect respondent privacy.</div></div>';
+  }
+  if (!verdict) {
+    return `<div class="verdict-inner"><div class="empty-note">No satisfaction ratings in this selection</div></div>`;
+  }
+  const copy = VERDICT_COPY[verdict.label];
+  return `
+    <div class="verdict-inner">
+      <div class="verdict-main">
+        <span class="verdict-badge ${verdict.label}"><span class="dot"></span>${copy.word}</span>
+        <div class="verdict-copy">
+          <div class="verdict-gloss">${esc(copy.gloss)}</div>
+          <div class="verdict-meta">
+            Average satisfaction <b>${verdict.mean.toFixed(1)} / ${satisfaction.max}</b> across
+            ${verdict.total.toLocaleString()} rating${verdict.total === 1 ? '' : 's'} for ${esc(scopeLabel)}
+            · ${Math.round(verdict.highShare * 100)}% scored ${satisfaction.verdictPositiveMin} or above.
+          </div>
+        </div>
+      </div>
+      <div class="verdict-scope" id="verdict-scope"></div>
+    </div>`;
+}
 
 export function initEffectiveness(root: HTMLElement, summary: DashboardSummary): DashboardController {
   const q = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
@@ -443,13 +481,19 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
   const boardRows = () => commentsFor(summary, eventsIn(summary, boardSelection()));
 
   function drawFeedbackBoard() {
-    renderFeedbackBoard(q('#fb-table'), boardRows(), eventsById, !!boardScope()?.feedbackSafe, boardFilter, () =>
-      setBoardFilter(null),
+    renderFeedbackBoard(
+      q('#fb-table'),
+      boardRows(),
+      eventsById,
+      filters,
+      !!boardScope()?.feedbackSafe,
+      boardFilter,
+      () => setBoardFilter(null),
     );
   }
 
   function update() {
-    scope = scopeFor(summary)?.effectiveness ?? null;
+    scope = scopeFor(summary, filters)?.effectiveness ?? null;
     boardFilter = null; // the top filter bar changed scope, drop any chart-click drill-down
     q('#eff-empty').hidden = !!scope;
     q('#eff-body').hidden = !scope;

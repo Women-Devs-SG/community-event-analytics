@@ -13,13 +13,16 @@ import {
   indexOfOrLast,
 } from '../shared/chart-theme';
 import type { ChartParams } from '../shared/chart-theme';
-import { scopeFor } from '../data';
-import { fmtPct, fmtNum, fmtInt, YOE_ORDER, SURVEY_YOE_ORDER } from '../analytics/metrics';
+import { scopeFor } from '../summary/client';
+import { filters } from '../features/filters/filter-state';
+import { YOE_ORDER, SURVEY_YOE_ORDER } from '../analytics/metrics';
+import { fmtPct, fmtNum, fmtInt } from '../shared/format';
 import { sentimentSplit } from '../features/feedback/themes';
-import { kpiCard, sentimentSplitHtml, renderFeedbackBoard, esc } from '../components';
+import { sentimentSplitHtml, renderFeedbackBoard } from '../features/feedback/feedback-board';
+import { kpiCard, esc } from '../shared/html';
 import { communityConfig } from '../config';
 import type { CommunityScope, CrossTabGroup, DashboardSummary, SegDim } from '../summary/types';
-import type { DashboardController } from '../types';
+import type { DashboardController } from '../shared/types';
 
 type SegOutcome = 'return' | 'sat' | 'rec';
 
@@ -749,11 +752,11 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     q('#seg-sel-label').textContent = bucket;
     const safe = indexes != null;
     q('#seg-senti').innerHTML = sentimentSplitHtml(sentimentSplit(rows), safe);
-    renderFeedbackBoard(q('#seg-fb-table'), rows, eventsById, safe);
+    renderFeedbackBoard(q('#seg-fb-table'), rows, eventsById, filters, safe);
   }
 
   function update() {
-    scope = scopeFor(summary)?.community ?? null;
+    scope = scopeFor(summary, filters)?.community ?? null;
     segSelection = null;
     q('#comm-empty').hidden = !!scope;
     q('#comm-body').hidden = !scope;

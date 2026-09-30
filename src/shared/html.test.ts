@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { esc } from './components';
+import { esc } from './html';
 
 describe('HTML escaping', () => {
   it('neutralizes spreadsheet-controlled markup before it enters tooltip HTML', () => {

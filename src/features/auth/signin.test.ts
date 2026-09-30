@@ -4,9 +4,9 @@ import { createAppsScriptAdapter, SignInDataError } from '../../data/adapters/ap
 import { createSyntheticAdapter } from '../../data/adapters/synthetic';
 import { loadData } from '../../data/load';
 import { buildSummary } from '../../summary/build';
-import { formatSignInError } from '../../data';
+import { formatSignInError } from '../../summary/client';
 import { readIdToken } from './google-identity';
-import type { RawRow } from '../../types';
+import type { RawRow } from '../../data/types';
 
 // The Apps Script's pure checks, evaluated without Google's services.
 type Claims = Record<string, unknown>;

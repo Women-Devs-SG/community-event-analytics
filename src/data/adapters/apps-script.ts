@@ -2,7 +2,7 @@
 // ID token to the Apps Script web app (apps-script/Code.gs), which checks it
 // against the sheet's sharing list and returns the rows.
 import type { DataSourceAdapter, RawDataBundle, RawDatasets } from '../contract';
-import type { RawRow } from '../../types';
+import type { RawRow } from '../types';
 
 const DATASET_KEYS = ['events', 'surveyResponses', 'feedbackAnswers', 'registrations', 'participants'] as const;
 const REQUEST_TIMEOUT_MS = 60_000;

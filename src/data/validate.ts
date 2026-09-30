@@ -1,6 +1,6 @@
 import { DataContractError } from './contract';
 import type { NormalizedDataBundle } from './contract';
-import type { ValidationIssue } from '../types';
+import type { ValidationIssue } from './types';
 
 function duplicateIssues(values: string[], dataset: string, field: string): ValidationIssue[] {
   const seen = new Set<string>();

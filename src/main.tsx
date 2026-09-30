@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { communityConfig as config } from './config';
-import { formatLoadError, formatSignInError, loadSummary, onFilterChange, setFilters } from './data';
+import { formatLoadError, formatSignInError, loadSummary } from './summary/client';
+import { onFilterChange, setFilters } from './features/filters/filter-state';
 import { readIdToken, showSignInButton, signOutOfGoogle } from './features/auth/google-identity';
 import type { SignedInUser } from './features/auth/google-identity';
-import { buildFilterBar } from './components';
+import { buildFilterBar } from './features/filters/filter-bar';
 import { initEffectiveness } from './dashboards/effectiveness';
 import { initCommunity } from './dashboards/community';
-import type { DashboardController } from './types';
+import type { DashboardController } from './shared/types';
 import type { DashboardSummary } from './summary/types';
 
 type DashboardTab = 'effectiveness' | 'community';

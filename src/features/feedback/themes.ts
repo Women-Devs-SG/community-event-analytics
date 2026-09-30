@@ -3,9 +3,8 @@
 // runs at build time (src/analytics/sentiment-score.ts) so the browser only
 // receives each answer's label.
 import { communityConfig } from '../../config';
-import type { FeedbackRecord } from '../../types';
-
-export type SentimentLabel = 'positive' | 'neutral' | 'negative';
+import type { SentimentLabel } from '../../analytics/sentiment-score';
+import type { FeedbackRecord } from '../../data/types';
 
 export interface ActionRule {
   id: string;
