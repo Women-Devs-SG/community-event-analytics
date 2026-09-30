@@ -18,6 +18,11 @@ updates:
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
+      # lint-staged 17 requires Node >=22.22.1, above this project's `>=22` engine range.
+      # Upgrade manually together with raising `engines.node`.
+      - dependency-name: lint-staged
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /

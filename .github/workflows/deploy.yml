@@ -14,13 +14,16 @@ permissions:
   pages: write
   id-token: write
 
+# Let an in-progress deployment finish rather than cancelling it part-way; the newest
+# queued run then deploys. Matches GitHub's recommended Pages configuration.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       VITE_DATA_SOURCE: ${{ vars.VITE_DATA_SOURCE }}
       VITE_REPORTING_TIMEZONE: ${{ vars.VITE_REPORTING_TIMEZONE }}
@@ -54,6 +57,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc

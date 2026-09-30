@@ -80,5 +80,5 @@ A new metric follows the same path: calculate it in `src/metrics.ts`, add it to 
 
 - [Data contract v1](data-contract-v1.md): canonical fields, metric definitions, and privacy rules
 - [Private dashboard with Google sign-in](google-signin.md): how the Apps Script access check works
-- [Development tooling](development-tooling.md): pre-commit hook, linting, and formatting
+- [Development tooling](development-tooling.md): commit and push hooks, linting, and formatting
 - [AGENTS.md](../AGENTS.md): the detailed code map and rules for automated contributors

@@ -12,8 +12,10 @@ By contributing, you agree to follow our [Code of Conduct](.github/CODE_OF_CONDU
 - [Getting Started](#getting-started)
 - [Working with Issues](#working-with-issues)
 - [Setting Up Your Local Environment](#setting-up-your-local-environment)
-- [Pre-commit checks](#pre-commit-checks)
+- [Automatic checks on commit and push](#automatic-checks-on-commit-and-push)
+- [Tests and coverage](#tests-and-coverage)
 - [Creating a Pull Request](#creating-a-pull-request)
+- [Automated checks on your pull request](#automated-checks-on-your-pull-request)
 - [Awaiting Review](#awaiting-review)
 
 ---
@@ -107,60 +109,104 @@ If you spot a bug or have an idea that isn’t already listed:
 
 ## Setting Up Your Local Environment
 
-To work on an issue:
+Contributors work in their own fork. To work on an assigned issue:
 
 1. Fork the repository to your GitHub account.
-2. Clone your fork and move into it:
+2. Clone your fork and add this repository as `upstream`, replacing `your-username` with your GitHub username:
    ```bash
    git clone https://github.com/your-username/community-event-analytics.git
    cd community-event-analytics
-   ```
-3. Add the original repository as `upstream` so you can keep your fork in sync:
-   ```bash
    git remote add upstream https://github.com/Women-Devs-SG/community-event-analytics.git
    ```
-4. Install dependencies and start the synthetic demo, using Node 22 (see `.nvmrc`):
+3. Use Node 22 (see `.nvmrc`) and install the locked dependencies. This also enables the [automatic checks on commit and push](#automatic-checks-on-commit-and-push):
    ```bash
    npm ci
-   npm run dev
    ```
-   Open the local URL printed by Vite. No credentials are needed. `npm ci` also installs the [pre-commit hook](#pre-commit-checks).
-5. Create a branch from the latest `upstream/main`:
+4. Create a branch from the latest upstream `main`. Name it `<type>/<issue-number>-<short-description>`, where type is `feat`, `fix`, `docs`, `test`, or `chore`:
    ```bash
    git fetch upstream
-   git checkout -b your-branch-name upstream/main
+   git switch -c fix/42-empty-filter-state upstream/main
    ```
-6. Make your changes.
-7. Before opening a PR, run `npm run format:check`, `npm run lint`, `npm run scan:generic`, `npm test`, and `npm run build` (which includes typechecking). There is no configured end-to-end test suite. For UI changes, manually review both dashboard tabs and their filters.
+5. Run `npm run dev` to start the synthetic demo, and use the local URL printed by Vite. No credentials are needed.
+6. Make your changes. Add or update tests for changed behavior (see [Tests and coverage](#tests-and-coverage)).
+7. Commit and push as usual; the [automatic checks](#automatic-checks-on-commit-and-push) run for you. There is no configured end-to-end test suite, so for UI changes, manually review both dashboard tabs and their filters.
+
+Commit messages do not need a special format; write a short sentence describing what the commit does, such as `Show an empty state when no events match`. Your commits are combined into one when the PR is merged.
+
+### Keeping your branch up to date
+
+If `main` changes while you are working, bring your branch up to date before asking for review:
+
+```bash
+git fetch upstream
+git merge upstream/main
+git push
+```
+
+If you are comfortable with rebasing, `git rebase upstream/main` followed by `git push --force-with-lease` also works. Never force-push to someone else's branch.
 
 AI-assisted contributions follow the same review process. Read [AGENTS.md](AGENTS.md), verify generated changes, and describe the checks you actually ran. Keep all fixtures synthetic and follow [SECURITY.md](SECURITY.md) when handling data or reporting vulnerabilities.
 
 ---
 
-## Pre-commit checks
+## Automatic checks on commit and push
 
-`npm ci` installs a pre-commit hook that runs `npm run check:commit` (whitespace, formatting, lint, generic scan, typecheck, and tests, all on synthetic data). If a check fails, run `npm run lint:fix` and `npm run format`, review the diff, and commit again.
+You don't need to remember a list of commands: `npm ci` (or `npm install`) enables two Git hooks, and they run the checks for you. In an existing checkout, run `npm run hooks:install` once.
 
-For hook setup in existing checkouts, custom hook paths, and the lint and formatting configuration, see [development tooling](docs/development-tooling.md).
+- **On every commit** (fast), the files you staged are auto-fixed: ESLint fixes what it can, Prettier formats them, and the fixed files are re-staged. Then a whitespace check and the generic scan run.
+- **On every push** (thorough), `npm run verify` runs the same checks as CI: formatting, lint, the generic scan, typechecking, tests with coverage thresholds, and the production build.
+
+A failed check stops the commit or push and prints what went wrong. Lint errors that cannot be fixed automatically, type errors, and failing tests need a manual fix. Both hooks use the synthetic data source and never fetch a real sheet.
+
+You can also run the commands yourself at any time:
+
+| Command          | What it does                                                    |
+| ---------------- | --------------------------------------------------------------- |
+| `npm run fix`    | Apply automatic lint fixes and formatting to the whole project. |
+| `npm run verify` | Run everything CI runs, without changing files.                 |
+
+Local hooks can be bypassed, and contributors editing in GitHub's web editor have no hooks, so CI remains the shared validation gate. For hook details, partially staged files, custom hook paths, and the lint and formatting configuration, see [development tooling](docs/development-tooling.md).
+
+## Tests and coverage
+
+Tests use [Vitest](https://vitest.dev/) and live next to the code they cover, organized by behavior (see the list in [AGENTS.md](AGENTS.md#verification-and-handoff)). Keep every fixture synthetic.
+
+- `npm test` runs all tests once. `npm test -- src/privacy.test.ts` runs one file.
+- `npm run test:coverage` also measures coverage. Open `coverage/index.html` in a browser to see which lines are untested.
+
+Coverage has minimum thresholds, configured in `vite.config.js`. They sit just below the current level, so a change that removes tested code or adds untested code can fail the check. Add tests for the behavior you changed rather than lowering a threshold. `src/privacy.ts` must stay fully covered because it controls what the public dashboard may disclose. Maintainers raise the thresholds as coverage improves.
 
 ## Creating a Pull Request
 
 Once you've completed your changes:
 
-1. Push your branch to your forked repository:
+1. Push your branch to your fork:
    ```bash
-   git push origin your-branch-name
+   git push -u origin fix/42-empty-filter-state
    ```
-2. Open a pull request (PR) from your branch to the repository's `main` branch.
-3. Fill in the [pull request template](.github/PULL_REQUEST_TEMPLATE.md), which GitHub adds to the description automatically. Link the issue it resolves (for example, `Closes #123`).
+2. Open a pull request (PR) from your branch to this repository's `main` branch. If your work is not finished, open it as a **draft** so maintainers can give early feedback.
+3. Give it a plain, descriptive title, such as `Show an empty state when no events match`. Maintainers may adjust the title when merging.
+4. Fill in the pull request template. Link the one issue it resolves with a line such as `Closes #42`; this closes the issue automatically when the PR is merged.
+5. Tick only the checks you actually ran. Add screenshots for visible UI changes.
 
-### PR Checklist:
+### PR Checklist
 
-- The PR solves only the one issue you were assigned.
-- The checks from step 7 of [Setting Up Your Local Environment](#setting-up-your-local-environment) pass, and you've ticked the ones you ran in the template.
-- Any test data, fixtures, and screenshots are synthetic: no real participant data, credentials, or private sheet links.
-- For UI changes, you've reviewed both dashboard tabs and their filters, and added a screenshot.
-- Your changes follow the repository’s coding guidelines in [AGENTS.md](AGENTS.md), and your PR has a descriptive title.
+- The PR resolves exactly one assigned issue.
+- Your branch is up to date with `main` and the automated checks pass.
+- Changed behavior has tests, and fixtures and screenshots use synthetic data only: no real participant data, credentials, or private sheet IDs.
+- For UI changes, you've reviewed both dashboard tabs and their filters.
+- Your changes follow the coding guidelines in [AGENTS.md](AGENTS.md), and documentation, `.env.example`, and `AGENTS.md` are updated if behavior or settings changed.
+
+## Automated checks on your pull request
+
+Every pull request runs these checks. A red ❌ is normal while you are learning; open the check's **Details** to see what failed.
+
+| Check          | What it verifies                                                                                                                         | How to fix it locally                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `Validate`     | Formatting, lint, the generic identifier scan, typechecking, tests with coverage thresholds, and the production build on synthetic data. | Run `npm run fix` for formatting and lint, or `npm run verify` to reproduce the failure, then push. |
+| `Linked issue` | The PR description links an issue with `Closes #<number>`, `Fixes #<number>`, or `Resolves #<number>`.                                   | Edit the PR description; the check reruns automatically. Dependabot updates are skipped.            |
+
+GitHub may ask a maintainer to approve workflow runs for first-time contributors. This is a security setting, not a problem with your PR.
 
 ---
 
@@ -168,8 +214,9 @@ Once you've completed your changes:
 
 Once you’ve submitted your PR:
 
-- A maintainer will review your changes. This may take some time — thank you for your patience!
-- If changes are requested, you can update your PR by pushing to the same branch.
+- A maintainer will review your changes. This may take some time — thank you for your patience! If there is no response after a week, feel free to leave a polite comment or ask in the Telegram group.
+- If changes are requested, push new commits to the same branch; the PR updates automatically. Reply to or resolve each comment once it is addressed.
+- Please do not close and reopen a new PR for the same change; keeping the conversation in one place helps reviewers.
 
 Remember, reviews are meant to ensure the quality and consistency of the project, not to criticize you personally.
 

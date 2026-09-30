@@ -1,0 +1,50 @@
+name: PR hygiene
+
+# Uses `pull_request` (not `pull_request_target`) so fork pull requests run with a
+# read-only token and no secrets. The check reads only the event payload.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  linked-issue:
+    # This name is a required status check in the main branch ruleset.
+    name: Linked issue
+    # Dependabot updates and maintainer-labelled exceptions have no issue to link.
+    # A skipped job satisfies the required check.
+    if: >-
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'no-issue-needed')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the description links an issue
+        env:
+          # Passed through the environment, never interpolated into the script.
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          pattern='(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+(#[0-9]+|https://github\.com/[^[:space:]]+/issues/[0-9]+)'
+          if printf '%s' "$PR_BODY" | grep -Eiq "$pattern"; then
+            echo "Linked issue found."
+            exit 0
+          fi
+          {
+            echo "### Please link the issue this pull request resolves"
+            echo
+            echo "Each pull request should resolve one assigned issue. Edit the pull request description and add a line such as:"
+            echo
+            echo '```'
+            echo 'Closes #123'
+            echo '```'
+            echo
+            echo "This check reruns automatically when you save the description. See CONTRIBUTING.md for details."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=Linked issue missing::Add 'Closes #<issue number>' to the pull request description."
+          exit 1

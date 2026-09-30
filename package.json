@@ -6,16 +6,19 @@
   "scripts": {
     "prepare": "husky",
     "hooks:install": "husky",
-    "check:commit": "git diff --cached --check && npm run format:check && npm run lint && npm run scan:generic && npm run typecheck && npm test",
+    "check:commit": "lint-staged && git diff --cached --check && npm run scan:generic",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
+    "fix": "npm run lint:fix && npm run format",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "summary": "node scripts/build-summary.mjs",
     "dev": "node scripts/build-summary.mjs development && vite",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "scan:generic": "node scripts/check-generic-repo.mjs",
     "typecheck": "tsc --noEmit",
+    "verify": "npm run format:check && npm run lint && npm run scan:generic && npm run typecheck && npm run test:coverage && npm run build",
     "build": "npm run typecheck && npm run summary && vite build",
     "preview": "vite preview"
   },
@@ -44,15 +47,24 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/sentiment": "^5.0.4",
+    "@vitest/coverage-v8": "^5.0.1",
     "eslint": "10.11.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.12.0",
     "husky": "9.1.7",
+    "lint-staged": "16.4.0",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs,gs}": [
+      "eslint --fix --max-warnings 0 --no-warn-ignored",
+      "prettier --write"
+    ],
+    "!(*.{ts,tsx,js,mjs,cjs,gs})": "prettier --write --ignore-unknown"
   }
 }

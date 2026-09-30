@@ -432,7 +432,7 @@ Print the PR URL. **If NO:** "PR description ready — open it on GitHub when yo
 - **Never** run `git push` yourself; print the command.
 - **Never** rebase, reset, amend, or switch the contributor's branch during the audit. Temporary integration work must stay in detached worktrees created for this run.
 - **Never** clear a push to `main`. Pushes to upstream `main` deploy GitHub Pages.
-- **Never** use or suggest `--no-verify`; the pre-commit hook complements this audit.
+- **Never** use or suggest `--no-verify`; the pre-commit and pre-push hooks complement this audit.
 - **Never** mark the audit passed without the developer's YES when manual items exist, and never tick a PR checkbox for a check that didn't run.
 - **Never** run checks against real community data or print environment contents. Force `VITE_DATA_SOURCE=synthetic`.
 - **Never** write a trivially passing test to close a gap.
