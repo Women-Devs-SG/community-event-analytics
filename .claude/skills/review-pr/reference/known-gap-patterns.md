@@ -101,3 +101,11 @@ The first entries come from the initial codebase review and the build-time summa
 **Check:** No real sheet ID, Apps Script `/macros/s/AKfy…` URL, `….apps.googleusercontent.com` client ID, or private key. `npm run scan:generic` checks for these; also look at `scripts/check-generic-repo.mjs` for weakened patterns.
 **Verdict:** BLOCKER
 **First seen:** Google sign-in work — 2026-09-25
+
+### Example text in a PR template satisfies its own check
+
+**Category:** QUALITY
+**Trigger:** A workflow validates the PR body (linked issue, checklist, section present) and `.github/PULL_REQUEST_TEMPLATE.md` contains example text.
+**Check:** Run the workflow's pattern against the unmodified template: `grep -Eio "<pattern>" .github/PULL_REQUEST_TEMPLATE.md`. Any match means an unfilled PR passes. HTML comments must be stripped before matching, and examples should use placeholders that cannot match (e.g. `#<issue number>`).
+**Verdict:** BLOCKER
+**First seen:** PR #20 — 2026-09-30
