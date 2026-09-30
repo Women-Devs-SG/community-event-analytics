@@ -1,5 +1,6 @@
 // Dashboard 2, Community profile
-import * as echarts from 'echarts';
+import { echarts, numValue, tooltipPoint, tooltipPoints } from './echarts';
+import type { BarSeriesOption, ChartParams, ECOption, EChartsType } from './echarts';
 import {
   C,
   baseAxis,
@@ -12,7 +13,6 @@ import {
   SEQ_BLUE,
   indexOfOrLast,
 } from '../shared/chart-theme';
-import type { ChartParams } from '../shared/chart-theme';
 import { scopeFor } from '../summary/client';
 import { filters } from '../features/filters/filter-state';
 import { YOE_ORDER, SURVEY_YOE_ORDER } from '../analytics/metrics';
@@ -125,7 +125,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
   const sectorChart = echarts.init(q('#sector-chart'));
   const segChart = echarts.init(q('#seg-chart'));
   const donutEl = () => q('#gender-donut');
-  let donutChart: echarts.ECharts | null = null;
+  let donutChart: EChartsType | null = null;
 
   let segDim: SegDim = 'yoe';
   let segOutcome: SegOutcome = 'return';
@@ -222,11 +222,14 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
       value: group.count,
       itemStyle: { color: genderColors[group.key] ?? C.notStated },
     }));
-    donutChart.setOption({
+    donutChart.setOption<ECOption>({
       ...baseChart,
       tooltip: {
         ...baseTooltip,
-        formatter: (p: ChartParams) => `${esc(p.name)}: <b>${fmtInt(p.value)}</b> (${p.percent}%)`,
+        formatter: (params) => {
+          const p = tooltipPoint(params);
+          return `${esc(p.name)}: <b>${fmtInt(numValue(p))}</b> (${p.percent}%)`;
+        },
       },
       series: [
         {
@@ -255,7 +258,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const genderKeys = [...new Set(buckets.flatMap((b) => tab.get(b)?.children.map((child) => child.key) ?? []))];
     return genderKeys
       .sort((a, b) => indexOfOrLast(GENDER_ORDER, a) - indexOfOrLast(GENDER_ORDER, b))
-      .map((g) => ({
+      .map((g): BarSeriesOption => ({
         name: g,
         type: 'bar',
         stack: 'g',
@@ -265,8 +268,8 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
       }));
   };
 
-  const hideChart = (chart: echarts.ECharts, message: string) =>
-    chart.setOption(
+  const hideChart = (chart: EChartsType, message: string) =>
+    chart.setOption<ECOption>(
       {
         ...baseChart,
         xAxis: { show: false },
@@ -283,20 +286,21 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const tab = new Map(scope!.experienceByGender.map((group) => [group.key, group]));
     const buckets = YOE_ORDER.filter((b) => tab.has(b));
     if (!buckets.length) return hideChart(yoeChart, 'No privacy-safe segments for this selection.');
-    yoeChart.setOption(
+    yoeChart.setOption<ECOption>(
       {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
-          formatter: (ps: ChartParams[]) => {
-            const total = ps.reduce((s, p) => s + p.value, 0);
+          formatter: (params) => {
+            const ps = tooltipPoints(params);
+            const total = ps.reduce((s, p) => s + numValue(p), 0);
             return (
               `<b>${esc(ps[0].name)}</b> · ${fmtInt(total)} ${terms.registrations}<br/>` +
               ps
-                .filter((p) => p.value)
-                .map((p) => `${p.marker} ${esc(p.seriesName)}: ${fmtInt(p.value)}`)
+                .filter((p) => numValue(p))
+                .map((p) => `${p.marker} ${esc(p.seriesName)}: ${fmtInt(numValue(p))}`)
                 .join('<br/>')
             );
           },
@@ -318,7 +322,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     if (!topics.length) return hideChart(topicGenderChart, 'No privacy-safe segments for this selection.');
     const totals = topics.map(tot);
     const genders = [...new Set(topics.flatMap((t) => tab.get(t)?.children.map((child) => child.key) ?? []))];
-    const series = genders.map((g) => ({
+    const series = genders.map((g): BarSeriesOption => ({
       name: g,
       type: 'bar',
       stack: 'g',
@@ -328,26 +332,30 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
         show: true,
         color: '#fff',
         fontSize: 10,
-        formatter: (p: ChartParams) => (p.value >= 15 ? `${Math.round(p.value)}%` : ''),
+        formatter: (p) => (numValue(p) >= 15 ? `${Math.round(numValue(p))}%` : ''),
       },
       data: topics.map(
         (t, i) =>
           +(((tab.get(t)?.children.find((child) => child.key === g)?.count ?? 0) / (totals[i] || 1)) * 100).toFixed(1),
       ),
     }));
-    topicGenderChart.setOption(
+    topicGenderChart.setOption<ECOption>(
       {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
-          formatter: (ps: ChartParams[]) =>
-            `<b>${esc(ps[0].name)}</b> · ${fmtInt(totals[ps[0].dataIndex])} ${terms.registrations}<br/>` +
-            ps
-              .filter((p) => p.value)
-              .map((p) => `${p.marker} ${esc(p.seriesName)}: ${Math.round(p.value)}%`)
-              .join('<br/>'),
+          formatter: (params) => {
+            const ps = tooltipPoints(params);
+            return (
+              `<b>${esc(ps[0].name)}</b> · ${fmtInt(totals[ps[0].dataIndex])} ${terms.registrations}<br/>` +
+              ps
+                .filter((p) => numValue(p))
+                .map((p) => `${p.marker} ${esc(p.seriesName)}: ${Math.round(numValue(p))}%`)
+                .join('<br/>')
+            );
+          },
         },
         legend: { bottom: 0, itemWidth: 12, itemHeight: 12, textStyle: { color: C.ink2, fontSize: 11 } },
         grid: { left: 8, right: 16, top: 8, bottom: 28, containLabel: true },
@@ -371,13 +379,15 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     if (!groups) return hideChart(jobfamChart, 'Hidden because a total could reveal a small group.');
     const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
     const items = [...groups].sort((a, b) => b.count - a.count);
-    jobfamChart.setOption(
+    jobfamChart.setOption<ECOption>(
       {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
-          formatter: (p: ChartParams) =>
-            `<b>${esc(p.name)}</b><br/>${fmtInt(p.value)} ${terms.registrations} (${fmtPct(p.value / total)})`,
+          formatter: (params) => {
+            const p = tooltipPoint(params);
+            return `<b>${esc(p.name)}</b><br/>${fmtInt(numValue(p))} ${terms.registrations} (${fmtPct(numValue(p) / total)})`;
+          },
         },
         series: [
           {
@@ -395,7 +405,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
               color: '#fff',
               fontSize: 11,
               fontWeight: 600,
-              formatter: (p: ChartParams) => `${p.name}\n${fmtInt(p.value)} · ${fmtPct(p.value / total)}`,
+              formatter: (p: ChartParams) => `${p.name}\n${fmtInt(numValue(p))} · ${fmtPct(numValue(p) / total)}`,
             },
             levels: [
               {
@@ -422,26 +432,26 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const counts = new Map(groups.map((group) => [group.key, group.count]));
     const total = groups.reduce((sum, group) => sum + group.count, 0) || 1;
     const sectors = [...counts.keys()].sort((a, b) => indexOfOrLast(SECTOR_ORDER, a) - indexOfOrLast(SECTOR_ORDER, b));
-    sectorChart.setOption(
+    sectorChart.setOption<ECOption>(
       {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
-          formatter: (ps: ChartParams[]) =>
-            ps
-              .filter((p) => p.value)
+          formatter: (params) =>
+            tooltipPoints(params)
+              .filter((p) => numValue(p))
               .map(
                 (p) =>
-                  `${p.marker} ${esc(p.seriesName)}: <b>${fmtInt(counts.get(p.seriesName))}</b> (${Math.round(p.value)}%)`,
+                  `${p.marker} ${esc(p.seriesName)}: <b>${fmtInt(counts.get(p.seriesName ?? ''))}</b> (${Math.round(numValue(p))}%)`,
               )
               .join('<br/>'),
         },
         grid: { left: 8, right: 60, top: 6, bottom: 6, containLabel: true },
         xAxis: { ...baseAxis, type: 'value', max: 100, show: false },
         yAxis: { ...baseAxis, type: 'category', data: ['All'], show: false },
-        series: sectors.map((s) => ({
+        series: sectors.map((s): BarSeriesOption => ({
           name: s,
           type: 'bar',
           stack: 's',
@@ -451,7 +461,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
             show: true,
             color: '#fff',
             fontSize: 10,
-            formatter: (p: ChartParams) => (p.value >= 9 ? `${Math.round(p.value)}%` : ''),
+            formatter: (p) => (numValue(p) >= 9 ? `${Math.round(numValue(p))}%` : ''),
           },
           data: [+(((counts.get(s) ?? 0) / total) * 100).toFixed(1)],
         })),
@@ -548,17 +558,17 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
         splitLine: { show: false },
         axisLabel: { ...baseAxis.axisLabel, interval: 0, width: 120, overflow: 'truncate' },
       },
-    };
-    const valueAxisName = (name: string) => ({ name, nameLocation: 'middle', nameGap: 24 });
+    } satisfies ECOption;
+    const valueAxisName = (name: string) => ({ name, nameLocation: 'middle', nameGap: 24 }) as const;
 
     if (segOutcome === 'return') {
-      segChart.setOption(
+      segChart.setOption<ECOption>(
         {
           ...base,
           tooltip: {
             ...baseTooltip,
-            formatter: (p: ChartParams) => {
-              const r = rows[p.dataIndex];
+            formatter: (params) => {
+              const r = rows[tooltipPoint(params).dataIndex];
               return `<b>${esc(r.bucket)}</b><br/>Returning: <b>${fmtPct(r.rate)}</b> of ${fmtInt(r.n)} people`;
             },
           },
@@ -578,7 +588,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
                 position: 'right',
                 color: C.ink2,
                 fontSize: 11,
-                formatter: (p: ChartParams) => `${Math.round(p.value)}% {n|· n=${fmtInt(rows[p.dataIndex].n)}}`,
+                formatter: (p) => `${Math.round(numValue(p))}% {n|· n=${fmtInt(rows[p.dataIndex].n)}}`,
                 rich: { n: { color: C.muted, fontSize: 10 } },
               },
               data: rows.map((r) => +((r.rate ?? 0) * 100).toFixed(1)),
@@ -598,7 +608,7 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
         const d = +(((r.detractors ?? 0) / (r.n || 1)) * 100).toFixed(1);
         return { promoters: +(100 - pa - d).toFixed(1), passives: pa, detractors: d };
       });
-      const mk = (key: 'promoters' | 'passives' | 'detractors', name: string, color: string) => ({
+      const mk = (key: 'promoters' | 'passives' | 'detractors', name: string, color: string): BarSeriesOption => ({
         name,
         type: 'bar',
         stack: 'd',
@@ -608,14 +618,14 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
           show: true,
           color: '#fff',
           fontSize: 10,
-          formatter: (p: ChartParams) => (p.value >= 12 ? `${Math.round(p.value)}%` : ''),
+          formatter: (p) => (numValue(p) >= 12 ? `${Math.round(numValue(p))}%` : ''),
         },
         data: rows.map((_r, i) => ({
           value: shares[i][key],
         })),
       });
       // invisible stack cap that carries the n= label past the 100% mark
-      const nCap = {
+      const nCap: BarSeriesOption = {
         name: '__n',
         type: 'bar',
         stack: 'd',
@@ -626,24 +636,25 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
           position: 'right',
           color: C.muted,
           fontSize: 10,
-          formatter: (p: ChartParams) => `n=${fmtInt(rows[p.dataIndex].n)}`,
+          formatter: (p) => `n=${fmtInt(rows[p.dataIndex].n)}`,
         },
         data: rows.map(() => 0),
       };
-      segChart.setOption(
+      segChart.setOption<ECOption>(
         {
           ...base,
           tooltip: {
             ...baseTooltip,
             trigger: 'axis',
             axisPointer: { type: 'shadow' },
-            formatter: (ps: ChartParams[]) => {
+            formatter: (params) => {
+              const ps = tooltipPoints(params);
               const r = rows[ps[0].dataIndex];
               return (
                 `<b>${esc(r.bucket)}</b> · n=${fmtInt(r.n)} responses<br/>` +
                 ps
                   .filter((p) => p.seriesName !== '__n')
-                  .map((p) => `${p.marker} ${p.seriesName}: ${Math.round(p.value)}%`)
+                  .map((p) => `${p.marker} ${p.seriesName}: ${Math.round(numValue(p))}%`)
                   .join('<br/>')
               );
             },
@@ -684,13 +695,13 @@ export function initCommunity(root: HTMLElement, summary: DashboardSummary): Das
     const totalN = rows.reduce((s, r) => s + r.n, 0);
     const overall = totalN ? rows.reduce((s, r) => s + avgOf(r) * r.n, 0) / totalN : 0;
     const maxAbs = Math.max(0.3, ...rows.map((r) => Math.abs(avgOf(r) - overall))) * 1.35;
-    segChart.setOption(
+    segChart.setOption<ECOption>(
       {
         ...base,
         tooltip: {
           ...baseTooltip,
-          formatter: (p: ChartParams) => {
-            const r = rows[p.dataIndex];
+          formatter: (params) => {
+            const r = rows[tooltipPoint(params).dataIndex];
             return (
               `<b>${esc(r.bucket)}</b><br/>Avg recommend: <b>${fmtNum(r.avg)}</b> / ${recommendation.max} (overall ${fmtNum(overall)})<br/>` +
               `n=${fmtInt(r.n)} responses`

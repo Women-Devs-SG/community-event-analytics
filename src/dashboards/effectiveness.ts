@@ -1,7 +1,7 @@
 // Dashboard 1, Event effectiveness
-import * as echarts from 'echarts';
+import { echarts, tooltipPoint } from './echarts';
+import type { ChartParams, ECOption } from './echarts';
 import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from '../shared/chart-theme';
-import type { ChartParams } from '../shared/chart-theme';
 import { commentsFor, eventsIn, scopeFor } from '../summary/client';
 import { filters } from '../features/filters/filter-state';
 import { quadrantAction } from '../analytics/metrics';
@@ -29,7 +29,7 @@ import type { DashboardSummary, EffectivenessScope, SummaryComment } from '../su
 import type { DashboardController } from '../shared/types';
 
 // scatter callbacks receive the plotted point back under `data.meta`
-type ScatterParams = ChartParams & { data: { meta: QuadrantPoint } };
+const metaOf = (p: ChartParams) => (p.data as { meta: QuadrantPoint }).meta;
 
 const terms = communityConfig.terminology;
 const satisfaction = communityConfig.ratings.satisfaction;
@@ -190,13 +190,13 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
     const maxDemand = Math.max(1.2, ...points.map((p) => p.demand)) * 1.15;
     const maxReg = Math.max(1, ...points.map((p) => p.registered));
 
-    quadChart.setOption(
+    quadChart.setOption<ECOption>(
       {
         ...baseChart,
         tooltip: {
           ...baseTooltip,
-          formatter: (p: ScatterParams) => {
-            const d = p.data.meta;
+          formatter: (params) => {
+            const d = metaOf(tooltipPoint(params));
             return `<b>${esc(d.name)}</b><br/>${esc(d.detail)}<br/>
               Satisfaction: <b>${fmtNum(d.satisfaction)}</b> / ${satisfaction.max} · Demand index: <b>${fmtNum(d.demand, 2)}</b><br/>
               Suggested action: <b>${quadrantAction(d.satisfaction, d.demand, refs)}</b>`;
@@ -250,7 +250,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
                 },
               };
             }),
-            symbolSize: (_v: unknown, p: ScatterParams) => 10 + 26 * Math.sqrt(p.data.meta.registered / maxReg),
+            symbolSize: (_v: unknown, p: ChartParams) => 10 + 26 * Math.sqrt(metaOf(p).registered / maxReg),
             emphasis: { focus: 'self', itemStyle: { opacity: 1 } },
             label: { show: false, formatter: (p: ChartParams) => p.name, position: 'top', color: C.ink2, fontSize: 10 },
             labelLayout: { hideOverlap: true },
@@ -259,13 +259,14 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
               symbol: 'none',
               lineStyle: { color: C.axis, type: 'dashed', width: 1.5 },
               label: { color: C.muted, fontSize: 10 },
+              // ECharts' types reject null; it checks these with `!= null`, so undefined behaves the same
               data: [
                 {
-                  xAxis: refs.medianDemand,
+                  xAxis: refs.medianDemand ?? undefined,
                   label: { formatter: 'median demand', position: 'insideStartBottom', rotate: 0 },
                 },
                 {
-                  yAxis: refs.medianSatisfaction,
+                  yAxis: refs.medianSatisfaction ?? undefined,
                   label: { formatter: 'median satisfaction', position: 'insideEndTop' },
                 },
               ],
@@ -297,7 +298,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
   // e.g. "high demand, high satisfaction" under SCALE, so the quadrant reads on its
   // own without the reader needing the paragraph above the chart
   const corner = (action: string, caption: string, h: 'left' | 'right', v: 'top' | 'bottom', color: string) => ({
-    type: 'text',
+    type: 'text' as const,
     [h]: h === 'left' ? 56 : 30,
     [v]: v === 'top' ? 42 : 52,
     style: {
