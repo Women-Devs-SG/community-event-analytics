@@ -52,19 +52,6 @@ export const SECTOR_COLORS = {
 
 export const SENTIMENT_COLORS = { positive: C.pos, neutral: C.neu, negative: C.neg };
 
-// The subset of ECharts callback params the dashboards read. ECharts types its
-// formatter/colour callbacks as a union with string, which stops TypeScript from
-// inferring the parameter, so the dashboards annotate with this instead.
-export interface ChartParams {
-  name: string;
-  value: number;
-  seriesName: string;
-  marker: string;
-  dataIndex: number;
-  percent?: number;
-  data?: unknown;
-}
-
 export const indexOfOrLast = (order: readonly string[], value: string) =>
   order.indexOf(value) === -1 ? 99 : order.indexOf(value);
 

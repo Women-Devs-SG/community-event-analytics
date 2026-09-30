@@ -80,11 +80,13 @@ A new metric follows the same path: calculate it in `src/analytics/metrics.ts`, 
 | Add or change a metric               | `src/analytics/metrics.ts`, `src/summary/build.ts`, `src/summary/types.ts` | [Data contract](data-contract-v1.md); `SUMMARY_VERSION` if the format changes |
 | Add a filter                         | `src/features/filters/filter-bar.ts`, **plus** `src/summary/scope.ts`      | `src/summary/summary.test.ts`                                                 |
 | Change a chart or KPI card           | `src/dashboards/effectiveness.ts` or `src/dashboards/community.ts`         | Escape inserted text and tooltip HTML with `esc` from `src/shared/html.ts`    |
+| Add a chart type or ECharts feature  | Register it in `src/dashboards/echarts.ts`                                 | Compare the changed charts against `main` in a browser                        |
 | Add a data source                    | A new adapter in `src/data/adapters/`                                      | `src/summary/generate.ts`, `.env.example`, docs, deployment workflow          |
 
 ## Things that look odd but are intentional
 
 - **React only wraps the page.** `src/main.tsx` handles sign-in and page state. The dashboards are plain DOM and ECharts controllers that release their charts and listeners through `dispose()`.
+- **ECharts is imported piece by piece.** `src/dashboards/echarts.ts` registers only the chart types, components, and features the dashboards use, which keeps the bundle about a third smaller. A chart that needs something new must register it there first.
 - **No arbitrary date ranges.** Public summaries can only answer the filter selections that were precomputed at build time.
 - **`null` is everywhere.** Missing values stay unknown instead of becoming zero, because a false zero looks like real data.
 - **Privacy runs before serialization, not in the charts.** Hiding a value in a chart does not protect it if the number is still in the published JSON.
