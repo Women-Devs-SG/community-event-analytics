@@ -110,6 +110,8 @@ Existing test coverage is organized by behavior:
 - `src/summary/summary.test.ts`: published identifiers, survey suppression, filter coverage, Sheets adapter.
 - `src/features/auth/signin.test.ts`: Apps Script access checks, live loading, token display.
 - `src/shared/html.test.ts`: HTML escaping.
+- `src/shared/format.test.ts`: missing values display as a dash, never zero.
+- `src/features/filters/filter-state.test.ts`: filter selection updates and change listeners.
 
 Add regression coverage for changed behavior, especially privacy boundaries, joins, denominators, nulls, and access checks. Mock external services; automated tests must not depend on a real sheet or account. Apps Script tests exercise helpers locally, not a deployed Google integration.
 
