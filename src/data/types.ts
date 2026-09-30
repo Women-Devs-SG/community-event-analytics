@@ -96,9 +96,3 @@ export interface DataSlice {
   feedback: FeedbackRecord[];
   registrations: RegistrationRecord[];
 }
-
-export interface DashboardController {
-  update: () => void;
-  resize: () => void;
-  dispose?: () => void;
-}

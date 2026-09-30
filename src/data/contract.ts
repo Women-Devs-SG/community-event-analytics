@@ -7,7 +7,7 @@ import type {
   ResponseRecord,
   SourceMetadata,
   ValidationIssue,
-} from '../types';
+} from './types';
 
 export interface RawDatasets {
   events: RawRow[];

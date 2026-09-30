@@ -25,7 +25,7 @@ The first entries come from the initial codebase review and the build-time summa
 ### Suppression only in chart rendering
 
 **Category:** PRIVACY
-**Trigger:** A privacy fix or new small-group rule is implemented in `src/dash-*.ts` or `src/components.ts`.
+**Trigger:** A privacy fix or new small-group rule is implemented in `src/dashboards/**` or `src/features/**`.
 **Check:** The value must also be absent from `public/dashboard-summary.json`. Anyone can download that file directly.
 **Verdict:** BLOCKER
 **First seen:** initial codebase review — 2026-09-24
@@ -50,7 +50,7 @@ The first entries come from the initial codebase review and the build-time summa
 
 **Category:** SECURITY
 **Trigger:** New `innerHTML` template or ECharts `formatter` returning HTML.
-**Check:** Every interpolated event name, topic, comment, segment label, or config string passes through `esc` from `src/components.ts`.
+**Check:** Every interpolated event name, topic, comment, segment label, or config string passes through `esc` from `src/shared/html.ts`.
 **Verdict:** BLOCKER
 **First seen:** initial codebase review — 2026-09-24
 
@@ -81,7 +81,7 @@ The first entries come from the initial codebase review and the build-time summa
 ### Access decided in the browser in sign-in mode
 
 **Category:** SECURITY
-**Trigger:** Changes to `src/auth/**`, `src/summary/live.ts`, or `apps-script/Code.gs`.
+**Trigger:** Changes to `src/features/auth/**`, `src/summary/live.ts`, or `apps-script/Code.gs`.
 **Check:** The browser never gates data on the decoded ID token (`readIdToken` is display-only). `apps-script/Code.gs` keeps `checkClaims_` (audience, issuer, expiry, verified email) and `isAllowed_` (sharing list) before returning rows.
 **Verdict:** BLOCKER
 **First seen:** Google sign-in work — 2026-09-24

@@ -2,9 +2,9 @@
 // src/summary/build.ts from the full source data, after the privacy rules have
 // been applied. It must never contain participant IDs, response IDs, or any
 // other row-level record from the source.
-import type { DataClassification } from '../types';
-import type { DistributionRow, OutcomeRow, QuadrantMode, QuadrantPoint, ReturningRow } from '../metrics';
-import type { SentimentLabel } from '../sentiment';
+import type { DataClassification } from '../data/types';
+import type { DistributionRow, OutcomeRow, QuadrantMode, QuadrantPoint, ReturningRow } from '../analytics/metrics';
+import type { SentimentLabel } from '../analytics/sentiment-score';
 
 export const SUMMARY_VERSION = 1;
 export const SUMMARY_FILE = 'dashboard-summary.json';

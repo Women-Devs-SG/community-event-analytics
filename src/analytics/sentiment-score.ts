@@ -3,8 +3,9 @@
 // The canonical question roles describe the intent of the configured survey
 // question without coupling the analysis to one source's column values.
 import Sentiment from 'sentiment';
-import type { SentimentLabel } from '../sentiment';
-import type { FeedbackRecord } from '../types';
+import type { FeedbackRecord } from '../data/types';
+
+export type SentimentLabel = 'positive' | 'neutral' | 'negative';
 
 const analyzer = new Sentiment();
 

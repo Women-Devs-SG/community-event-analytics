@@ -3,7 +3,7 @@ import { loadData } from '../data/load';
 import { createSyntheticAdapter } from '../data/adapters/synthetic';
 import { createGoogleSheetsAdapter } from '../data/adapters/google-sheets';
 import type { RawDataBundle, RawDatasets } from '../data/contract';
-import type { RawRow } from '../types';
+import type { RawRow } from '../data/types';
 import { assertNoRowIdentifiers, buildSummary } from './build';
 import { ALL_EVENTS, reachableSelections, scopeKey } from './scope';
 import type { DashboardSummary } from './types';

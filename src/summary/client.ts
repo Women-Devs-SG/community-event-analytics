@@ -2,27 +2,12 @@
 // privacy-safe summary produced at build time (see src/summary/) and never sees
 // raw rows. In google-signin mode, src/summary/live.ts builds the same summary
 // in the browser from rows the Apps Script returns to a signed-in viewer.
-import { SignInDataError } from './data/adapters/apps-script';
-import { DataContractError, formatDataContractError } from './data/contract';
-import { matchesSelection, scopeKey } from './summary/scope';
-import type { ScopeSelection } from './summary/scope';
-import { SUMMARY_FILE, SUMMARY_VERSION } from './summary/types';
-import type { DashboardSummary, ScopeSummary, SummaryComment, SummaryEvent } from './summary/types';
-
-export type DashboardFilters = ScopeSelection;
-
-export const filters: DashboardFilters = { year: '', format: '', topic: '', eventId: '' };
-const listeners = new Set<(filters: DashboardFilters) => void>();
-
-export const onFilterChange = (listener: (filters: DashboardFilters) => void) => {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-};
-
-export function setFilters(patch: Partial<DashboardFilters>) {
-  Object.assign(filters, patch);
-  listeners.forEach((listener) => listener(filters));
-}
+import { SignInDataError } from '../data/adapters/apps-script';
+import { DataContractError, formatDataContractError } from '../data/contract';
+import { matchesSelection, scopeKey } from './scope';
+import type { ScopeSelection } from './scope';
+import { SUMMARY_FILE, SUMMARY_VERSION } from './types';
+import type { DashboardSummary, ScopeSummary, SummaryComment, SummaryEvent } from './types';
 
 export class SummaryLoadError extends Error {
   constructor(message: string) {
@@ -54,12 +39,12 @@ export const formatLoadError = (error: unknown): string =>
   error instanceof SummaryLoadError ? error.message : 'The dashboard data could not be loaded.';
 
 // The summary for a filter selection, or null when no event matches it.
-export function scopeFor(summary: DashboardSummary, selection: ScopeSelection = filters): ScopeSummary | null {
+export function scopeFor(summary: DashboardSummary, selection: ScopeSelection): ScopeSummary | null {
   const index = summary.scopes[scopeKey(selection)];
   return index == null ? null : summary.scopeData[index];
 }
 
-export const eventsIn = (summary: DashboardSummary, selection: ScopeSelection = filters): SummaryEvent[] =>
+export const eventsIn = (summary: DashboardSummary, selection: ScopeSelection): SummaryEvent[] =>
   summary.events.filter((event) => matchesSelection(event, selection));
 
 export const commentsFor = (summary: DashboardSummary, events: SummaryEvent[]): SummaryComment[] => {

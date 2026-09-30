@@ -1,7 +1,7 @@
 // Neutral default theme. Adopters can replace the core colors in config.ts or
 // with Vite environment variables without changing chart code.
 
-import { communityConfig } from './config';
+import { communityConfig } from '../config';
 
 export const C = {
   surface: communityConfig.branding.surface,

@@ -7,7 +7,7 @@
 // the sheet ID, so it is reported as a warning.
 import Papa from 'papaparse';
 import type { DataSourceAdapter, RawDataBundle, RawDatasets } from '../contract';
-import type { RawRow, SourceMetadata } from '../../types';
+import type { RawRow, SourceMetadata } from '../types';
 
 const DATASET_KEYS = [
   'events',

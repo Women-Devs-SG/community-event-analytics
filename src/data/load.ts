@@ -1,7 +1,7 @@
 import { normalizeSource } from './normalize';
 import { validateSource } from './validate';
 import type { DataSourceAdapter } from './contract';
-import type { DashboardData } from '../types';
+import type { DashboardData } from './types';
 
 export const median = (values: Array<number | null>): number | null => {
   const sorted = values

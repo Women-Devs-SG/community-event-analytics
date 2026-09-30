@@ -1,6 +1,6 @@
 // Pure metric computations over the filtered slice.
-import { communityConfig, surveyExperienceOrder } from './config';
-import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from './types';
+import { communityConfig, surveyExperienceOrder } from '../config';
+import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from '../data/types';
 
 type Numeric = number | null | undefined;
 
@@ -20,10 +20,6 @@ export interface QuadrantPoint {
 }
 
 export type QuadrantMode = 'event' | 'topic' | 'format';
-
-export const fmtPct = (v: Numeric, dp = 0) => (v == null || isNaN(v) ? '–' : (v * 100).toFixed(dp) + '%');
-export const fmtNum = (v: Numeric, dp = 1) => (v == null || isNaN(v) ? '–' : Number(v).toFixed(dp));
-export const fmtInt = (v: Numeric) => (v == null || isNaN(v) ? '–' : Math.round(v).toLocaleString());
 
 const sumKnown = (values: Numeric[]): number | null => {
   const known = values.filter((value): value is number => value != null && !isNaN(value));

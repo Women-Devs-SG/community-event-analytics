@@ -1,5 +1,5 @@
 import type { DataSourceAdapter, RawDataBundle } from '../contract';
-import type { RawRow } from '../../types';
+import type { RawRow } from '../types';
 
 const EVENT_SPECS = [
   ['2025-01-18', 'Welcome Night: Finding Your Community', 'Networking', 'Community'],

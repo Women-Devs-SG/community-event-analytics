@@ -140,11 +140,11 @@ If none: "None stated — use judgement; keep the change to the issue's files."
 Always include the AGENTS.md defaults that apply to the files you will touch:
 
 - Public summary path: never publish row-level data, participant IDs, or response IDs; keep `assertNoRowIdentifiers`; apply disclosure rules before serialization; never lower thresholds to make a test pass.
-- HTML templates and ECharts tooltip formatters: escape inserted data/config strings with `esc` (`src/components.ts`) or use DOM text APIs.
+- HTML templates and ECharts tooltip formatters: escape inserted data/config strings with `esc` (`src/shared/html.ts`) or use DOM text APIs.
 - Nulls and unknowns stay null/unknown — never zero; never substitute synthetic rows after a real source fails.
 - Environment settings: update `src/config.ts`, `src/vite-env.d.ts`, `.env.example`, docs, and `.github/workflows/deploy.yml` together; no `VITE_` credentials; never read or spread the whole `import.meta.env`.
 - Filters: update `src/summary/scope.ts` reachable selections as well as the UI.
-- Summary format: keep `SUMMARY_VERSION`, `src/summary/build.ts`, and browser loading (`src/data.ts`, `src/summary/live.ts`) compatible.
+- Summary format: keep `SUMMARY_VERSION`, `src/summary/build.ts`, and browser loading (`src/summary/client.ts`, `src/summary/live.ts`) compatible.
 - Sign-in mode: access decisions stay in `apps-script/Code.gs`; the decoded ID token in the browser is display-only; tokens and live rows never go to storage, logs, or fixtures.
 - Chart lifecycle: dispose ECharts instances and listeners in controller `dispose`; resize on tab visibility.
 
@@ -158,9 +158,9 @@ Hard constraints (must satisfy):
 
 State which path(s) the change touches — this decides tests and manual checks:
 
-- **Public summary (build time):** `src/data/**`, `src/summary/build.ts|scope.ts|generate.ts|types.ts`, `src/privacy.ts`, `src/metrics.ts`, `scripts/build-summary.mjs`
-- **google-signin (browser):** `src/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`
-- **Presentation only:** `src/main.tsx`, `src/dash-*.ts`, `src/components.ts`, `src/style.css`, `src/theme.ts`
+- **Public summary (build time):** `src/data/**`, `src/summary/build.ts|scope.ts|generate.ts|types.ts`, `src/analytics/privacy.ts`, `src/analytics/metrics.ts`, `scripts/build-summary.mjs`
+- **google-signin (browser):** `src/features/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`
+- **Presentation only:** `src/main.tsx`, `src/dashboards/**`, `src/features/{filters,feedback}/**`, `src/shared/**`, `src/style.css`
 - **Docs/tooling only**
 
 ### Additional test scenarios
@@ -175,17 +175,17 @@ List them — assign each an appropriate verification method in Step 2.6.
 
 This repo co-locates tests as `src/**/*.test.ts`, organized by behavior (see AGENTS.md → Verification and handoff):
 
-| Change                                                                                | Test type                                                      | File                                                   |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| Normalization, validation, aliases, timezones, synthetic data                         | unit                                                           | `src/data/data.test.ts`                                |
-| Disclosure rules (`src/privacy.ts`)                                                   | unit                                                           | `src/privacy.test.ts`                                  |
-| Summary generation, scopes, published identifiers, survey suppression, Sheets adapter | unit                                                           | `src/summary/summary.test.ts`                          |
-| Sign-in: Apps Script helpers, Apps Script adapter, live loading, token display        | unit (mocked `fetch`)                                          | `src/auth/signin.test.ts`                              |
-| HTML escaping                                                                         | unit                                                           | `src/components.test.ts`                               |
-| `src/metrics.ts`, `src/sentiment.ts` (no test file yet)                               | unit                                                           | create `src/metrics.test.ts` / `src/sentiment.test.ts` |
-| React shell, dashboard DOM/ECharts rendering, CSS                                     | **manual** (no component test setup)                           | browser check on synthetic data                        |
-| Real Google sign-in or a deployed Apps Script                                         | **manual**, maintainer-authorized only                         | —                                                      |
-| Docs-only                                                                             | documentation review — accuracy, links, commands, format, scan | changed documentation sections                         |
+| Change                                                                                | Test type                                                      | File                                                                            |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Normalization, validation, aliases, timezones, synthetic data                         | unit                                                           | `src/data/data.test.ts`                                                         |
+| Disclosure rules (`src/analytics/privacy.ts`)                                         | unit                                                           | `src/analytics/privacy.test.ts`                                                 |
+| Summary generation, scopes, published identifiers, survey suppression, Sheets adapter | unit                                                           | `src/summary/summary.test.ts`                                                   |
+| Sign-in: Apps Script helpers, Apps Script adapter, live loading, token display        | unit (mocked `fetch`)                                          | `src/features/auth/signin.test.ts`                                              |
+| HTML escaping                                                                         | unit                                                           | `src/shared/html.test.ts`                                                       |
+| `src/analytics/metrics.ts`, `src/features/feedback/themes.ts` (no test file yet)      | unit                                                           | create `src/analytics/metrics.test.ts` / `src/features/feedback/themes.test.ts` |
+| React shell, dashboard DOM/ECharts rendering, CSS                                     | **manual** (no component test setup)                           | browser check on synthetic data                                                 |
+| Real Google sign-in or a deployed Apps Script                                         | **manual**, maintainer-authorized only                         | —                                                                               |
+| Docs-only                                                                             | documentation review — accuracy, links, commands, format, scan | changed documentation sections                                                  |
 
 For a presentation change, still automate the data it depends on where possible — e.g. a test that `buildSummary` produces the `limitations` the UI will render.
 
@@ -332,7 +332,7 @@ For each AC, record its verification category, concrete evidence, and PASS/FAIL/
 AC #1 — PASS → src/summary/summary.test.ts › "lists withheld events in limitations"
 AC #2 — PASS (manual UI) → both tabs show the notes; checked in the browser on synthetic data
 AC #3 — PASS → npm run verify
-AC #4 — PASS (documentation) → README reset instructions match src/components.ts; links, format, and scan checked
+AC #4 — PASS (documentation) → README reset instructions match src/features/filters/filter-bar.ts; links, format, and scan checked
 ```
 
 **Gate:** every AC has appropriate verification evidence. Documentation review can satisfy documentation criteria without unit tests. Missing required behavior coverage needs a meaningful test; unavailable checks remain UNVERIFIED and must be reported as outstanding, not passed merely because they have a manual classification.

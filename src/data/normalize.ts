@@ -6,7 +6,7 @@ import type {
   RegistrationRecord,
   ResponseRecord,
   ValidationIssue,
-} from '../types';
+} from './types';
 import type { NormalizedDataBundle, RawDataBundle } from './contract';
 import { communityConfig, type DatasetKey } from '../config';
 

@@ -4,17 +4,17 @@ Tests are co-located as `src/**/*.test.ts` and run with Vitest (`npm test`, or `
 
 ## 1. File → test mapping
 
-| Changed file(s)                                                                        | Expected coverage                                                                              |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `src/data/normalize.ts`, `validate.ts`, `load.ts`, `adapters/synthetic.ts`             | `src/data/data.test.ts`                                                                        |
-| `src/privacy.ts`                                                                       | `src/privacy.test.ts`                                                                          |
-| `src/summary/build.ts`, `scope.ts`, `types.ts`, `adapters/google-sheets.ts`            | `src/summary/summary.test.ts`                                                                  |
-| `src/auth/**`, `src/summary/live.ts`, `adapters/apps-script.ts`, `apps-script/Code.gs` | `src/auth/signin.test.ts` (Apps Script helpers via `?raw`)                                     |
-| `src/components.ts` `esc`                                                              | `src/components.test.ts`                                                                       |
-| `src/metrics.ts`, `src/sentiment.ts`                                                   | `src/metrics.test.ts` / `src/sentiment.test.ts` (to be created)                                |
-| `src/main.tsx`, `src/dash-*.ts`, CSS, layout in `src/components.ts`                    | Manual browser check; automate the data they render where possible                             |
-| `scripts/**`, config                                                                   | Relevant behavior/tool checks and the full suite; assess whether regression coverage is needed |
-| Documentation                                                                          | Accuracy, links, commands, formatting, and generic scan; no unit tests for prose               |
+| Changed file(s)                                                                                 | Expected coverage                                                                              |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/data/normalize.ts`, `validate.ts`, `load.ts`, `adapters/synthetic.ts`                      | `src/data/data.test.ts`                                                                        |
+| `src/analytics/privacy.ts`                                                                      | `src/analytics/privacy.test.ts`                                                                |
+| `src/summary/build.ts`, `scope.ts`, `types.ts`, `adapters/google-sheets.ts`                     | `src/summary/summary.test.ts`                                                                  |
+| `src/features/auth/**`, `src/summary/live.ts`, `adapters/apps-script.ts`, `apps-script/Code.gs` | `src/features/auth/signin.test.ts` (Apps Script helpers via `?raw`)                            |
+| `src/shared/html.ts` `esc`                                                                      | `src/shared/html.test.ts`                                                                      |
+| `src/analytics/metrics.ts`, `src/features/feedback/themes.ts`                                   | `src/analytics/metrics.test.ts` / `src/features/feedback/themes.test.ts` (to be created)       |
+| `src/main.tsx`, `src/dashboards/*.ts`, CSS, layout in `src/features/**`                         | Manual browser check; automate the data they render where possible                             |
+| `scripts/**`, config                                                                            | Relevant behavior/tool checks and the full suite; assess whether regression coverage is needed |
+| Documentation                                                                                   | Accuracy, links, commands, formatting, and generic scan; no unit tests for prose               |
 
 For each changed behavior in a row with expected coverage, check the diff adds or changes a test that exercises it:
 

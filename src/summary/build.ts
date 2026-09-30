@@ -14,10 +14,10 @@ import {
   outcomeByYoe,
   distributionByYoe,
   returningBySegment,
-} from '../metrics';
-import type { QuadrantMode } from '../metrics';
-import { disclosureGroups, isDisclosureSafe, minimumSegmentSize, protectedCrossTab } from '../privacy';
-import type { DisclosureGroup, ProtectedCrossTab } from '../privacy';
+} from '../analytics/metrics';
+import type { QuadrantMode } from '../analytics/metrics';
+import { disclosureGroups, isDisclosureSafe, minimumSegmentSize, protectedCrossTab } from '../analytics/privacy';
+import type { DisclosureGroup, ProtectedCrossTab } from '../analytics/privacy';
 import type {
   DashboardData,
   DataSlice,
@@ -25,9 +25,9 @@ import type {
   FeedbackRecord,
   RegistrationRecord,
   ResponseRecord,
-} from '../types';
+} from '../data/types';
 import { reachableSelections, scopeKey, matchesSelection } from './scope';
-import { scoreFeedback } from './sentiment-score';
+import { scoreFeedback } from '../analytics/sentiment-score';
 import { SUMMARY_VERSION } from './types';
 import type {
   CommunityScope,
