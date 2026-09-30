@@ -51,6 +51,7 @@ Environment files can change the source. Keep routine checks on `VITE_DATA_SOURC
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `src/main.tsx`                                                         | React application shell, sign-in state, dashboard lifecycle.                                           |
 | `src/dashboards/effectiveness.ts`, `src/dashboards/community.ts`       | Imperative DOM/ECharts dashboard controllers, one per tab.                                             |
+| `src/dashboards/echarts.ts`                                            | Registers only the ECharts modules the charts use; typed chart options and callback params.            |
 | `src/features/filters/`                                                | Shared filter state and the filter bar.                                                                |
 | `src/features/feedback/feedback-board.ts`                              | Feedback board and sentiment split.                                                                    |
 | `src/shared/`                                                          | Dependency-free helpers: HTML escaping and KPI cards, number formatting, chart theme, controller type. |
@@ -89,6 +90,7 @@ There are two distinct paths; preserve both:
 - Keep TypeScript and typescript-eslint versions compatible. TypeScript is pinned to the supported 6.0 release line; do not bypass peer dependency checks to upgrade the compiler.
 - Follow nearby code: two-space indentation, single quotes, semicolons, explicit interfaces/types, and `import type` for type-only imports. Avoid broad reformatting or unrelated dependency upgrades.
 - Preserve the existing React shell plus DOM/ECharts controllers unless a task calls for architectural change. Clean up listeners and chart instances through controller disposal; resize charts when tabs become visible.
+- Import ECharts from `src/dashboards/echarts.ts`, not the bare `'echarts'` package, and type options with its `ECOption`. Register a new series type, component, or feature there. An unregistered series or component fails typechecking, but an unregistered feature (such as `LegacyGridContainLabel` for `grid.containLabel`) fails silently, so compare changed charts against `main` in a browser.
 - Escape data/configuration strings inserted into HTML templates using `esc` from `src/shared/html.ts`, or use safe DOM text APIs. Review chart tooltip HTML as well as page markup.
 - Respect the import boundaries enforced in `eslint.config.mjs`: `main.tsx` → `dashboards/` → `features/` → `summary/`, `analytics/`, `data/` → `shared/`. Features do not import each other, and `summary/generate.ts` and the Google Sheets adapter never reach browser code. Do not add barrel `index.ts` files.
 - Put branding, aliases, segment labels/order, exclusions, and rating settings in `src/config.ts`; do not scatter adopter-specific values through charts.
@@ -112,6 +114,7 @@ Existing test coverage is organized by behavior:
 - `src/shared/html.test.ts`: HTML escaping.
 - `src/shared/format.test.ts`: missing values display as a dash, never zero.
 - `src/features/filters/filter-state.test.ts`: filter selection updates and change listeners.
+- `src/dashboards/echarts.test.ts`: ECharts callback params for axis and item tooltips.
 
 Add regression coverage for changed behavior, especially privacy boundaries, joins, denominators, nulls, and access checks. Mock external services; automated tests must not depend on a real sheet or account. Apps Script tests exercise helpers locally, not a deployed Google integration.
 
