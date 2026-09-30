@@ -16,7 +16,7 @@ Categories: `PRIVACY`, `SECURITY`, `QUALITY`, `CONVENTION`, `DOCS`.
 
 ## 1. Public summary: no row-level data (PRIVACY)
 
-Applies when `src/summary/**`, `src/privacy.ts`, `src/metrics.ts`, `src/data/**`, or `scripts/build-summary.mjs` changed.
+Applies when `src/summary/**`, `src/analytics/privacy.ts`, `src/analytics/metrics.ts`, `src/data/**`, or `scripts/build-summary.mjs` changed.
 
 - `assertNoRowIdentifiers(summary, data)` is still called in `src/summary/generate.ts`. Removed or bypassed → **BLOCKER**.
 - New fields in `src/summary/types.ts` (`DashboardSummary`, `ScopeSummary`, `SummaryComment`, …) carry aggregates, event metadata, or threshold-checked comment text only. A field with participant IDs, response IDs, per-person rows, or `response_id` on comments → **BLOCKER**.
@@ -31,7 +31,7 @@ Applies when `src/summary/**`, `src/privacy.ts`, `src/metrics.ts`, `src/data/**`
 - Thresholds come from `communityConfig.privacy.minimumSegmentSize` (via `isDisclosureSafe` / `minimumSegmentSize()`), not new numeric literals. A threshold lowered, or a test changed to expect a lower one → **BLOCKER**.
 - Per-event survey suppression in `src/summary/build.ts` (`eventsMeetingThreshold` for ratings and comments) still applies to every new survey-derived figure. A new figure computed from `data.responses`/`data.feedback` instead of the rated/published sets → **BLOCKER**.
 - Grouped breakdowns use `disclosureGroups` / `protectedCrossTab` with distinct-person counting (`participantIdOf`) where people, not rows, are being counted.
-- Suppression added only in chart code (`src/dash-*.ts`), while the summary still carries the value → **BLOCKER**. Suppress in the summary.
+- Suppression added only in chart code (`src/dashboards/*.ts`), while the summary still carries the value → **BLOCKER**. Suppress in the summary.
 
 ## 3. HTML and tooltip escaping (SECURITY)
 
@@ -41,7 +41,7 @@ The dashboards build HTML strings for `innerHTML` and ECharts tooltip formatters
 git diff "$BASE_REMOTE/main"...HEAD -- src | grep -nE '^\+.*(innerHTML|insertAdjacentHTML|formatter:|dangerouslySetInnerHTML)'
 ```
 
-For each hit, confirm every interpolated data or config value (event names, topics, comment text, segment labels, config strings) passes through `esc(...)` from `src/components.ts`, or uses `textContent` / React text. An unescaped value → **BLOCKER**. `dangerouslySetInnerHTML` → **BLOCKER** unless the content is fully static.
+For each hit, confirm every interpolated data or config value (event names, topics, comment text, segment labels, config strings) passes through `esc(...)` from `src/shared/html.ts`, or uses `textContent` / React text. An unescaped value → **BLOCKER**. `dangerouslySetInnerHTML` → **BLOCKER** unless the content is fully static.
 
 ## 4. Environment settings and credentials (SECURITY / DOCS)
 
@@ -56,7 +56,7 @@ git diff "$BASE_REMOTE/main"...HEAD | grep -nE '^\+.*(import\.meta\.env|process\
 
 ## 5. Sign-in boundary (SECURITY)
 
-Applies when `src/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, or `apps-script/Code.gs` changed.
+Applies when `src/features/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, or `apps-script/Code.gs` changed.
 
 - `checkClaims_` still verifies audience = `CLIENT_ID`, issuer, expiry, and `email_verified`; `isAllowed_` still checks the sharing list; `doPost` still calls both before returning data. Any weakened → **BLOCKER**.
 - Access decided in the browser from the decoded token (`readIdToken`) → **BLOCKER**. It's display-only.
@@ -82,7 +82,7 @@ Each needs a specific comment explaining why. Without one → **WARNING**. `@ts-
 
 ## 8. Duplicated constants and scattered config (CONVENTION)
 
-- Adopter-specific values (colors, labels, segment names/order, thresholds, rating bounds, tab names) hard-coded in `src/dash-*.ts`, `src/components.ts`, or `src/theme.ts` instead of `src/config.ts` → **WARNING**.
+- Adopter-specific values (colors, labels, segment names/order, thresholds, rating bounds, tab names) hard-coded in `src/dashboards/**`, `src/features/**`, or `src/shared/chart-theme.ts` instead of `src/config.ts` → **WARNING**.
 - A literal duplicating an existing constant (e.g. `10` for the privacy threshold, `'Not stated'` instead of the segment's `unknownLabel`, a second copy of `DATASET_KEYS`) → **WARNING**.
 
 ## 9. Nulls, denominators, and grains (QUALITY)
@@ -93,8 +93,8 @@ Each needs a specific comment explaining why. Without one → **WARNING**. `@ts-
 
 ## 10. Filters and summary format (QUALITY)
 
-- A new filter in `src/components.ts` without matching updates to `reachableSelections` / `scopeKey` / `matchesSelection` in `src/summary/scope.ts` → **BLOCKER**. Selections would have no precomputed summary.
-- A changed `DashboardSummary` shape without updating `SUMMARY_VERSION` (if incompatible), `src/data.ts`, and `src/summary/live.ts` → **BLOCKER**.
+- A new filter in `src/features/filters/filter-bar.ts` without matching updates to `reachableSelections` / `scopeKey` / `matchesSelection` in `src/summary/scope.ts` → **BLOCKER**. Selections would have no precomputed summary.
+- A changed `DashboardSummary` shape without updating `SUMMARY_VERSION` (if incompatible), `src/summary/client.ts`, and `src/summary/live.ts` → **BLOCKER**.
 
 ## 11. Chart lifecycle (QUALITY)
 

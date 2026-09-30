@@ -181,7 +181,7 @@ Project-specific constraints worth stating whenever they apply (all from AGENTS.
 
 - Must not publish row-level data, participant IDs, or response IDs in the public summary; `assertNoRowIdentifiers` stays in the public path.
 - Must apply disclosure rules before serialization, not only in chart rendering; must not lower thresholds to make a test pass.
-- Strings inserted into HTML templates or chart tooltips must go through `esc` from `src/components.ts`.
+- Strings inserted into HTML templates or chart tooltips must go through `esc` from `src/shared/html.ts`.
 - Missing values stay null/unknown, never zero.
 - New environment settings must update config/types, `.env.example`, docs, and `.github/workflows/deploy.yml` together; no `VITE_` credentials.
 - New filters must update reachable selections in `src/summary/scope.ts` as well as the UI.

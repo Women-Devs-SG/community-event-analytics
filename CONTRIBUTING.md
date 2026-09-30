@@ -171,10 +171,10 @@ Local hooks can be bypassed, and contributors editing in GitHub's web editor hav
 
 Tests use [Vitest](https://vitest.dev/) and live next to the code they cover, organized by behavior (see the list in [AGENTS.md](AGENTS.md#verification-and-handoff)). Keep every fixture synthetic.
 
-- `npm test` runs all tests once. `npm test -- src/privacy.test.ts` runs one file.
+- `npm test` runs all tests once. `npm test -- src/analytics/privacy.test.ts` runs one file.
 - `npm run test:coverage` also measures coverage. Open `coverage/index.html` in a browser to see which lines are untested.
 
-Coverage has minimum thresholds, configured in `vite.config.js`. They sit just below the current level, so a change that removes tested code or adds untested code can fail the check. Add tests for the behavior you changed rather than lowering a threshold. `src/privacy.ts` must stay fully covered because it controls what the public dashboard may disclose. Maintainers raise the thresholds as coverage improves.
+Coverage has minimum thresholds, configured in `vite.config.js`. They sit just below the current level, so a change that removes tested code or adds untested code can fail the check. Add tests for the behavior you changed rather than lowering a threshold. `src/analytics/privacy.ts` must stay fully covered because it controls what the public dashboard may disclose. Maintainers raise the thresholds as coverage improves.
 
 ## Creating a Pull Request
 

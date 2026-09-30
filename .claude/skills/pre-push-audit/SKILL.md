@@ -117,10 +117,10 @@ Sort each file into buckets (a file can be in more than one):
 
 | Bucket                                     | Paths                                                                                                                                                                                         |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Public summary path (privacy-critical)** | `src/summary/build.ts`, `src/summary/scope.ts`, `src/summary/types.ts`, `src/summary/generate.ts`, `src/privacy.ts`, `scripts/build-summary.mjs`                                              |
-| **Data pipeline**                          | `src/data/**` (adapters, normalize, validate, load, contract), `src/types.ts`, `src/metrics.ts`, `src/summary/sentiment-score.ts`                                                             |
-| **Sign-in path (access-critical)**         | `src/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`                                                                                               |
-| **Presentation**                           | `src/main.tsx`, `src/dash-*.ts`, `src/components.ts`, `src/sentiment.ts`, `src/style.css`, `src/theme.ts`, `index.html`, `public/**`                                                          |
+| **Public summary path (privacy-critical)** | `src/summary/build.ts`, `src/summary/scope.ts`, `src/summary/types.ts`, `src/summary/generate.ts`, `src/analytics/privacy.ts`, `scripts/build-summary.mjs`                                    |
+| **Data pipeline**                          | `src/data/**` (adapters, normalize, validate, load, contract), `src/data/types.ts`, `src/analytics/metrics.ts`, `src/analytics/sentiment-score.ts`                                            |
+| **Sign-in path (access-critical)**         | `src/features/auth/**`, `src/summary/live.ts`, `src/data/adapters/apps-script.ts`, `apps-script/Code.gs`                                                                                      |
+| **Presentation**                           | `src/main.tsx`, `src/dashboards/**`, `src/features/{filters,feedback}/**`, `src/shared/**`, `src/style.css`, `index.html`, `public/**`                                                        |
 | **Configuration**                          | `src/config.ts`, `src/vite-env.d.ts`, `.env.example`                                                                                                                                          |
 | **Tooling / CI**                           | `package.json`, `package-lock.json`, `tsconfig.json`, `vite.config.js`, `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.gitattributes`, `.husky/**`, `scripts/**`, `.github/**` |
 | **Docs**                                   | `*.md`, `docs/**`, `LICENSE`                                                                                                                                                                  |
@@ -141,17 +141,17 @@ Flag now:
 
 Use this mapping (from AGENTS.md → Verification and handoff):
 
-| Changed file(s)                                                                        | Expected test file                                                           |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `src/data/normalize.ts`, `validate.ts`, `load.ts`, `adapters/synthetic.ts`             | `src/data/data.test.ts`                                                      |
-| `src/privacy.ts`                                                                       | `src/privacy.test.ts`                                                        |
-| `src/summary/build.ts`, `scope.ts`, `types.ts`, `adapters/google-sheets.ts`            | `src/summary/summary.test.ts`                                                |
-| `src/auth/**`, `src/summary/live.ts`, `adapters/apps-script.ts`, `apps-script/Code.gs` | `src/auth/signin.test.ts`                                                    |
-| `src/components.ts` (the `esc` helper)                                                 | `src/components.test.ts`                                                     |
-| `src/metrics.ts`, `src/sentiment.ts`                                                   | `src/metrics.test.ts` / `src/sentiment.test.ts` (to be created)              |
-| Presentation-only (`main.tsx`, `dash-*.ts`, CSS, layout in `components.ts`)            | No automated test — manual browser check (Step 5)                            |
-| Tooling, configuration, `scripts/**`                                                   | Relevant behavior/tool checks and full suite; assess regression coverage     |
-| Documentation                                                                          | Accuracy, links, commands, formatting, and generic scan; no prose unit tests |
+| Changed file(s)                                                                                 | Expected test file                                                                       |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/data/normalize.ts`, `validate.ts`, `load.ts`, `adapters/synthetic.ts`                      | `src/data/data.test.ts`                                                                  |
+| `src/analytics/privacy.ts`                                                                      | `src/analytics/privacy.test.ts`                                                          |
+| `src/summary/build.ts`, `scope.ts`, `types.ts`, `adapters/google-sheets.ts`                     | `src/summary/summary.test.ts`                                                            |
+| `src/features/auth/**`, `src/summary/live.ts`, `adapters/apps-script.ts`, `apps-script/Code.gs` | `src/features/auth/signin.test.ts`                                                       |
+| `src/shared/html.ts` (the `esc` helper)                                                         | `src/shared/html.test.ts`                                                                |
+| `src/analytics/metrics.ts`, `src/features/feedback/themes.ts`                                   | `src/analytics/metrics.test.ts` / `src/features/feedback/themes.test.ts` (to be created) |
+| Presentation-only (`main.tsx`, `dashboards/*.ts`, CSS, layout in `features/**`)                 | No automated test — manual browser check (Step 5)                                        |
+| Tooling, configuration, `scripts/**`                                                            | Relevant behavior/tool checks and full suite; assess regression coverage                 |
+| Documentation                                                                                   | Accuracy, links, commands, formatting, and generic scan; no prose unit tests             |
 
 For each changed file with an expected test file, check that the diff changes that test file, or that an existing test already covers the changed behavior:
 
@@ -233,7 +233,7 @@ Run the checks that apply to the buckets from Step 3, plus any hard constraints 
 | Sign-in checks stay server-side            | Sign-in path changed                        | `checkClaims_` still checks audience, issuer, expiry, and verified email; `isAllowed_` still checks the sharing list; the browser doesn't gate access on the decoded token                                                                |
 | No persisted tokens or rows                | Sign-in path changed                        | `git diff … -- src \| grep -nE '^\+.*(localStorage\|sessionStorage\|indexedDB\|console\.(log\|info)\(.*(token\|credential\|rows))'` is empty                                                                                              |
 | Filters stay precomputed                   | Filter UI or `scope.ts` changed             | New filter fields are handled in `reachableSelections`/`scopeKey`/`matchesSelection` and covered in `summary.test.ts`                                                                                                                     |
-| Summary format compatibility               | `src/summary/types.ts` changed              | `SUMMARY_VERSION` bumped if the shape changed incompatibly; `src/data.ts` and `src/summary/live.ts` updated                                                                                                                               |
+| Summary format compatibility               | `src/summary/types.ts` changed              | `SUMMARY_VERSION` bumped if the shape changed incompatibly; `src/summary/client.ts` and `src/summary/live.ts` updated                                                                                                                     |
 | Nulls stay nulls                           | Data pipeline or metrics changed            | No new `?? 0` / `                                                                                                                                                                                                                         |     | 0` on measurements that can be unknown |
 | Generated files not committed              | Always                                      | Diff contains none of `public/dashboard-summary.json`, `dist/`, `.env`, `.env.local`                                                                                                                                                      |
 
@@ -297,7 +297,7 @@ Manual testing required before push:
 
 □ [SIGN-IN] (maintainer) shared account sees data; non-shared account sees the access
   message; sign-out clears the dashboard. Or: "live sign-in not verified".
-  Affected: src/auth/google-identity.ts
+  Affected: src/features/auth/google-identity.ts
 ```
 
 Before adding an item, check whether it can be automated (data shape, text in the summary, an access-check helper). If coverage is missing, report the gap and the appropriate test file as a blocker. Do not implement tests or create commits during this audit. The contributor can run:
