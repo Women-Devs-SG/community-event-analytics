@@ -239,6 +239,16 @@ function App() {
           hidden={!data}
         />
       </main>
+      {data && data.source.limitations.length > 0 && (
+        <aside className="limitation-notes">
+          <h2>About this data</h2>
+          <ul>
+            {data.source.limitations.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
 
       <footer className="footer">
         <span>
