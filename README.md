@@ -1,6 +1,6 @@
 # Community Event Analytics
 
-Open-source event analytics dashboards for community organizers. The project helps a community understand:
+Free, privacy-safe dashboards that show community organizers which events work and who they're reaching, built from a Google Sheet with no backend required. The project helps a community understand:
 
 - **Programme effectiveness:** which events, topics, and formats attract demand and receive strong participant feedback.
 - **Community profile:** who participates, which groups return, and how outcomes vary across supported segments.
