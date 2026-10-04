@@ -33,6 +33,42 @@ function surveyRows(eventId: string, count: number, satisfaction: number) {
   return { responses, feedback };
 }
 
+const showUpRateSource = {
+  sourceLabel: 'Test',
+  sourceKind: 'test',
+  dataClassification: 'synthetic' as const,
+  fetchedAt: new Date('2026-03-01T00:00:00Z'),
+  reportingTimezone: 'UTC',
+  contractVersion: 1 as const,
+  historyStart: null,
+  historyEnd: null,
+  limitations: [] as string[],
+};
+
+function showUpRateEvents(
+  ...rows: Array<{ id: string; registered: number | null; attended: number | null }>
+): RawDataBundle {
+  return {
+    datasets: {
+      events: rows.map((row) => ({
+        event_id: row.id,
+        event_name: row.id,
+        event_date: '2026-01-10',
+        format: 'Talk',
+        topic_primary: 'Data',
+        registered: row.registered,
+        attended: row.attended,
+        year_median_registered: 20,
+      })),
+      surveyResponses: [],
+      feedbackAnswers: [],
+      registrations: [],
+      participants: [],
+    },
+    source: showUpRateSource,
+  };
+}
+
 function smallAndLargeEvent(): RawDataBundle {
   const large = surveyRows('large', 10, 9);
   const small = surveyRows('small', 2, 3);
@@ -136,6 +172,69 @@ describe('build-time summary', () => {
   it('shares one computed summary between selections with the same events', async () => {
     const summary = buildSummary(await loadData(createSyntheticAdapter()));
     expect(summary.scopeData.length).toBeLessThan(Object.keys(summary.scopes).length);
+  });
+
+  it('publishes a paired-event show-up rate for the all-events and single-event scopes', async () => {
+    const data = await loadData(createSyntheticAdapter());
+    const summary = buildSummary(data);
+    const pairedRate = (events: typeof data.events) => {
+      const paired = events.filter((row) => row.attended != null && row.registered != null && row.registered > 0);
+      if (!paired.length) return null;
+      return (
+        paired.reduce((sum, row) => sum + row.attended!, 0) / paired.reduce((sum, row) => sum + row.registered!, 0)
+      );
+    };
+
+    expect(scopeOf(summary).effectiveness.kpis.showUpRate).toBe(pairedRate(data.events));
+    for (const event of data.events) {
+      expect(scopeOf(summary, { ...ALL_EVENTS, eventId: event.event_id }).effectiveness.kpis.showUpRate).toBe(
+        pairedRate([event]),
+      );
+    }
+  });
+
+  //Given one event has registered: 50, attended: null and another event has registered 40, attended: 30
+  //When summary built
+  //Then showUpRate should be 0.75, and event with null attended should be excluded
+  it('excludes events with unknown attendance from both sides of showUpRate', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          showUpRateEvents(
+            { id: 'unknown', registered: 50, attended: null },
+            { id: 'known', registered: 40, attended: 30 },
+          ),
+      }),
+    );
+    expect(scopeOf(summary).effectiveness.kpis.showUpRate).toBe(0.75);
+    expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'unknown' }).effectiveness.kpis.showUpRate).toBeNull();
+    expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'known' }).effectiveness.kpis.showUpRate).toBe(0.75);
+  });
+
+  // Given one event has registered: 0, attended: 0
+  // When the summary is built
+  // Then showUpRate is null (no showed up phrase, –, 0%, or NaN on the card)
+  it('omits showUpRate when registrations are zero', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () => showUpRateEvents({ id: 'empty', registered: 0, attended: 0 }),
+      }),
+    );
+    expect(scopeOf(summary).effectiveness.kpis.showUpRate).toBeNull();
+    expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'empty' }).effectiveness.kpis.showUpRate).toBeNull();
+  });
+
+  // Given an event with registered: 50, attended: 52
+  // When it is the only event selected
+  // Then the sub-line reads 104% showed up · ...
+  it('keeps showUpRate above 100% when attendance exceeds registrations', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () => showUpRateEvents({ id: 'walkins', registered: 50, attended: 52 }),
+      }),
+    );
+    expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'walkins' }).effectiveness.kpis.showUpRate).toBe(1.04);
+    expect(scopeOf(summary).effectiveness.kpis.showUpRate).toBe(1.04);
   });
 });
 
