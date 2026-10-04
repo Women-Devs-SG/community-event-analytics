@@ -121,6 +121,7 @@ export function buildSummary(data: DashboardData): DashboardSummary {
         responses: all.responses,
         totalAttended: all.totalAttended,
         totalRegistered: all.totalRegistered,
+        showUpRate: all.showUpRate,
         returningRate: isDisclosureSafe(all.returningPopulation) ? all.returningRate : null,
         hotTopic: all.hotTopic,
       },

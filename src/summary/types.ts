@@ -6,7 +6,7 @@ import type { DataClassification } from '../data/types';
 import type { DistributionRow, OutcomeRow, QuadrantMode, QuadrantPoint, ReturningRow } from '../analytics/metrics';
 import type { SentimentLabel } from '../analytics/sentiment-score';
 
-export const SUMMARY_VERSION = 1;
+export const SUMMARY_VERSION = 2;
 export const SUMMARY_FILE = 'dashboard-summary.json';
 
 export type SegDim = 'yoe' | 'gender' | 'jobfam' | 'sector' | 'org';
@@ -53,6 +53,7 @@ export interface EffectivenessScope {
     responses: number;
     totalAttended: number | null;
     totalRegistered: number | null;
+    showUpRate: number | null;
     returningRate: number | null;
     hotTopic: [string, number] | null;
   };

@@ -39,6 +39,15 @@ export function kpisEffectiveness(slice: DataSlice) {
   const responseRate = totalAttended != null && totalAttended > 0 ? responseCount / totalAttended : null;
 
   const totalRegistered = sumKnown(events.map((e) => e.registered));
+  //events in the current selection where both attended and registered are known and registered > 0 are paired
+  const paired = events.filter(
+    (e): e is EventRecord & { registered: number; attended: number } =>
+      e.attended != null && e.registered != null && e.registered > 0,
+  );
+  //show-up rate is the ratio of attended to registered for paired events
+  const showUpRate = paired.length
+    ? paired.reduce((sum, e) => sum + e.attended, 0) / paired.reduce((sum, e) => sum + e.registered, 0)
+    : null;
   const people = new Map<string, PersonRecord>();
   for (const r of registrations) if (r.person?.is_returning_registered != null) people.set(r.participant_id, r.person);
   const returning = [...people.values()].filter((p) => p.is_returning_registered === true).length;
@@ -58,6 +67,7 @@ export function kpisEffectiveness(slice: DataSlice) {
     responses: responseCount,
     totalAttended,
     totalRegistered,
+    showUpRate,
     returningRate,
     returningPopulation: people.size,
     hotTopic,

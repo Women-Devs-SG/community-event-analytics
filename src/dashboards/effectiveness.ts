@@ -171,7 +171,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
       kpiCard(
         fmtInt(k.totalRegistered),
         terms.registrations[0].toUpperCase() + terms.registrations.slice(1),
-        returningSummary,
+        k.showUpRate != null ? `${fmtPct(k.showUpRate)} showed up · ${returningSummary}` : returningSummary,
       ),
       kpiCard(
         k.hotTopic ? esc(k.hotTopic[0]) : '–',
