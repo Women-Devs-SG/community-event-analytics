@@ -212,6 +212,7 @@ All metrics use the events selected by the active event, year, format, and topic
 | Hot topic               | Topic with the greatest summed attendance across events in scope. Ties use a deterministic configured ordering and should be disclosed when material.                                                                                              |
 | Lifetime returner share | Among distinct participants registered for the selected events, the share whose `is_returning_registered` is true in the declared source-history window. This may include registrations outside the active period and must be labeled accordingly. |
 | Selection return rate   | Optional alternative: share of distinct participants with registrations for at least two events inside the current selection. It must not be presented as the lifetime returner share.                                                             |
+| Show-up rate            | Sum of `events.attended` ÷ sum of `events.registered`, only for events in the current selection where both values are known and `registered > 0`. Null when no event qualifies. Values above 100% are not clamped.                                 |
 
 ### Demand-satisfaction quadrant
 
@@ -250,6 +251,7 @@ This contract reduces accidental disclosure but does not replace consent, legal 
 | Format or topic filters   | Corresponding non-null event field                   | Omit only the unsupported filter and grouping toggle.                                    |
 | Registration totals       | `events.registered`                                  | Show unavailable; do not derive unless the configured metric basis is registration rows. |
 | Attendance totals         | `events.attended`                                    | Show unavailable.                                                                        |
+| Show-up rate              | Paired `events.registered` and `events.attended`     | Omit the phrase from the Registrations card; do not show 0%, a dash, or NaN.             |
 | Response rate             | Survey responses plus attendance                     | Show unavailable with the missing denominator named.                                     |
 | Demand quadrant           | Valid demand and satisfaction for at least one event | Omit the quadrant or show an evidence-specific empty state.                              |
 | Feedback board            | Valid feedback answers                               | Omit the board; never substitute sample comments into live data.                         |
