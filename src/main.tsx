@@ -39,6 +39,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('effectiveness');
   const [user, setUser] = useState<SignedInUser | null>(null);
   const [signingIn, setSigningIn] = useState(false);
+  // page appearance only; cards and charts keep their light theme
+  const [darkMode, setDarkMode] = useState(false);
   const signInButtonRef = useRef<HTMLDivElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
   const effectivenessRef = useRef<HTMLElement>(null);
@@ -55,6 +57,10 @@ function App() {
     rootStyle.setProperty('--brand-secondary', config.branding.secondary);
     rootStyle.setProperty('--brand-accent', config.branding.accent);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.appearance = darkMode ? 'dark' : 'light';
+  }, [darkMode]);
 
   useEffect(() => {
     if (signInMode) return;
@@ -184,6 +190,14 @@ function App() {
               </button>
             </div>
           )}
+          <button
+            type="button"
+            className="appearance-toggle"
+            aria-pressed={darkMode}
+            onClick={() => setDarkMode((enabled) => !enabled)}
+          >
+            Dark mode
+          </button>
         </div>
       </header>
 
