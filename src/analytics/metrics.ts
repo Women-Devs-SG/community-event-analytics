@@ -1,6 +1,7 @@
 // Pure metric computations over the filtered slice.
 import { communityConfig, surveyExperienceOrder } from '../config';
 import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from '../data/types';
+import { fmtInt, fmtPct } from '../shared/format';
 
 type Numeric = number | null | undefined;
 
@@ -17,6 +18,13 @@ export interface QuadrantPoint {
   registered: number;
   events: number;
   detail: string;
+  /** Pooled attended ÷ registered over `showUpEvents` of this point's `events`. */
+  showUpRate: number | null;
+  showUpEvents: number;
+  /** Pooled registered ÷ capacity over `fillEvents` of this point's `events`; `capacity` is their seat total. */
+  fillRate: number | null;
+  capacity: number | null;
+  fillEvents: number;
 }
 
 export type QuadrantMode = 'event' | 'topic' | 'format';
@@ -24,6 +32,41 @@ export type QuadrantMode = 'event' | 'topic' | 'format';
 const sumKnown = (values: Numeric[]): number | null => {
   const known = values.filter((value): value is number => value != null && !isNaN(value));
   return known.length ? known.reduce((sum, value) => sum + value, 0) : null;
+};
+
+// Show-up over events where attended and registered are both known and registered > 0.
+export function pairedShowUp(events: EventRecord[]) {
+  const paired = events.filter(
+    (e): e is EventRecord & { registered: number; attended: number } =>
+      e.attended != null && e.registered != null && e.registered > 0,
+  );
+  const rate = paired.length
+    ? paired.reduce((sum, e) => sum + e.attended, 0) / paired.reduce((sum, e) => sum + e.registered, 0)
+    : null;
+  return { rate, events: paired.length };
+}
+
+// Room fill over events where registered and capacity are both known and capacity > 0.
+export function pairedRoomFill(events: EventRecord[]) {
+  const paired = events.filter(
+    (e): e is EventRecord & { registered: number; capacity: number } =>
+      e.registered != null && e.capacity != null && e.capacity > 0,
+  );
+  const capacity = paired.length ? paired.reduce((sum, e) => sum + e.capacity, 0) : null;
+  const rate = capacity ? paired.reduce((sum, e) => sum + e.registered, 0) / capacity : null;
+  return { rate, capacity, events: paired.length };
+}
+
+const turnoutOf = (events: EventRecord[]) => {
+  const showUp = pairedShowUp(events);
+  const fill = pairedRoomFill(events);
+  return {
+    showUpRate: showUp.rate,
+    showUpEvents: showUp.events,
+    fillRate: fill.rate,
+    capacity: fill.capacity,
+    fillEvents: fill.events,
+  };
 };
 
 // ── Dashboard 1 KPIs ─────────────────────────────────────────────────────────
@@ -39,15 +82,7 @@ export function kpisEffectiveness(slice: DataSlice) {
   const responseRate = totalAttended != null && totalAttended > 0 ? responseCount / totalAttended : null;
 
   const totalRegistered = sumKnown(events.map((e) => e.registered));
-  //events in the current selection where both attended and registered are known and registered > 0 are paired
-  const paired = events.filter(
-    (e): e is EventRecord & { registered: number; attended: number } =>
-      e.attended != null && e.registered != null && e.registered > 0,
-  );
-  //show-up rate is the ratio of attended to registered for paired events
-  const showUpRate = paired.length
-    ? paired.reduce((sum, e) => sum + e.attended, 0) / paired.reduce((sum, e) => sum + e.registered, 0)
-    : null;
+  const showUpRate = pairedShowUp(events).rate;
   const people = new Map<string, PersonRecord>();
   for (const r of registrations) if (r.person?.is_returning_registered != null) people.set(r.participant_id, r.person);
   const returning = [...people.values()].filter((p) => p.is_returning_registered === true).length;
@@ -122,16 +157,18 @@ export function quadrantPoints(
         registered: e.registered,
         events: 1,
         detail: `${e.format ?? 'Format not stated'} · ${e.topic_primary ?? 'Topic not stated'} · ${e.event_date}`,
+        ...turnoutOf([e]),
       })),
       skipped,
     };
   }
   const key = mode === 'topic' ? 'topic_primary' : 'format';
-  const groups = new Map<string, { satW: number; respW: number; demandSum: number; registered: number; n: number }>();
+  type Group = { satW: number; respW: number; demandSum: number; registered: number; members: Plottable[] };
+  const groups = new Map<string, Group>();
   for (const e of withSat) {
     const groupKey = e[key];
     if (groupKey == null) continue;
-    const g = groups.get(groupKey) ?? { satW: 0, respW: 0, demandSum: 0, registered: 0, n: 0 };
+    const g = groups.get(groupKey) ?? { satW: 0, respW: 0, demandSum: 0, registered: 0, members: [] };
     const resp = slice.responses.filter(
       (response) => response.event_id === e.event_id && response.satisfaction != null,
     ).length;
@@ -140,19 +177,24 @@ export function quadrantPoints(
     g.respW += resp;
     g.demandSum += e.demand_index; // demand = simple mean of event demand indices
     g.registered += e.registered;
-    g.n += 1;
+    g.members.push(e);
     groups.set(groupKey, g);
   }
   return {
-    points: [...groups.entries()].map(([name, g]) => ({
-      id: name, // topic_primary / format value, the click target for that mode
-      name,
-      satisfaction: g.satW / g.respW,
-      demand: g.demandSum / g.n,
-      registered: g.registered,
-      events: g.n,
-      detail: `${g.n} event${g.n > 1 ? 's' : ''} · ${g.registered} registered`,
-    })),
+    points: [...groups.entries()].map(([name, g]) => {
+      const n = g.members.length;
+      return {
+        id: name, // topic_primary / format value, the click target for that mode
+        name,
+        satisfaction: g.satW / g.respW,
+        demand: g.demandSum / n,
+        registered: g.registered,
+        events: n,
+        detail: `${n} event${n > 1 ? 's' : ''} · ${g.registered} registered`,
+        // over exactly the plotted events, so privacy-withheld events never contribute
+        ...turnoutOf(g.members),
+      };
+    }),
     skipped,
   };
 }
@@ -166,6 +208,20 @@ export const quadrantAction = (sat: number, demand: number, refs: QuadrantRefs):
   if (!hiSat && hiDem) return 'Improve';
   if (hiSat && !hiDem) return 'Maintain';
   return 'Deprioritise';
+};
+
+// Tooltip line for a quadrant point; a part that cannot be calculated is left out,
+// and coverage is appended when only some of the point's events qualify.
+export const quadrantTurnout = (point: QuadrantPoint): string | null => {
+  const coverage = (qualifying: number) =>
+    qualifying < point.events ? ` (${qualifying} of ${point.events} events)` : '';
+  const parts: string[] = [];
+  if (point.showUpRate != null) parts.push(`Showed up: ${fmtPct(point.showUpRate)}${coverage(point.showUpEvents)}`);
+  if (point.fillRate != null && point.capacity != null)
+    parts.push(
+      `Room filled: ${fmtPct(point.fillRate)} of ${fmtInt(point.capacity)} seats${coverage(point.fillEvents)}`,
+    );
+  return parts.length ? parts.join(' · ') : null;
 };
 
 // ── Dashboard 2 ──────────────────────────────────────────────────────────────
