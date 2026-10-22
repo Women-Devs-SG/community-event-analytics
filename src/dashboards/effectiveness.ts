@@ -112,6 +112,11 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
     </div>`;
 
   const quadChart = echarts.init(q('#quad-chart'));
+  // Below this chart width (phones and small tablets) the corner captions, median labels
+  // and bubble names collide, so only the corner actions and a selected bubble's name are drawn.
+  const NARROW_CHART_WIDTH = 640;
+  const isNarrowChart = () => quadChart.getWidth() < NARROW_CHART_WIDTH;
+  let narrowLayout = false;
   let quadMode: QuadrantMode = 'event';
   let boardFilter: BoardFilter | null = null; // set by clicking a scatter bubble
 
@@ -189,6 +194,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
     const refs = summary.refs;
     const maxDemand = Math.max(1.2, ...points.map((p) => p.demand)) * 1.15;
     const maxReg = Math.max(1, ...points.map((p) => p.registered));
+    const narrow = (narrowLayout = isNarrowChart());
 
     quadChart.setOption<ECOption>(
       {
@@ -245,7 +251,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
                   borderWidth: sel ? 2.5 : 2,
                 },
                 label: {
-                  show: sel || (!boardFilter && (quadMode !== 'event' || points.length <= 14)),
+                  show: sel || (!narrow && !boardFilter && (quadMode !== 'event' || points.length <= 14)),
                   color: sel ? C.ink : C.ink2,
                   fontWeight: sel ? 700 : 400,
                 },
@@ -259,7 +265,7 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
               silent: true,
               symbol: 'none',
               lineStyle: { color: C.axis, type: 'dashed', width: 1.5 },
-              label: { color: C.muted, fontSize: 10 },
+              label: { show: !narrow, color: C.muted, fontSize: 10 },
               // ECharts' types reject null; it checks these with `!= null`, so undefined behaves the same
               data: [
                 {
@@ -275,10 +281,10 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
           },
         ],
         graphic: [
-          corner('SCALE', 'high demand, high satisfaction', 'right', 'top', C.green),
-          corner('IMPROVE', 'high demand, low satisfaction', 'right', 'bottom', C.jasper),
-          corner('MAINTAIN', 'low demand, high satisfaction', 'left', 'top', C.blue),
-          corner('DEPRIORITISE', 'low demand, low satisfaction', 'left', 'bottom', C.muted),
+          corner('SCALE', 'high demand, high satisfaction', 'right', 'top', C.green, narrow),
+          corner('IMPROVE', 'high demand, low satisfaction', 'right', 'bottom', C.jasper, narrow),
+          corner('MAINTAIN', 'low demand, high satisfaction', 'left', 'top', C.blue, narrow),
+          corner('DEPRIORITISE', 'low demand, low satisfaction', 'left', 'bottom', C.muted, narrow),
         ],
       },
       true,
@@ -298,12 +304,19 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
   // corner label + a small muted caption underneath naming the axes and the action,
   // e.g. "high demand, high satisfaction" under SCALE, so the quadrant reads on its
   // own without the reader needing the paragraph above the chart
-  const corner = (action: string, caption: string, h: 'left' | 'right', v: 'top' | 'bottom', color: string) => ({
+  const corner = (
+    action: string,
+    caption: string,
+    h: 'left' | 'right',
+    v: 'top' | 'bottom',
+    color: string,
+    narrow: boolean,
+  ) => ({
     type: 'text' as const,
     [h]: h === 'left' ? 56 : 30,
     [v]: v === 'top' ? 42 : 52,
     style: {
-      text: `{action|${action}}\n{caption|${caption}}`,
+      text: narrow ? `{action|${action}}` : `{action|${action}}\n{caption|${caption}}`,
       rich: {
         action: { fill: color, fontSize: 11, fontWeight: 700, align: h, lineHeight: 15 },
         caption: { fill: C.muted, fontSize: 9.5, fontWeight: 400, align: h, lineHeight: 13 },
@@ -507,5 +520,11 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
     drawFeedbackBoard();
   }
 
-  return { update, resize: () => quadChart.resize(), dispose: () => quadChart.dispose() };
+  function resize() {
+    quadChart.resize();
+    // crossing the narrow threshold changes which labels are drawn, not just their size
+    if (scope && isNarrowChart() !== narrowLayout) drawQuadrant();
+  }
+
+  return { update, resize, dispose: () => quadChart.dispose() };
 }
