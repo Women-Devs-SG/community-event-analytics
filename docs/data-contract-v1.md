@@ -226,6 +226,7 @@ All metrics use the events selected by the active event, year, format, and topic
 | Lifetime returner share | Among distinct participants registered for the selected events, the share whose `is_returning_registered` is true in the declared source-history window. This may include registrations outside the active period and must be labeled accordingly. |
 | Selection return rate   | Optional alternative: share of distinct participants with registrations for at least two events inside the current selection. It must not be presented as the lifetime returner share.                                                             |
 | Show-up rate            | Sum of `events.attended` ÷ sum of `events.registered`, only for events in the current selection where both values are known and `registered > 0`. Null when no event qualifies. Values above 100% are not clamped.                                 |
+| Room fill rate          | Sum of `events.registered` ÷ sum of `events.capacity`, only for events where both values are known and `capacity > 0`. Null when no event qualifies. Values above 100% (overbooking) are not clamped.                                              |
 
 ### Demand-satisfaction quadrant
 
@@ -234,6 +235,7 @@ All metrics use the events selected by the active event, year, format, and topic
 - Aggregated demand is the arithmetic mean of valid event demand indices unless configuration specifies and labels another method.
 - Reference lines are medians across the declared comparison population. The UI must state whether that population is all loaded events or only the active selection.
 - Suggested actions such as “Scale” or “Improve” are configurable interpretations of relative position, not causal conclusions.
+- Each point's tooltip also shows its show-up rate and room fill rate, pooled over the events already in that point, with the summed seat capacity (“Room filled: 94% of 66 seats”). The point publishes `showUpRate`, `fillRate`, `capacity`, and how many of its events qualified for each (`showUpEvents`, `fillEvents`). A topic or format point whose rate covers only some of its events states that coverage, for example “(2 of 3 events)”. A rate that cannot be calculated is omitted. Events withheld for survey privacy are not in any point, so they contribute to neither rate.
 
 ### Segment metrics
 
@@ -265,6 +267,7 @@ This contract reduces accidental disclosure but does not replace consent, legal 
 | Registration totals       | `events.registered`                                  | Show unavailable; do not derive unless the configured metric basis is registration rows. |
 | Attendance totals         | `events.attended`                                    | Show unavailable.                                                                        |
 | Show-up rate              | Paired `events.registered` and `events.attended`     | Omit the phrase from the Registrations card; do not show 0%, a dash, or NaN.             |
+| Room fill rate            | Paired `events.registered` and positive `capacity`   | Omit the room-fill part of the quadrant tooltip; do not show 0%, a dash, or NaN.         |
 | Response rate             | Survey responses plus attendance                     | Show unavailable with the missing denominator named.                                     |
 | Demand quadrant           | Valid demand and satisfaction for at least one event | Omit the quadrant or show an evidence-specific empty state.                              |
 | Feedback board            | Valid feedback answers                               | Omit the board; never substitute sample comments into live data.                         |

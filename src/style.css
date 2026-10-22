@@ -22,13 +22,34 @@
   --pos: #0b6e4f;
   --neu: #8a8781;
   --neg: #b23a20;
+  /* page appearance, kept apart from the branding variables set inline by main.tsx */
+  --page-surface: var(--surface);
+  --page-panel: var(--card);
+  --page-ink: var(--ink);
+  --page-muted: var(--muted);
+  --page-border: var(--border);
+  --page-rule: var(--grid);
+  --page-link: var(--brand-primary);
+  --page-neg: var(--neg);
   color-scheme: light;
+}
+/* dark page surroundings; cards below reset these, so panels and charts stay light */
+:root[data-appearance='dark'] {
+  --page-surface: #17151c;
+  --page-panel: #221f29;
+  --page-ink: #ece9f1;
+  --page-muted: #aaa6b4;
+  --page-border: rgba(255, 255, 255, 0.16);
+  --page-rule: rgba(255, 255, 255, 0.12);
+  --page-link: color-mix(in srgb, var(--brand-primary) 45%, #fff);
+  --page-neg: #f19a85;
+  color-scheme: dark;
 }
 
 body {
   overflow-x: clip;
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--page-surface);
+  color: var(--page-ink);
   font-family:
     system-ui,
     -apple-system,
@@ -125,20 +146,128 @@ body {
   outline: 2px solid var(--brand-accent);
   outline-offset: 2px;
 }
+/* sun/moon switch: the knob slides under the active mode */
+.appearance-toggle {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  border: none;
+  border-radius: 999px;
+  background: #f3f6fb;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.15s ease;
+}
+.appearance-toggle:hover {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
+}
+.appearance-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 38px;
+  height: 30px;
+  border-radius: 999px;
+  background: #e1e6ef;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+.appearance-icon {
+  position: relative;
+  width: 38px;
+  height: 30px;
+  padding: 6px 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: color 0.2s ease;
+}
+.appearance-icon.sun {
+  color: #1d2333;
+}
+.appearance-icon.moon {
+  color: #9aa3b5;
+}
+.appearance-toggle[aria-pressed='true'] {
+  background: #0f1424;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-knob {
+  transform: translateX(38px);
+  background: #3a4563;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-icon.sun {
+  color: #b5bccb;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-icon.moon {
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .appearance-toggle,
+  .appearance-knob,
+  .appearance-icon {
+    transition: none;
+  }
+}
+.appearance-toggle:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+/* keep the toggle on the right while the tabs are hidden before sign-in */
+.tabs[hidden] ~ .appearance-toggle {
+  margin-left: auto;
+}
+/* narrow screens: toggle sits top-right beside the brand, tabs share a full-width row */
+@media (max-width: 700px) {
+  .topbar-inner {
+    gap: 14px 12px;
+  }
+  .appearance-toggle {
+    order: 1;
+    margin-left: auto;
+  }
+  .topbar-title {
+    order: 2;
+    flex-basis: 100%;
+  }
+  .tabs {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 10px;
+  }
+  .account {
+    order: 4;
+  }
+}
+@media (max-width: 360px) {
+  .tab {
+    padding: 8px 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
 
 /* ── filter bar (sticky toolbar) ── */
 .filterbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--surface);
+  background: var(--page-surface);
   max-width: 1280px;
   margin: 0 auto;
   padding: 12px 24px 6px;
 }
 .filterbar-inner {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--page-panel);
+  border: 1px solid var(--page-border);
   border-radius: 14px;
   padding: 12px 16px;
   box-shadow: 0 2px 10px rgba(11, 11, 11, 0.05);
@@ -161,7 +290,7 @@ body {
 .filter-group > label {
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--muted);
+  color: var(--page-muted);
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
@@ -169,10 +298,10 @@ body {
 .filterbar input[type='date'] {
   font-family: inherit;
   font-size: 13px;
-  color: var(--ink);
+  color: var(--page-ink);
   height: 36px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--page-panel);
+  border: 1px solid var(--page-border);
   border-radius: 9px;
   padding: 0 10px;
   width: 100%;
@@ -184,13 +313,13 @@ body {
 }
 .filterbar select:hover,
 .filterbar input[type='date']:hover {
-  border-color: var(--muted);
+  border-color: var(--page-muted);
 }
 .filterbar select:focus-visible,
 .filterbar input[type='date']:focus-visible {
   outline: none;
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  border-color: var(--page-link);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--page-link) 18%, transparent);
 }
 .period-inputs {
   display: flex;
@@ -198,7 +327,7 @@ body {
   gap: 6px;
 }
 .period-inputs span {
-  color: var(--muted);
+  color: var(--page-muted);
   font-size: 13px;
 }
 .period-inputs input[type='date'] {
@@ -212,7 +341,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: var(--brand-primary);
+  color: var(--page-link);
   background: transparent;
   border: none;
   border-radius: 9px;
@@ -221,11 +350,19 @@ body {
   transition: background 0.15s ease;
 }
 .filterbar .reset-btn:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--page-link) 8%, transparent);
 }
 .filterbar .reset-btn:focus-visible {
-  outline: 2px solid var(--brand-primary);
+  outline: 2px solid var(--page-link);
   outline-offset: 2px;
+}
+
+/* narrow screens: the filters stack one per row, too tall to pin over the charts,
+   so the bar scrolls away with the page */
+@media (max-width: 700px) {
+  .filterbar {
+    position: static;
+  }
 }
 
 /* ── layout ── */
@@ -246,11 +383,11 @@ main {
 .status {
   padding: 48px 0;
   text-align: center;
-  color: var(--muted);
+  color: var(--page-muted);
   font-size: 15px;
 }
 .status.error {
-  color: var(--neg);
+  color: var(--page-neg);
 }
 
 /* ── google-signin mode ── */
@@ -315,7 +452,7 @@ main {
 }
 .section-note {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--page-muted);
   margin-bottom: 12px;
 }
 
@@ -325,10 +462,19 @@ main {
   gap: 12px;
 }
 .card {
+  --page-panel: var(--card);
+  --page-ink: var(--ink);
+  --page-muted: var(--muted);
+  --page-border: var(--border);
+  --page-rule: var(--grid);
+  --page-link: var(--brand-primary);
+  --page-neg: var(--neg);
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
+  color: var(--ink);
+  color-scheme: light;
 }
 .kpi .kpi-value {
   font-size: 30px;
@@ -911,23 +1057,23 @@ main {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  color: var(--muted);
+  color: var(--page-muted);
   font-size: 12px;
-  border-top: 1px solid var(--grid);
+  border-top: 1px solid var(--page-rule);
 }
 
 .limitation-notes {
   max-width: 1280px;
   margin: 0 auto;
   padding: 18px 24px 8px;
-  color: var(--muted);
+  color: var(--page-muted);
   font-size: 12px;
   line-height: 1.45;
 }
 .limitation-notes h2 {
   font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--page-muted);
   margin-bottom: 6px;
 }
 .limitation-notes ul {

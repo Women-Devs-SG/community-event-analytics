@@ -4,6 +4,7 @@ import { createSyntheticAdapter } from '../data/adapters/synthetic';
 import { createGoogleSheetsAdapter } from '../data/adapters/google-sheets';
 import type { RawDataBundle, RawDatasets } from '../data/contract';
 import type { RawRow } from '../data/types';
+import { quadrantTurnout } from '../analytics/metrics';
 import { assertNoRowIdentifiers, buildSummary } from './build';
 import { ALL_EVENTS, reachableSelections, scopeKey } from './scope';
 import type { DashboardSummary } from './types';
@@ -62,6 +63,41 @@ function showUpRateEvents(
       })),
       surveyResponses: [],
       feedbackAnswers: [],
+      registrations: [],
+      participants: [],
+    },
+    source: showUpRateSource,
+  };
+}
+
+// Events with turnout and capacity, each with `respondents` survey answers (10 meets the threshold).
+function turnoutEvents(
+  ...rows: Array<{
+    id: string;
+    registered: number | null;
+    attended: number | null;
+    capacity: number | null;
+    respondents?: number;
+    topic?: string;
+    format?: string;
+  }>
+): RawDataBundle {
+  const surveys = rows.map((row) => surveyRows(row.id, row.respondents ?? 10, 8));
+  return {
+    datasets: {
+      events: rows.map((row) => ({
+        event_id: row.id,
+        event_name: row.id,
+        event_date: '2026-01-10',
+        format: row.format ?? 'Workshop',
+        topic_primary: row.topic ?? 'Data',
+        registered: row.registered,
+        attended: row.attended,
+        capacity: row.capacity,
+        year_median_registered: 20,
+      })),
+      surveyResponses: surveys.flatMap((survey) => survey.responses),
+      feedbackAnswers: surveys.flatMap((survey) => survey.feedback),
       registrations: [],
       participants: [],
     },
@@ -235,6 +271,128 @@ describe('build-time summary', () => {
     );
     expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'walkins' }).effectiveness.kpis.showUpRate).toBe(1.04);
     expect(scopeOf(summary).effectiveness.kpis.showUpRate).toBe(1.04);
+  });
+
+  // Given a topic with two rated events, one missing attendance and capacity
+  // When the summary is built
+  // Then each rate covers only the event where its inputs are known
+  it('computes quadrant turnout and room fill over the events where both inputs are known', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'full', registered: 40, attended: 30, capacity: 50 },
+            { id: 'partial', registered: 60, attended: null, capacity: null },
+          ),
+      }),
+    );
+    const { quadrant } = scopeOf(summary).effectiveness;
+
+    expect(quadrant.topic.points[0]).toMatchObject({
+      id: 'Data',
+      events: 2,
+      showUpRate: 0.75,
+      showUpEvents: 1,
+      fillRate: 0.8,
+      capacity: 50,
+      fillEvents: 1,
+    });
+    expect(quadrant.event.points.find((point) => point.id === 'partial')).toMatchObject({
+      showUpRate: null,
+      showUpEvents: 0,
+      fillRate: null,
+      capacity: null,
+      fillEvents: 0,
+    });
+  });
+
+  it('pools quadrant turnout and room fill as totals, not an average of event rates', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'a', registered: 40, attended: 30, capacity: 50 },
+            { id: 'b', registered: 20, attended: 10, capacity: 40 },
+          ),
+      }),
+    );
+    const workshop = scopeOf(summary).effectiveness.quadrant.format.points[0];
+
+    expect(workshop).toMatchObject({ id: 'Workshop', events: 2, showUpEvents: 2, fillEvents: 2, capacity: 90 });
+    expect(workshop.showUpRate).toBeCloseTo(40 / 60); // not (0.75 + 0.5) / 2
+    expect(workshop.fillRate).toBeCloseTo(60 / 90); // not (0.8 + 0.5) / 2
+  });
+
+  it('leaves zero capacity out of room fill and keeps overbooking above 100%', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'no-seats', registered: 10, attended: 8, capacity: 0, topic: 'Cloud' },
+            { id: 'overbooked', registered: 70, attended: 60, capacity: 60, topic: 'Data' },
+          ),
+      }),
+    );
+    const points = scopeOf(summary).effectiveness.quadrant.event.points;
+
+    expect(points.find((point) => point.id === 'no-seats')).toMatchObject({
+      showUpRate: 0.8,
+      fillRate: null,
+      capacity: null,
+      fillEvents: 0,
+    });
+    expect(points.find((point) => point.id === 'overbooked')?.fillRate).toBeCloseTo(70 / 60);
+  });
+
+  it('words the quadrant tooltip turnout line, leaving out parts that cannot be calculated', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'full', registered: 40, attended: 30, capacity: 50, topic: 'Data' },
+            { id: 'partial', registered: 60, attended: null, capacity: null, topic: 'Data' },
+            { id: 'talk', registered: 10, attended: 8, capacity: null, topic: 'Cloud', format: 'Talk' },
+            { id: 'overbooked', registered: 70, attended: 63, capacity: 60, topic: 'AI' },
+          ),
+      }),
+    );
+    const { quadrant } = scopeOf(summary).effectiveness;
+    const point = (mode: 'event' | 'topic', id: string) => quadrant[mode].points.find((p) => p.id === id)!;
+
+    expect(quadrantTurnout(point('topic', 'Data'))).toBe(
+      'Showed up: 75% (1 of 2 events) · Room filled: 80% of 50 seats (1 of 2 events)',
+    );
+    expect(quadrantTurnout(point('event', 'full'))).toBe('Showed up: 75% · Room filled: 80% of 50 seats');
+    expect(quadrantTurnout(point('event', 'talk'))).toBe('Showed up: 80%');
+    expect(quadrantTurnout(point('event', 'partial'))).toBeNull();
+    expect(quadrantTurnout(point('event', 'overbooked'))).toBe('Showed up: 90% · Room filled: 117% of 60 seats');
+  });
+
+  // Given an event whose survey responses fall below the privacy threshold
+  // When the summary is built
+  // Then its registered, attended and capacity reach no quadrant point
+  it('keeps events withheld for privacy out of quadrant turnout and room fill', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'rated', registered: 30, attended: 20, capacity: 40 },
+            { id: 'withheld', registered: 5, attended: 5, capacity: 5, respondents: 2 },
+          ),
+      }),
+    );
+
+    for (const scope of summary.scopeData) {
+      for (const mode of ['event', 'topic', 'format'] as const) {
+        for (const point of scope.effectiveness.quadrant[mode].points) {
+          expect(point.id).not.toBe('withheld');
+          expect(point).toMatchObject({ events: 1, showUpEvents: 1, fillEvents: 1, capacity: 40 });
+          expect(point.showUpRate).toBeCloseTo(20 / 30);
+          expect(point.fillRate).toBeCloseTo(30 / 40);
+        }
+      }
+    }
+    expect(scopeOf(summary, { ...ALL_EVENTS, eventId: 'withheld' }).effectiveness.quadrant.event.points).toEqual([]);
   });
 });
 
