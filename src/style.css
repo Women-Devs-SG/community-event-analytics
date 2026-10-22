@@ -146,28 +146,72 @@ body {
   outline: 2px solid var(--brand-accent);
   outline-offset: 2px;
 }
+/* sun/moon switch: the knob slides under the active mode */
 .appearance-toggle {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: transparent;
-  color: #fff;
-  padding: 8px 16px;
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  border: none;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+  background: #f3f6fb;
   cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
   transition:
-    background 0.15s ease,
-    color 0.15s ease;
+    background 0.2s ease,
+    box-shadow 0.15s ease;
 }
 .appearance-toggle:hover {
-  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
+}
+.appearance-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 38px;
+  height: 30px;
+  border-radius: 999px;
+  background: #e1e6ef;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+.appearance-icon {
+  position: relative;
+  width: 38px;
+  height: 30px;
+  padding: 6px 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: color 0.2s ease;
+}
+.appearance-icon.sun {
+  color: #1d2333;
+}
+.appearance-icon.moon {
+  color: #9aa3b5;
 }
 .appearance-toggle[aria-pressed='true'] {
-  background: #fff;
-  border-color: #fff;
-  color: var(--brand-primary);
+  background: #0f1424;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-knob {
+  transform: translateX(38px);
+  background: #3a4563;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-icon.sun {
+  color: #b5bccb;
+}
+.appearance-toggle[aria-pressed='true'] .appearance-icon.moon {
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .appearance-toggle,
+  .appearance-knob,
+  .appearance-icon {
+    transition: none;
+  }
 }
 .appearance-toggle:focus-visible {
   outline: 2px solid var(--brand-accent);
