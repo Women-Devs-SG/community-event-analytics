@@ -1,6 +1,7 @@
 // Pure metric computations over the filtered slice.
 import { communityConfig, surveyExperienceOrder } from '../config';
 import type { DataSlice, EventRecord, PersonRecord, RegistrationRecord, ResponseRecord } from '../data/types';
+import { fmtInt, fmtPct } from '../shared/format';
 
 type Numeric = number | null | undefined;
 
@@ -207,6 +208,20 @@ export const quadrantAction = (sat: number, demand: number, refs: QuadrantRefs):
   if (!hiSat && hiDem) return 'Improve';
   if (hiSat && !hiDem) return 'Maintain';
   return 'Deprioritise';
+};
+
+// Tooltip line for a quadrant point; a part that cannot be calculated is left out,
+// and coverage is appended when only some of the point's events qualify.
+export const quadrantTurnout = (point: QuadrantPoint): string | null => {
+  const coverage = (qualifying: number) =>
+    qualifying < point.events ? ` (${qualifying} of ${point.events} events)` : '';
+  const parts: string[] = [];
+  if (point.showUpRate != null) parts.push(`Showed up: ${fmtPct(point.showUpRate)}${coverage(point.showUpEvents)}`);
+  if (point.fillRate != null && point.capacity != null)
+    parts.push(
+      `Room filled: ${fmtPct(point.fillRate)} of ${fmtInt(point.capacity)} seats${coverage(point.fillEvents)}`,
+    );
+  return parts.length ? parts.join(' · ') : null;
 };
 
 // ── Dashboard 2 ──────────────────────────────────────────────────────────────

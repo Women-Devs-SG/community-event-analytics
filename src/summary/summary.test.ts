@@ -4,6 +4,7 @@ import { createSyntheticAdapter } from '../data/adapters/synthetic';
 import { createGoogleSheetsAdapter } from '../data/adapters/google-sheets';
 import type { RawDataBundle, RawDatasets } from '../data/contract';
 import type { RawRow } from '../data/types';
+import { quadrantTurnout } from '../analytics/metrics';
 import { assertNoRowIdentifiers, buildSummary } from './build';
 import { ALL_EVENTS, reachableSelections, scopeKey } from './scope';
 import type { DashboardSummary } from './types';
@@ -341,6 +342,30 @@ describe('build-time summary', () => {
       fillEvents: 0,
     });
     expect(points.find((point) => point.id === 'overbooked')?.fillRate).toBeCloseTo(70 / 60);
+  });
+
+  it('words the quadrant tooltip turnout line, leaving out parts that cannot be calculated', async () => {
+    const summary = buildSummary(
+      await loadData({
+        load: async () =>
+          turnoutEvents(
+            { id: 'full', registered: 40, attended: 30, capacity: 50, topic: 'Data' },
+            { id: 'partial', registered: 60, attended: null, capacity: null, topic: 'Data' },
+            { id: 'talk', registered: 10, attended: 8, capacity: null, topic: 'Cloud', format: 'Talk' },
+            { id: 'overbooked', registered: 70, attended: 63, capacity: 60, topic: 'AI' },
+          ),
+      }),
+    );
+    const { quadrant } = scopeOf(summary).effectiveness;
+    const point = (mode: 'event' | 'topic', id: string) => quadrant[mode].points.find((p) => p.id === id)!;
+
+    expect(quadrantTurnout(point('topic', 'Data'))).toBe(
+      'Showed up: 75% (1 of 2 events) · Room filled: 80% of 50 seats (1 of 2 events)',
+    );
+    expect(quadrantTurnout(point('event', 'full'))).toBe('Showed up: 75% · Room filled: 80% of 50 seats');
+    expect(quadrantTurnout(point('event', 'talk'))).toBe('Showed up: 80%');
+    expect(quadrantTurnout(point('event', 'partial'))).toBeNull();
+    expect(quadrantTurnout(point('event', 'overbooked'))).toBe('Showed up: 90% · Room filled: 117% of 60 seats');
   });
 
   // Given an event whose survey responses fall below the privacy threshold

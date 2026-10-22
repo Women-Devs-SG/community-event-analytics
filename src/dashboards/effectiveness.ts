@@ -4,7 +4,7 @@ import type { ChartParams, ECOption } from './echarts';
 import { C, baseAxis, baseTooltip, baseChart, SENTIMENT_COLORS } from '../shared/chart-theme';
 import { commentsFor, eventsIn, scopeFor } from '../summary/client';
 import { filters } from '../features/filters/filter-state';
-import { quadrantAction } from '../analytics/metrics';
+import { quadrantAction, quadrantTurnout } from '../analytics/metrics';
 import type { QuadrantActionLabel, QuadrantMode, QuadrantPoint, VerdictLabel } from '../analytics/metrics';
 import { fmtPct, fmtNum, fmtInt } from '../shared/format';
 import {
@@ -197,9 +197,10 @@ export function initEffectiveness(root: HTMLElement, summary: DashboardSummary):
           ...baseTooltip,
           formatter: (params) => {
             const d = metaOf(tooltipPoint(params));
+            const turnout = quadrantTurnout(d);
             return `<b>${esc(d.name)}</b><br/>${esc(d.detail)}<br/>
               Satisfaction: <b>${fmtNum(d.satisfaction)}</b> / ${satisfaction.max} · Demand index: <b>${fmtNum(d.demand, 2)}</b><br/>
-              Suggested action: <b>${quadrantAction(d.satisfaction, d.demand, refs)}</b>`;
+              ${turnout ? `${esc(turnout)}<br/>` : ''}Suggested action: <b>${quadrantAction(d.satisfaction, d.demand, refs)}</b>`;
           },
         },
         grid: { left: 48, right: 24, top: 36, bottom: 44 },
