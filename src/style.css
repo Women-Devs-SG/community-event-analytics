@@ -357,6 +357,14 @@ body {
   outline-offset: 2px;
 }
 
+/* narrow screens: the filters stack one per row, too tall to pin over the charts,
+   so the bar scrolls away with the page */
+@media (max-width: 700px) {
+  .filterbar {
+    position: static;
+  }
+}
+
 /* ── layout ── */
 main {
   position: relative;
