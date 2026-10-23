@@ -38,6 +38,7 @@ async function filesIn(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
     entries.map(async (entry) => {
+      if (entry.name === '.git') return [];
       const path = join(directory, entry.name);
       if (entry.isDirectory()) return ignoredDirectories.has(entry.name) ? [] : filesIn(path);
       return ignoredFiles.has(entry.name) ? [] : [path];
