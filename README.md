@@ -102,6 +102,8 @@ Viewers in this mode can read the sheet itself, so share it only with people who
 
 The versioned canonical schema, dataset grains, joins, metric denominators, normalization rules, privacy behavior, and feature-degradation policy are defined in [`docs/data-contract-v1.md`](docs/data-contract-v1.md).
 
+New to these terms? Start with the contract's [technical terms](docs/data-contract-v1.md#technical-terms).
+
 Source-specific column names are mapped into canonical fields before metrics or charts use them. Invalid keys, duplicate identities, orphaned joins, inconsistent returning status, and malformed values produce structured contract errors instead of silently changing the population.
 
 See [data preparation](docs/data-preparation.md) for the safe path from a community's source data to a deployment.

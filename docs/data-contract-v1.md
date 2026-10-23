@@ -24,6 +24,19 @@ The canonical terminology is deliberately community-neutral:
 
 Community names, demographic labels, survey wording, and organizer-specific terms are configuration, not canonical schema names.
 
+### Technical terms
+
+- **Canonical field:** the standard, community-neutral field name the dashboard uses, such as `event_id` or `satisfaction`. Adapters map each source's column names (aliases configured in `src/config.ts`) to canonical fields before any metric runs.
+- **Grain:** what one row of a dataset represents. For example, `registrations` has one row per participant-event registration, and `participants` has one row per de-identified participant. Counting across the wrong grain, such as treating registrations as people, gives wrong totals.
+- **Denominator:** the "out of how many" in a rate. For example, the survey response rate is distinct responses divided by attendance. When the denominator is missing or zero, the rate is null (unknown), not zero.
+- **Summary:** in the public modes, the file `public/dashboard-summary.json` generated at build time. It contains only aggregates, event metadata, and comments from events with enough respondents; participant and response identifiers never leave the build. In `google-signin` mode nothing is published: source rows are delivered to signed-in viewers on the sheet's sharing list, and the summary is built in their browser.
+- **Scope / reachable selection:** a scope is one filter selection: a combination of year, format, and topic, or a single event. A summary is precomputed for every selection the filter bar can produce, called the reachable selections. Arbitrary date ranges are not supported.
+- **Minimum segment size:** the configured threshold (`minimum_segment_size` in the privacy rules; `privacy.minimumSegmentSize` in `src/config.ts`) a group must reach before its figures are shown. Where the rules call for it, the count is of distinct people or respondents, not rows.
+- **Suppression:** hiding a figure because its group is below the minimum segment size. This applies to every value, tooltip, label, drill-down, and export, not only chart colour. Survey ratings and free text are also suppressed per event: an event's ratings, or its free-text answers, are left out of every figure unless that event has enough distinct respondents (counted separately for each), though its response count is still shown.
+- **"Other / small groups":** a bucket that below-threshold groups may be combined into when the combination is analytically valid. Currently, two or more small groups are combined only if the combined group meets the threshold. Otherwise they stay suppressed.
+- **Protected grouping:** a breakdown inside a breakdown, such as segments within a parent category. The parent is shown only if it meets the threshold and every child is shown or safely combined, so a parent total or 100% bar can't reveal a hidden child.
+- **Differencing:** recovering a hidden figure by subtracting visible ones, for example a total minus its visible categories, or two selections that differ by one event. The rules in "Privacy and safe display" are designed to prevent this. Registration breakdowns across overlapping selections are not yet cross-checked against each other (see "Current implementation conformance gaps"), so the project does not guarantee anonymity.
+
 ## Conformance levels
 
 - **Core conformance** requires a valid `events` dataset. It supports event discovery, year filtering, and any event-level metrics backed by supplied fields.
