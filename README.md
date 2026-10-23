@@ -37,6 +37,16 @@ In the public modes (`synthetic` and `google-sheets`), the browser receives only
 
 The source architecture lives under `src/data/` and the build-time summary under `src/summary/`. `src/summary/client.ts` is the browser-side facade that loads the summary, and the dashboard UI lives in `src/dashboards/` and `src/features/`. See the [architecture overview](docs/architecture.md) for how the pieces fit together.
 
+## Choose a data source
+
+| Mode                  | When data is read                               | What the browser receives    | Credentials                                                    | Who can view                                          | Setup guide                                                            |
+| --------------------- | ----------------------------------------------- | ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
+| `synthetic` (default) | At build time, generated locally                | Privacy-checked summary only | None                                                           | Anyone with the site link                             | [Safe demo by default](#safe-demo-by-default)                          |
+| `google-sheets`       | At build time (shows data as of the last build) | Privacy-checked summary only | Service account key (build-only secret)                        | Anyone with the site link                             | [Connect Google Sheets](docs/configuration.md#3-connect-google-sheets) |
+| `google-signin`       | On every page load                              | **Raw sheet rows**           | OAuth client ID and Apps Script URL (both public, not secrets) | Google accounts the sheet is individually shared with | [Private dashboard with Google sign-in](docs/google-signin.md)         |
+
+In `google-signin` mode, anyone who can view the dashboard can also read the sheet itself, so share it only with people who may see raw responses. Chart privacy thresholds still apply for readability, but they are not an access control.
+
 ## Develop
 
 Use Node 22 (see `.nvmrc`) and npm. AI coding contributors should read [`AGENTS.md`](AGENTS.md) for the code map, data boundaries, conventions, and verification workflow.
